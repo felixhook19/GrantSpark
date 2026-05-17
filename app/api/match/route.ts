@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
@@ -13,10 +12,7 @@ function truncate(text, max) {
 
 export async function POST() {
   const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
@@ -55,16 +51,14 @@ export async function POST() {
   ].join('\n')
 
   const grantsText = grants.map((g, i) => [
-    `GRANT ${i + 1} | id:${g.id}`,
+    `GRANT ${i + 1} id:${g.id}`,
     `Title: ${g.title}`,
     `Funder: ${g.funder || 'unknown'}`,
-    `Summary: ${truncate(g.summary, 200)}`,
-    `Eligibility: ${truncate(g.eligibility_summary, 200)}`,
+    `Summary: ${truncate(g.summary, 150)}`,
+    `Eligibility: ${truncate(g.eligibility_summary, 150)}`,
     `Sectors: ${(g.sector_tags || []).join(', ')}`,
     `Amount: £${g.grant_amount_min || '?'}-£${g.grant_amount_max || '?'}`,
     `Deadline: ${g.deadline || 'rolling'}`,
-    `Max employees: ${g.max_employees || 'none'}`,
-    `Match funding required: ${g.match_funding_required ? 'yes' : 'no'}`,
   ].join(' | ')).join('\n')
 
   const prompt = `You are a UK grant matching expert. Score each grant 0-100 for fit with this organisation.
@@ -75,38 +69,53 @@ ${profileText}
 GRANTS (one per line):
 ${grantsText}
 
-Return ONLY a JSON array, no markdown. Each element:
+Return ONLY a valid JSON array, no markdown, no explanation. Each element:
 {"grant_id":"<id>","fit_score":<0-100>,"decision":"apply"|"consider"|"skip","why_match":["reason"],"risks":["risk"],"next_steps":["step"]}
 
-Sort by fit_score descending. Include all grants.`
+Include all grants. Sort by fit_score descending.`
 
   let parsed
   try {
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-haiku-20241022',
-      max_tokens: 2000,
-      messages: [{ role: 'user', content: prompt }],
+    const apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-5-haiku-20241022',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }],
+      }),
     })
 
-    let text = ''
-    for (const block of message.content) {
-      if (block.type === 'text') text += block.text
+    if (!apiResponse.ok) {
+      const errText = await apiResponse.text()
+      console.error('Anthropic API error:', apiResponse.status, errText)
+      return NextResponse.json(
+        { error: `AI error ${apiResponse.status}: ${errText}` },
+        { status: 502 }
+      )
     }
+
+    const aiData = await apiResponse.json()
+    let text = (aiData.content || [])
+      .filter((b) => b.type === 'text')
+      .map((b) => b.text)
+      .join('')
     text = text.replace(/```json/g, '').replace(/```/g, '').trim()
     parsed = JSON.parse(text)
   } catch (err) {
+    console.error('Match route error:', err)
     return NextResponse.json(
-      { error: 'AI matching is temporarily unavailable. Please try again.' },
+      { error: String(err) },
       { status: 502 }
     )
   }
 
   if (!Array.isArray(parsed)) {
-    return NextResponse.json(
-      { error: 'Unexpected result. Please try again.' },
-      { status: 502 }
-    )
+    return NextResponse.json({ error: 'Unexpected AI response format' }, { status: 502 })
   }
 
   const validIds = new Set(grants.map((g) => g.id))
