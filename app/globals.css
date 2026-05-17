@@ -1,0 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #0B1220;
+  color: #F4F1EA;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0B1220;
+}
+::-webkit-scrollbar-thumb {
+  background: #1E2A3A;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #8892A0;
+}
+
+@keyframes spark-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(25, 232, 143, 0.45); }
+  50% { box-shadow: 0 0 0 7px rgba(25, 232, 143, 0); }
+}
+.spark-pulse {
+  animation: spark-pulse 2.2s infinite;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up {
+  animation: fade-up 0.5s ease forwards;
+}
+
+/* ---- Blog article content styling ---- */
+.blog-content {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: rgba(244, 241, 234, 0.85);
+}
+.blog-content h2 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+  color: #F4F1EA;
+  margin-top: 2.4rem;
+  margin-bottom: 0.9rem;
+}
+.blog-content h3 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #F4F1EA;
+  margin-top: 1.8rem;
+  margin-bottom: 0.7rem;
+}
+.blog-content p {
+  margin-bottom: 1.15rem;
+}
+.blog-content ul,
+.blog-content ol {
+  margin: 0 0 1.15rem 1.3rem;
+}
+.blog-content li {
+  margin-bottom: 0.5rem;
+}
+.blog-content ul li {
+  list-style: disc;
+}
+.blog-content ol li {
+  list-style: decimal;
+}
+.blog-content a {
+  color: #19E88F;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.blog-content strong {
+  color: #F4F1EA;
+  font-weight: 600;
+}
+.blog-content blockquote {
+  border-left: 3px solid #19E88F;
+  padding: 0.4rem 0 0.4rem 1.2rem;
+  margin: 1.4rem 0;
+  color: rgba(244, 241, 234, 0.7);
+  font-style: italic;
+}
+.blog-content code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+  background: rgba(244, 241, 234, 0.08);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
