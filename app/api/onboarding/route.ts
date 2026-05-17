@@ -23,11 +23,12 @@ export async function POST(request) {
 
   const admin = createSupabaseAdminClient()
 
-  // Build a row using only columns that exist on the orgs table.
+  const orgType = body.org_category || 'business'
   const row = {
     owner_user_id: user.id,
     org_name: body.org_name || 'Untitled organisation',
-    org_category: body.org_category || 'business',
+    org_type: orgType,
+    org_category: orgType,
     org_description: body.org_description || '',
     nation: body.nation || 'England',
     postcode_area: body.postcode_area || '',
@@ -41,7 +42,6 @@ export async function POST(request) {
     has_match_funding: body.has_match_funding === true,
   }
 
-  // If the user already has an org, update it; otherwise insert.
   const { data: existing } = await admin
     .from('orgs')
     .select('id')
