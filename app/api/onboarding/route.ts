@@ -23,7 +23,7 @@ export async function POST(request) {
 
   const admin = createSupabaseAdminClient()
 
-  const orgType = body.org_category || 'business'
+  const orgType = 'Other'
   const row = {
     owner_user_id: user.id,
     org_name: body.org_name || 'Untitled organisation',
