@@ -34,12 +34,7 @@ const TEAM_SIZES = [
   { value: '250+', label: '250+ people' },
 ]
 
-const NATIONS = [
-  { value: 'England', label: 'England' },
-  { value: 'Scotland', label: 'Scotland' },
-  { value: 'Wales', label: 'Wales' },
-  { value: 'NI', label: 'Northern Ireland' },
-]
+const NATIONS = ['England', 'Scotland', 'Wales', 'Northern Ireland']
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -61,6 +56,7 @@ export default function OnboardingPage() {
     themes: [],
   })
 
+  // If the user already has an org, skip straight to the dashboard.
   useEffect(() => {
     let active = true
     fetch('/api/profile')
@@ -179,7 +175,8 @@ export default function OnboardingPage() {
                   What does your organisation do? *
                 </label>
                 <p className="mb-2 text-xs text-slate">
-                  Plain English — this is what the AI uses to match you to grants.
+                  Plain English — this is what the AI uses to match you to
+                  grants.
                 </p>
                 <textarea
                   value={form.org_description}
@@ -241,8 +238,8 @@ export default function OnboardingPage() {
                   className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk focus:border-spark focus:outline-none"
                 >
                   {NATIONS.map((n) => (
-                    <option key={n.value} value={n.value}>
-                      {n.label}
+                    <option key={n} value={n}>
+                      {n}
                     </option>
                   ))}
                 </select>
