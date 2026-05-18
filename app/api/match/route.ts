@@ -32,8 +32,8 @@ export async function POST() {
   const { data: grants } = await admin
     .from('opportunities')
     .select('id, title, funder, summary, eligibility_summary, sector_tags, audience, grant_amount_min, grant_amount_max, deadline, geography, max_employees, match_funding_required, funding_type, url')
-    .eq('status', 'open')
-    .limit(30)
+    .in('status', ['open', 'rolling'])
+    .limit(50)
 
   if (!grants || grants.length === 0) {
     return NextResponse.json({ matches: [] })
@@ -57,7 +57,7 @@ export async function POST() {
     `Summary: ${truncate(g.summary, 150)}`,
     `Eligibility: ${truncate(g.eligibility_summary, 150)}`,
     `Sectors: ${(g.sector_tags || []).join(', ')}`,
-    `Amount: £${g.grant_amount_min || '?'}-£${g.grant_amount_max || '?'}`,
+    `Amount: GBP ${g.grant_amount_min || '?'}-${g.grant_amount_max || '?'}`,
     `Deadline: ${g.deadline || 'rolling'}`,
   ].join(' | ')).join('\n')
 
@@ -85,7 +85,7 @@ Include all grants. Sort by fit_score descending.`
       },
       body: JSON.stringify({
         model: 'claude-3-5-haiku-20241022',
-        max_tokens: 2000,
+        max_tokens: 8000,
         messages: [{ role: 'user', content: prompt }],
       }),
     })
@@ -108,10 +108,7 @@ Include all grants. Sort by fit_score descending.`
     parsed = JSON.parse(text)
   } catch (err) {
     console.error('Match route error:', err)
-    return NextResponse.json(
-      { error: String(err) },
-      { status: 502 }
-    )
+    return NextResponse.json({ error: String(err) }, { status: 502 })
   }
 
   if (!Array.isArray(parsed)) {
