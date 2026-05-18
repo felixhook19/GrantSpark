@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
@@ -157,7 +157,7 @@ function GrantCard({ match }) {
   )
 }
 
-export default function DashboardPage() {
+function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [org, setOrg] = useState(null)
@@ -490,5 +490,18 @@ export default function DashboardPage() {
 
       </div>
     </div>
+  )
+}
+
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-midnight">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-spark border-t-transparent" />
+      </div>
+    }>
+      <DashboardInner />
+    </Suspense>
   )
 }
