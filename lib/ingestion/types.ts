@@ -14,14 +14,11 @@ export type Source = {
   last_error?: string | null
 }
 
-// Minimal shape returned by the listing-extraction Claude call.
 export type CandidateGrant = {
   title: string
   url: string
 }
 
-// Output of the normalisation Claude call — maps 1:1 onto the
-// columns we upsert into `opportunities`.
 export type NormalisedGrant = {
   title: string
   funder: string | null
@@ -51,9 +48,15 @@ export type IngestionResult = {
   duration_ms: number
 }
 
-// Cap to keep a single cron invocation under Vercel Hobby's 60s ceiling.
+// Caps tuned for Anthropic Tier 1 (50,000 input tokens/min) running on
+// Vercel Hobby (60s function ceiling). If/when the Anthropic tier is
+// upgraded these can be raised via env vars without code changes.
 export const MAX_GRANTS_PER_RUN = Number(process.env.INGEST_MAX_GRANTS_PER_RUN || '2')
 export const MAX_CANDIDATES_FROM_LISTING = Number(
   process.env.INGEST_MAX_CANDIDATES || '8'
 )
-export const MAX_HTML_CHARS = 50000
+// Dropped from 50k to 20k after a parallel-source test pushed peak input
+// tokens over the Tier 1 TPM ceiling. At ~3 chars/token, 20k chars per
+// page ≈ 6.5k tokens. With sources processed sequentially that fits with
+// generous headroom.
+export const MAX_HTML_CHARS = Number(process.env.INGEST_MAX_HTML_CHARS || '20000')

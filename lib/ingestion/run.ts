@@ -1,14 +1,4 @@
 // Per-source orchestrator for a single ingestion run.
-//
-// 1. Log a `job_runs` row as 'running'.
-// 2. Fetch the source's listing page.
-// 3. Ask Claude to extract candidate grant URLs.
-// 4. Filter out URLs that already exist in `opportunities` (by canonical_key).
-// 5. For up to MAX_GRANTS_PER_RUN new candidates, fetch detail page and
-//    ask Claude to normalise into our Grant schema.
-// 6. Insert each new opportunity.
-// 7. Update sources.last_run_at / last_success_at / last_error.
-// 8. Finalise the `job_runs` row.
 
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { fetchHtml, canonicalKey } from './adapter'
@@ -74,10 +64,8 @@ export async function runIngestionForSource(source: Source): Promise<IngestionRe
   let inserted = 0
 
   try {
-    // 1. Listing page
     const listingHtml = await fetchHtml(source.base_url, 15000)
 
-    // 2. Candidates
     let candidates: CandidateGrant[] = []
     try {
       candidates = await extractCandidates(
@@ -113,7 +101,6 @@ export async function runIngestionForSource(source: Source): Promise<IngestionRe
       return result
     }
 
-    // 3. Filter out URLs already in DB
     const keys = candidates.map((c) => canonicalKey(c.url))
     const { data: existing } = await admin
       .from('opportunities')
@@ -126,7 +113,6 @@ export async function runIngestionForSource(source: Source): Promise<IngestionRe
     const fresh = candidates.filter((c) => !existingKeys.has(canonicalKey(c.url)))
     const toFetch = fresh.slice(0, MAX_GRANTS_PER_RUN)
 
-    // 4. For each new candidate, fetch + normalise + insert
     for (const cand of toFetch) {
       try {
         const detailHtml = await fetchHtml(cand.url, 15000)
@@ -211,7 +197,12 @@ export async function runIngestionForSource(source: Source): Promise<IngestionRe
   }
 }
 
-// Top-level: run all enabled sources in parallel.
+// Top-level: run all enabled sources SEQUENTIALLY.
+//
+// Previous version used Promise.all which fired all sources' Claude
+// calls in parallel and blew Anthropic's Tier-1 50k TPM ceiling. Serial
+// keeps peak token throughput at a single in-flight call (~6k tokens).
+// With 5 sources × ~3 calls × ~3s each ≈ 45s — fits the Hobby 60s cap.
 export async function runIngestionForAllSources(): Promise<IngestionResult[]> {
   const admin = createSupabaseAdminClient()
   const { data: sources } = await admin
@@ -222,8 +213,10 @@ export async function runIngestionForAllSources(): Promise<IngestionResult[]> {
   const list = ((sources || []) as Source[]).filter((s) => Boolean(s.base_url))
   if (list.length === 0) return []
 
-  // Parallel — keeps wall time inside the Hobby 60s cap when each source
-  // makes ~3-4 sequential Claude calls.
-  const results = await Promise.all(list.map((s) => runIngestionForSource(s)))
+  const results: IngestionResult[] = []
+  for (const s of list) {
+    const r = await runIngestionForSource(s)
+    results.push(r)
+  }
   return results
 }
