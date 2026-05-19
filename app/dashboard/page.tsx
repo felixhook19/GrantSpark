@@ -5,8 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Logo } from '@/components/Logo'
+import type { Match, Grant, Org, Decision } from '@/types/db'
 
-function ScoreBadge({ score }) {
+function ScoreBadge({ score }: { score: number }) {
   let cls = 'border-white/10 bg-white/5 text-slate'
   if (score >= 75) cls = 'border-spark/25 bg-spark/10 text-spark'
   else if (score >= 50) cls = 'border-warn/25 bg-warn/10 text-warn'
@@ -18,8 +19,8 @@ function ScoreBadge({ score }) {
   )
 }
 
-function DecisionTag({ decision }) {
-  const map = {
+function DecisionTag({ decision }: { decision: Decision | string }) {
+  const map: Record<string, { cls: string; label: string }> = {
     apply: { cls: 'border-spark/20 bg-spark/10 text-spark', label: '✓ Apply' },
     consider: { cls: 'border-warn/20 bg-warn/10 text-warn', label: '◑ Consider' },
     skip: { cls: 'border-white/10 bg-white/5 text-slate', label: '✗ Skip' },
@@ -32,16 +33,16 @@ function DecisionTag({ decision }) {
   )
 }
 
-function GrantCard({ match }) {
+function GrantCard({ match }: { match: Match }) {
   const [open, setOpen] = useState(false)
-  const g = match.grant
+  const g: Grant = match.grant
 
-  let daysLeft = null
+  let daysLeft: number | null = null
   if (g.deadline) {
     daysLeft = Math.ceil((new Date(g.deadline).getTime() - Date.now()) / 86400000)
   }
 
-  function money(v) {
+  function money(v: number | null | undefined): string | null {
     if (!v && v !== 0) return null
     return '£' + Number(v).toLocaleString()
   }
@@ -94,7 +95,7 @@ function GrantCard({ match }) {
 
       {g.sector_tags && g.sector_tags.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-1.5">
-          {g.sector_tags.map((tag) => (
+          {g.sector_tags.map((tag: string) => (
             <span key={tag} className="rounded-lg border border-white/8 bg-white/5 px-2 py-1 text-xs text-slate">
               {tag}
             </span>
@@ -119,7 +120,7 @@ function GrantCard({ match }) {
             <div>
               <p className="mb-2 font-mono text-xs uppercase tracking-wider text-slate">Why it matches</p>
               <ul className="space-y-1">
-                {match.why_match.map((r, i) => (
+                {match.why_match.map((r: string, i: number) => (
                   <li key={i} className="flex gap-2 text-sm text-chalk/70">
                     <span className="flex-shrink-0 text-spark">✓</span>{r}
                   </li>
@@ -131,7 +132,7 @@ function GrantCard({ match }) {
             <div>
               <p className="mb-2 font-mono text-xs uppercase tracking-wider text-slate">Watch out for</p>
               <ul className="space-y-1">
-                {match.risks.map((r, i) => (
+                {match.risks.map((r: string, i: number) => (
                   <li key={i} className="flex gap-2 text-sm text-chalk/70">
                     <span className="flex-shrink-0 text-warn">!</span>{r}
                   </li>
@@ -143,7 +144,7 @@ function GrantCard({ match }) {
             <div>
               <p className="mb-2 font-mono text-xs uppercase tracking-wider text-slate">Next steps</p>
               <ul className="space-y-1">
-                {match.next_steps.map((s, i) => (
+                {match.next_steps.map((s: string, i: number) => (
                   <li key={i} className="flex gap-2 text-sm text-chalk/70">
                     <span className="flex-shrink-0 text-spark">{i + 1}.</span>{s}
                   </li>
@@ -160,14 +161,14 @@ function GrantCard({ match }) {
 function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [org, setOrg] = useState(null)
-  const [matches, setMatches] = useState([])
+  const [org, setOrg] = useState<Org | null>(null)
+  const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [matching, setMatching] = useState(false)
   const [error, setError] = useState('')
 
   // Filters
-  const [decisionFilter, setDecisionFilter] = useState('all')
+  const [decisionFilter, setDecisionFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [minAmount, setMinAmount] = useState('')
   const [maxAmount, setMaxAmount] = useState('')
@@ -182,7 +183,7 @@ function DashboardInner() {
       if (!res.ok) {
         setError(data.error || 'Matching failed. Please try again.')
       } else {
-        setMatches(data.matches || [])
+        setMatches((data.matches || []) as Match[])
       }
     } catch {
       setError('Network error. Please try again.')
@@ -195,11 +196,17 @@ function DashboardInner() {
     async function init() {
       try {
         const profileRes = await fetch('/api/profile')
-        if (profileRes.status === 401) { router.replace('/login'); return }
+        if (profileRes.status === 401) {
+          router.replace('/login')
+          return
+        }
         const profileData = await profileRes.json()
         if (!active) return
-        if (!profileData.org) { router.replace('/onboarding'); return }
-        setOrg(profileData.org)
+        if (!profileData.org) {
+          router.replace('/onboarding')
+          return
+        }
+        setOrg(profileData.org as Org)
 
         // If coming back from profile edit with rematch flag, run matching
         if (searchParams.get('rematch') === '1') {
@@ -212,18 +219,23 @@ function DashboardInner() {
         const matchesData = await matchesRes.json()
         if (!active) return
         if (matchesData.matches && matchesData.matches.length > 0) {
-          setMatches(matchesData.matches)
+          setMatches(matchesData.matches as Match[])
           setLoading(false)
         } else {
           setLoading(false)
           runMatching()
         }
       } catch {
-        if (active) { setError('Could not load your dashboard. Please refresh.'); setLoading(false) }
+        if (active) {
+          setError('Could not load your dashboard. Please refresh.')
+          setLoading(false)
+        }
       }
     }
     init()
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [router, runMatching, searchParams])
 
   async function handleSignOut() {
@@ -250,7 +262,7 @@ function DashboardInner() {
       const titleMatch = m.grant?.title?.toLowerCase().includes(q)
       const funderMatch = m.grant?.funder?.toLowerCase().includes(q)
       const summaryMatch = m.grant?.summary?.toLowerCase().includes(q)
-      const tagMatch = m.grant?.sector_tags?.some((t) => t.toLowerCase().includes(q))
+      const tagMatch = m.grant?.sector_tags?.some((t: string) => t.toLowerCase().includes(q))
       if (!titleMatch && !funderMatch && !summaryMatch && !tagMatch) return false
     }
     if (minAmount && m.grant?.grant_amount_max) {
@@ -262,7 +274,8 @@ function DashboardInner() {
     return true
   })
 
-  const hasActiveFilters = decisionFilter !== 'all' || searchQuery || minAmount || maxAmount
+  const hasActiveFilters =
+    decisionFilter !== 'all' || Boolean(searchQuery) || Boolean(minAmount) || Boolean(maxAmount)
 
   if (loading) {
     return (
@@ -444,7 +457,7 @@ function DashboardInner() {
                 Showing {visible.length} of {matches.length} grants
               </p>
             )}
-            {visible.map((match, i) => (
+            {visible.map((match: Match, i: number) => (
               <GrantCard key={i} match={match} />
             ))}
           </div>
@@ -483,7 +496,7 @@ function DashboardInner() {
               <Link href="/profile" className="text-spark hover:underline">
                 Update your profile
               </Link>
-              {' '}to refine what you're looking for.
+              {' '}to refine what you&apos;re looking for.
             </p>
           </div>
         )}
@@ -493,14 +506,15 @@ function DashboardInner() {
   )
 }
 
-
 export default function DashboardPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-midnight">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-spark border-t-transparent" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-midnight">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-spark border-t-transparent" />
+        </div>
+      }
+    >
       <DashboardInner />
     </Suspense>
   )

@@ -9,7 +9,21 @@ export const dynamic = 'force-dynamic'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
 
-async function getPost(slug) {
+type BlogPostFull = {
+  slug: string
+  title: string
+  excerpt?: string | null
+  tag?: string | null
+  read_minutes?: number | null
+  published_at?: string | null
+  author?: string | null
+  meta_description?: string | null
+  content_html?: string | null
+}
+
+type RouteParams = { params: Promise<{ slug: string }> }
+
+async function getPost(slug: string): Promise<BlogPostFull | null> {
   const admin = createSupabaseAdminClient()
   const { data } = await admin
     .from('blog_posts')
@@ -17,10 +31,11 @@ async function getPost(slug) {
     .eq('slug', slug)
     .eq('published', true)
     .maybeSingle()
-  return data
+  return (data as BlogPostFull | null) || null
 }
 
-function formatDate(value) {
+function formatDate(value: string | null | undefined): string {
+  if (!value) return ''
   try {
     return new Date(value).toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -32,7 +47,7 @@ function formatDate(value) {
   }
 }
 
-export async function generateMetadata({ params }): Promise<Metadata> {
+export async function generateMetadata({ params }: RouteParams): Promise<Metadata> {
   const { slug } = await params
   const post = await getPost(slug)
 
@@ -40,28 +55,30 @@ export async function generateMetadata({ params }): Promise<Metadata> {
     return { title: 'Article not found' }
   }
 
+  const description = post.meta_description || post.excerpt || undefined
+
   return {
     title: post.title,
-    description: post.meta_description || post.excerpt,
+    description,
     alternates: {
       canonical: `/blog/${post.slug}`,
     },
     openGraph: {
       title: post.title,
-      description: post.meta_description || post.excerpt,
+      description,
       url: `${siteUrl}/blog/${post.slug}`,
       type: 'article',
-      publishedTime: post.published_at,
+      publishedTime: post.published_at || undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title: post.title,
-      description: post.meta_description || post.excerpt,
+      description,
     },
   }
 }
 
-export default async function BlogPostPage({ params }) {
+export default async function BlogPostPage({ params }: RouteParams) {
   const { slug } = await params
   const post = await getPost(slug)
 
@@ -129,7 +146,7 @@ export default async function BlogPostPage({ params }) {
           <div className="mt-6 border-t border-white/5 pt-8">
             <div
               className="blog-content"
-              dangerouslySetInnerHTML={{ __html: post.content_html }}
+              dangerouslySetInnerHTML={{ __html: post.content_html || '' }}
             />
           </div>
 

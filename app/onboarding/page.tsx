@@ -4,15 +4,21 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/Logo'
 
-const ORG_TYPES = [
-  { value: 'business', label: 'Business / Startup', desc: 'Limited company, LLP or sole trader' },
-  { value: 'charity', label: 'Charity / CIC', desc: 'Registered charity or community interest company' },
-  { value: 'social_enterprise', label: 'Social Enterprise', desc: 'Trading for social or environmental impact' },
-  { value: 'public_sector', label: 'Public Sector', desc: 'Local authority, NHS trust or other public body' },
-  { value: 'individual', label: 'Individual', desc: 'Applying as an individual or sole trader' },
+const SECTORS = [
+  'Technology / Software',
+  'AI / Machine Learning',
+  'Clean Tech / Net Zero',
+  'Health / MedTech',
+  'Fintech',
+  'EdTech',
+  'Creative / Digital Media',
+  'Manufacturing',
+  'Agriculture / FoodTech',
+  'Social Enterprise',
+  'Other',
 ]
 
-const BUSINESS_STAGES = [
+const STAGES = [
   { value: 'idea', label: 'Idea — pre-incorporation' },
   { value: 'pre-revenue', label: 'Pre-revenue — incorporated, no sales yet' },
   { value: 'early-revenue', label: 'Early revenue — first customers' },
@@ -20,45 +26,30 @@ const BUSINESS_STAGES = [
   { value: 'scale', label: 'Scale — established and growing fast' },
 ]
 
-const CHARITY_STAGES = [
-  { value: 'idea', label: 'New — under 1 year old' },
-  { value: 'pre-revenue', label: 'Developing — 1 to 3 years old' },
-  { value: 'early-revenue', label: 'Established — 3 to 10 years old' },
-  { value: 'growth', label: 'Mature — over 10 years old' },
-  { value: 'scale', label: 'Large / well-established' },
-]
-
 const TEAM_SIZES = [
-  { value: 'sole_trader', label: 'Just me / 1 person' },
+  { value: 'sole_trader', label: 'Just me' },
   { value: '1-9', label: '2–9 people' },
   { value: '10-49', label: '10–49 people' },
   { value: '50-249', label: '50–249 people' },
   { value: '250+', label: '250+ people' },
 ]
 
-const NATIONS = [
-  { value: 'England', label: 'England' },
-  { value: 'Scotland', label: 'Scotland' },
-  { value: 'Wales', label: 'Wales' },
-  { value: 'NI', label: 'Northern Ireland' },
-]
+const NATIONS = ['England', 'Scotland', 'Wales', 'Northern Ireland']
 
-const BUSINESS_SECTORS = [
-  'Technology / Software', 'AI / Machine Learning', 'Clean Tech / Net Zero',
-  'Health / MedTech', 'Fintech', 'EdTech', 'Creative / Digital Media',
-  'Manufacturing', 'Agriculture / FoodTech', 'Social Enterprise', 'Other',
-]
+type OnboardingForm = {
+  org_name: string
+  org_description: string
+  org_category: string
+  innovation_stage: string
+  rd_active: boolean
+  nation: string
+  postcode_area: string
+  employee_count_band: string
+  website: string
+  themes: string[]
+}
 
-const CHARITY_SECTORS = [
-  'Community Development', 'Young People & Youth', 'Older People & Elderly',
-  'Mental Health & Wellbeing', 'Disability & Inclusion', 'Homelessness & Housing',
-  'Education & Skills', 'Health & Social Care', 'Domestic Abuse Support',
-  'Refugee & Migration', 'Environment & Conservation', 'Arts & Culture',
-  'Food & Nutrition', 'Poverty & Financial Inclusion', 'Sport & Recreation',
-  'Social Enterprise', 'Clean Tech / Net Zero', 'Other',
-]
-
-const TOTAL_STEPS = 4
+type FormField = keyof OnboardingForm
 
 export default function OnboardingPage() {
   const router = useRouter()
@@ -67,7 +58,7 @@ export default function OnboardingPage() {
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState('')
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<OnboardingForm>({
     org_name: '',
     org_description: '',
     org_category: 'business',
@@ -78,13 +69,13 @@ export default function OnboardingPage() {
     employee_count_band: '1-9',
     website: '',
     themes: [],
-    has_match_funding: false,
   })
 
+  // If the user already has an org, skip straight to the dashboard.
   useEffect(() => {
     let active = true
     fetch('/api/profile')
-      .then((r) => r.json())
+      .then((res) => res.json())
       .then((data) => {
         if (!active) return
         if (data.org) {
@@ -93,37 +84,25 @@ export default function OnboardingPage() {
           setChecking(false)
         }
       })
-      .catch(() => { if (active) setChecking(false) })
-    return () => { active = false }
+      .catch(() => {
+        if (active) setChecking(false)
+      })
+    return () => {
+      active = false
+    }
   }, [router])
 
-  const isCharity = form.org_category === 'charity' || form.org_category === 'social_enterprise'
-  const sectors = isCharity ? CHARITY_SECTORS : BUSINESS_SECTORS
-  const stages = isCharity ? CHARITY_STAGES : BUSINESS_STAGES
-
-  function update(field, value) {
+  function update<K extends FormField>(field: K, value: OnboardingForm[K]) {
     setForm((f) => ({ ...f, [field]: value }))
   }
 
-  function toggleTheme(theme) {
+  function toggleTheme(theme: string) {
     setForm((f) => ({
       ...f,
       themes: f.themes.includes(theme)
         ? f.themes.filter((t) => t !== theme)
         : [...f.themes, theme],
     }))
-  }
-
-  function selectOrgType(value) {
-    update('org_category', value)
-    update('themes', [])
-    update('innovation_stage', 'early-revenue')
-  }
-
-  function canProceed() {
-    if (step === 1) return !!form.org_category
-    if (step === 2) return form.org_name.trim().length > 0 && form.org_description.trim().length > 0
-    return true
   }
 
   async function handleSubmit() {
@@ -149,13 +128,6 @@ export default function OnboardingPage() {
     }
   }
 
-  const stepTitles = [
-    'What type of organisation are you?',
-    isCharity ? 'Tell us about your organisation' : 'Tell us about your business',
-    'Location and size',
-    isCharity ? 'Cause areas and activities' : 'Sectors and focus',
-  ]
-
   if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-midnight">
@@ -167,8 +139,6 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-midnight px-6 py-12">
       <div className="mx-auto max-w-xl">
-
-        {/* Header */}
         <div className="mb-10">
           <div className="mb-8 flex items-center gap-2.5">
             <Logo size={28} />
@@ -177,13 +147,12 @@ export default function OnboardingPage() {
             </span>
           </div>
 
-          {/* Progress bar */}
           <div className="mb-6 flex gap-2">
-            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            {[1, 2, 3].map((s) => (
               <div
-                key={i}
+                key={s}
                 className={
-                  i < step
+                  s <= step
                     ? 'h-1 flex-1 rounded-full bg-spark'
                     : 'h-1 flex-1 rounded-full bg-white/10'
                 }
@@ -192,44 +161,17 @@ export default function OnboardingPage() {
           </div>
 
           <p className="font-mono text-xs uppercase tracking-widest text-spark">
-            Step {step} of {TOTAL_STEPS}
+            Step {step} of 3
           </p>
           <h1 className="mt-2 font-display text-3xl font-bold text-chalk">
-            {stepTitles[step - 1]}
+            {step === 1 && 'Tell us about your organisation'}
+            {step === 2 && 'Location and size'}
+            {step === 3 && 'Sectors and focus'}
           </h1>
         </div>
 
         <div className="space-y-6 rounded-2xl border border-white/5 bg-midnight-2 p-8">
-
-          {/* Step 1 — Org type */}
           {step === 1 && (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {ORG_TYPES.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  onClick={() => selectOrgType(t.value)}
-                  className={
-                    form.org_category === t.value
-                      ? 'rounded-xl border border-spark bg-spark/10 p-5 text-left transition-colors'
-                      : 'rounded-xl border border-white/10 p-5 text-left transition-colors hover:border-white/25'
-                  }
-                >
-                  <p className={
-                    form.org_category === t.value
-                      ? 'font-display font-semibold text-spark'
-                      : 'font-display font-semibold text-chalk'
-                  }>
-                    {t.label}
-                  </p>
-                  <p className="mt-1 text-sm text-slate">{t.desc}</p>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Step 2 — About */}
-          {step === 2 && (
             <>
               <div>
                 <label className="mb-2 block text-sm font-medium text-chalk/70">
@@ -239,83 +181,81 @@ export default function OnboardingPage() {
                   type="text"
                   value={form.org_name}
                   onChange={(e) => update('org_name', e.target.value)}
-                  placeholder={isCharity ? 'e.g. Bright Futures Community Trust' : 'e.g. Acme Technologies Ltd'}
+                  placeholder="e.g. Acme Technologies Ltd"
                   className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
                 />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-chalk/70">
-                  {isCharity
-                    ? 'What does your organisation do and who does it help? *'
-                    : 'What does your organisation do? *'}
+                  What does your organisation do? *
                 </label>
                 <p className="mb-2 text-xs text-slate">
-                  {isCharity
-                    ? 'Describe your charitable objectives, who you support and what outcomes you achieve. The AI uses this to match you to relevant grants.'
-                    : 'Describe your product, technology and market. The AI uses this to match you to the right grants.'}
+                  Plain English — this is what the AI uses to match you to
+                  grants.
                 </p>
                 <textarea
                   value={form.org_description}
                   onChange={(e) => update('org_description', e.target.value)}
-                  rows={5}
-                  placeholder={isCharity
-                    ? 'e.g. We provide free mental health counselling and peer support groups for young people aged 16–25 in South London, helping them manage anxiety and build resilience.'
-                    : 'e.g. We build AI software that helps NHS trusts cut waiting times by predicting patient no-shows.'}
+                  rows={4}
+                  placeholder="e.g. We build AI software that helps NHS trusts cut waiting times by predicting patient no-shows."
                   className="w-full resize-none rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
                 />
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-chalk/70">
-                  {isCharity ? 'How established are you?' : 'What stage is your business at?'}
+                  Stage
                 </label>
                 <select
                   value={form.innovation_stage}
                   onChange={(e) => update('innovation_stage', e.target.value)}
                   className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk focus:border-spark focus:outline-none"
                 >
-                  {stages.map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
+                  {STAGES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
+                    </option>
                   ))}
                 </select>
               </div>
-              {!isCharity && (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-chalk/70">
-                    Do you conduct research &amp; development?
-                  </label>
-                  <div className="flex gap-3">
-                    {['Yes', 'No'].map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => update('rd_active', opt === 'Yes')}
-                        className={
-                          (opt === 'Yes') === form.rd_active
-                            ? 'flex-1 rounded-xl border border-spark bg-spark/10 py-3 text-sm font-medium text-spark'
-                            : 'flex-1 rounded-xl border border-white/10 py-3 text-sm font-medium text-slate hover:border-white/20'
-                        }
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
+              <div>
+                <label className="mb-2 block text-sm font-medium text-chalk/70">
+                  Do you conduct research &amp; development?
+                </label>
+                <div className="flex gap-3">
+                  {['Yes', 'No'].map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => update('rd_active', opt === 'Yes')}
+                      className={
+                        (opt === 'Yes') === form.rd_active
+                          ? 'flex-1 rounded-xl border border-spark bg-spark/10 py-3 text-sm font-medium text-spark'
+                          : 'flex-1 rounded-xl border border-white/10 py-3 text-sm font-medium text-slate hover:border-white/20'
+                      }
+                    >
+                      {opt}
+                    </button>
+                  ))}
                 </div>
-              )}
+              </div>
             </>
           )}
 
-          {/* Step 3 — Location and size */}
-          {step === 3 && (
+          {step === 2 && (
             <>
               <div>
-                <label className="mb-2 block text-sm font-medium text-chalk/70">Nation</label>
+                <label className="mb-2 block text-sm font-medium text-chalk/70">
+                  Nation
+                </label>
                 <select
                   value={form.nation}
                   onChange={(e) => update('nation', e.target.value)}
                   className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk focus:border-spark focus:outline-none"
                 >
                   {NATIONS.map((n) => (
-                    <option key={n.value} value={n.value}>{n.label}</option>
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -326,7 +266,9 @@ export default function OnboardingPage() {
                 <input
                   type="text"
                   value={form.postcode_area}
-                  onChange={(e) => update('postcode_area', e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    update('postcode_area', e.target.value.toUpperCase())
+                  }
                   maxLength={4}
                   placeholder="e.g. EC1, M1, BS1"
                   className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
@@ -334,7 +276,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <label className="mb-3 block text-sm font-medium text-chalk/70">
-                  {isCharity ? 'Team / staff size (including volunteers)' : 'Team size'}
+                  Team size
                 </label>
                 <div className="space-y-2">
                   {TEAM_SIZES.map((t) => (
@@ -355,53 +297,30 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <label className="mb-2 block text-sm font-medium text-chalk/70">
-                  {isCharity
-                    ? 'Can you provide match funding or co-investment if required?'
-                    : 'Can you provide match funding if a grant requires it?'}
-                </label>
-                <div className="flex gap-3">
-                  {['Yes', 'No'].map((opt) => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => update('has_match_funding', opt === 'Yes')}
-                      className={
-                        (opt === 'Yes') === form.has_match_funding
-                          ? 'flex-1 rounded-xl border border-spark bg-spark/10 py-3 text-sm font-medium text-spark'
-                          : 'flex-1 rounded-xl border border-white/10 py-3 text-sm font-medium text-slate hover:border-white/20'
-                      }
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-chalk/70">
-                  Website <span className="text-slate">(optional)</span>
+                  Website
                 </label>
                 <input
                   type="text"
                   value={form.website}
                   onChange={(e) => update('website', e.target.value)}
-                  placeholder="https://yourorganisation.org"
+                  placeholder="https://yourcompany.com"
                   className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
                 />
               </div>
             </>
           )}
 
-          {/* Step 4 — Sectors */}
-          {step === 4 && (
+          {step === 3 && (
             <>
               <div>
-                <p className="mb-1 text-sm text-slate">
-                  {isCharity
-                    ? 'Select all the cause areas your organisation works in. This is the most important factor in matching you to relevant grants.'
-                    : 'Select all sectors that apply to your work.'}
+                <label className="mb-1 block text-sm font-medium text-chalk/70">
+                  Select all sectors that apply
+                </label>
+                <p className="mb-4 text-xs text-slate">
+                  This helps us surface sector-specific grants.
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {sectors.map((sector) => (
+                <div className="flex flex-wrap gap-2">
+                  {SECTORS.map((sector) => (
                     <button
                       key={sector}
                       type="button"
@@ -425,7 +344,6 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* Navigation */}
           <div className="flex gap-3 pt-2">
             {step > 1 && (
               <button
@@ -436,11 +354,13 @@ export default function OnboardingPage() {
                 ← Back
               </button>
             )}
-            {step < TOTAL_STEPS ? (
+            {step < 3 ? (
               <button
                 type="button"
                 onClick={() => setStep((s) => s + 1)}
-                disabled={!canProceed()}
+                disabled={
+                  step === 1 && (!form.org_name || !form.org_description)
+                }
                 className="flex-1 rounded-xl bg-spark py-3 text-sm font-semibold text-midnight transition-colors hover:bg-spark/90 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Continue →
@@ -456,7 +376,6 @@ export default function OnboardingPage() {
               </button>
             )}
           </div>
-
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import type { BlogPost } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,8 @@ export const metadata: Metadata = {
   },
 }
 
-function formatDate(value) {
+function formatDate(value: string | null | undefined): string {
+  if (!value) return ''
   try {
     return new Date(value).toLocaleDateString('en-GB', {
       day: 'numeric',
@@ -35,7 +37,7 @@ export default async function BlogIndexPage() {
     .eq('published', true)
     .order('published_at', { ascending: false })
 
-  const list = posts || []
+  const list = (posts || []) as BlogPost[]
 
   return (
     <div className="min-h-screen bg-midnight">
@@ -66,7 +68,7 @@ export default async function BlogIndexPage() {
             </div>
           ) : (
             <div className="grid gap-6">
-              {list.map((post) => (
+              {list.map((post: BlogPost) => (
                 <Link
                   key={post.slug}
                   href={`/blog/${post.slug}`}

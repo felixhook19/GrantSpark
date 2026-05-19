@@ -1,41 +1,66 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { requireEnv } from '@/lib/env'
+import type { Grant, Org, Decision } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-function truncate(text, max) {
+type AiBlock = { type: string; text?: string }
+type AiResponse = { content?: AiBlock[] }
+
+type AiMatch = {
+  grant_id?: string
+  fit_score?: number
+  decision?: Decision | string
+  why_match?: unknown
+  risks?: unknown
+  next_steps?: unknown
+}
+
+function truncate(text: string | null | undefined, max: number): string {
   if (!text) return ''
   return text.length > max ? text.slice(0, max) + '...' : text
 }
 
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value.filter((v): v is string => typeof v === 'string')
+}
+
 export async function POST() {
   const supabase = await createSupabaseServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
   const admin = createSupabaseAdminClient()
 
-  const { data: org } = await admin
+  const { data: orgData } = await admin
     .from('orgs')
     .select('*')
     .eq('owner_user_id', user.id)
     .maybeSingle()
 
+  const org = orgData as Org | null
   if (!org) {
     return NextResponse.json({ error: 'No organisation profile found' }, { status: 404 })
   }
 
-  const { data: grants } = await admin
+  const { data: grantsData } = await admin
     .from('opportunities')
-    .select('id, title, funder, summary, eligibility_summary, sector_tags, audience, grant_amount_min, grant_amount_max, deadline, geography, max_employees, match_funding_required, funding_type, url')
+    .select(
+      'id, title, funder, summary, eligibility_summary, sector_tags, audience, grant_amount_min, grant_amount_max, deadline, geography, max_employees, match_funding_required, funding_type, url'
+    )
     .in('status', ['open', 'rolling'])
     .limit(50)
 
-  if (!grants || grants.length === 0) {
+  const grants = (grantsData || []) as Grant[]
+  if (grants.length === 0) {
     return NextResponse.json({ matches: [] })
   }
 
@@ -50,16 +75,20 @@ export async function POST() {
     `Match funding available: ${org.has_match_funding ? 'yes' : 'no'}`,
   ].join('\n')
 
-  const grantsText = grants.map((g, i) => [
-    `GRANT ${i + 1} id:${g.id}`,
-    `Title: ${g.title}`,
-    `Funder: ${g.funder || 'unknown'}`,
-    `Summary: ${truncate(g.summary, 150)}`,
-    `Eligibility: ${truncate(g.eligibility_summary, 150)}`,
-    `Sectors: ${(g.sector_tags || []).join(', ')}`,
-    `Amount: GBP ${g.grant_amount_min || '?'}-${g.grant_amount_max || '?'}`,
-    `Deadline: ${g.deadline || 'rolling'}`,
-  ].join(' | ')).join('\n')
+  const grantsText = grants
+    .map((g, i) =>
+      [
+        `GRANT ${i + 1} id:${g.id}`,
+        `Title: ${g.title}`,
+        `Funder: ${g.funder || 'unknown'}`,
+        `Summary: ${truncate(g.summary, 150)}`,
+        `Eligibility: ${truncate(g.eligibility_summary, 150)}`,
+        `Sectors: ${(g.sector_tags || []).join(', ')}`,
+        `Amount: GBP ${g.grant_amount_min ?? '?'}-${g.grant_amount_max ?? '?'}`,
+        `Deadline: ${g.deadline || 'rolling'}`,
+      ].join(' | ')
+    )
+    .join('\n')
 
   const prompt = `You are a UK grant matching expert. Score each grant 0-100 for fit with this organisation.
 
@@ -74,13 +103,13 @@ Return ONLY a valid JSON array, no markdown, no explanation. Each element:
 
 Include all grants. Sort by fit_score descending.`
 
-  let parsed
+  let parsed: unknown
   try {
     const apiResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
+        'x-api-key': requireEnv('ANTHROPIC_API_KEY'),
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
@@ -99,10 +128,10 @@ Include all grants. Sort by fit_score descending.`
       )
     }
 
-    const aiData = await apiResponse.json()
+    const aiData = (await apiResponse.json()) as AiResponse
     let text = (aiData.content || [])
-      .filter((b) => b.type === 'text')
-      .map((b) => b.text)
+      .filter((b: AiBlock) => b.type === 'text')
+      .map((b: AiBlock) => b.text || '')
       .join('')
     text = text.replace(/```json/g, '').replace(/```/g, '').trim()
     parsed = JSON.parse(text)
@@ -116,16 +145,20 @@ Include all grants. Sort by fit_score descending.`
   }
 
   const validIds = new Set(grants.map((g) => g.id))
-  const rows = parsed
-    .filter((m) => m && validIds.has(m.grant_id))
+  const rows = (parsed as AiMatch[])
+    .filter((m): m is AiMatch & { grant_id: string } =>
+      Boolean(m && typeof m.grant_id === 'string' && validIds.has(m.grant_id))
+    )
     .map((m) => ({
       org_id: org.id,
       opportunity_id: m.grant_id,
       fit_score: typeof m.fit_score === 'number' ? Math.min(100, Math.max(0, m.fit_score)) : 0,
-      decision: ['apply', 'consider', 'skip'].includes(m.decision) ? m.decision : 'consider',
-      why_match: Array.isArray(m.why_match) ? m.why_match : [],
-      risks: Array.isArray(m.risks) ? m.risks : [],
-      next_steps: Array.isArray(m.next_steps) ? m.next_steps : [],
+      decision: (['apply', 'consider', 'skip'] as const).includes(m.decision as Decision)
+        ? (m.decision as Decision)
+        : ('consider' as Decision),
+      why_match: asStringArray(m.why_match),
+      risks: asStringArray(m.risks),
+      next_steps: asStringArray(m.next_steps),
     }))
 
   await admin.from('matches').delete().eq('org_id', org.id)

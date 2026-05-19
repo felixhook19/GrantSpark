@@ -1,10 +1,24 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(request) {
+type OnboardingBody = {
+  org_name?: string
+  org_category?: string
+  org_description?: string
+  nation?: string
+  postcode_area?: string
+  innovation_stage?: string | null
+  employee_count_band?: string | null
+  rd_active?: boolean
+  website?: string
+  themes?: string[]
+  has_match_funding?: boolean
+}
+
+export async function POST(request: NextRequest) {
   const supabase = await createSupabaseServerClient()
   const {
     data: { user },
@@ -14,9 +28,9 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
   }
 
-  let body
+  let body: OnboardingBody
   try {
-    body = await request.json()
+    body = (await request.json()) as OnboardingBody
   } catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
@@ -38,8 +52,8 @@ export async function POST(request) {
     rd_active: body.rd_active === true,
     website: body.website || '',
     themes: Array.isArray(body.themes) ? body.themes : [],
-    sic_codes: [],
-    target_markets: [],
+    sic_codes: [] as string[],
+    target_markets: [] as string[],
     has_match_funding: body.has_match_funding === true,
   }
 
@@ -50,17 +64,9 @@ export async function POST(request) {
     .eq('owner_user_id', user.id)
     .maybeSingle()
 
-  let result
-  if (existing) {
-    result = await admin
-      .from('orgs')
-      .update(row)
-      .eq('id', existing.id)
-      .select()
-      .single()
-  } else {
-    result = await admin.from('orgs').insert(row).select().single()
-  }
+  const result = existing
+    ? await admin.from('orgs').update(row).eq('id', existing.id).select().single()
+    : await admin.from('orgs').insert(row).select().single()
 
   if (result.error) {
     return NextResponse.json({ error: result.error.message }, { status: 500 })

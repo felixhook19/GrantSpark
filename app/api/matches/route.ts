@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import type { Grant } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
+
+type MatchRow = {
+  org_id: string
+  opportunity_id: string
+  fit_score: number
+  decision: string
+  why_match?: string[] | null
+  risks?: string[] | null
+  next_steps?: string[] | null
+}
 
 export async function GET() {
   const supabase = await createSupabaseServerClient()
@@ -37,23 +48,24 @@ export async function GET() {
     return NextResponse.json({ error: matchError.message }, { status: 500 })
   }
 
-  if (!matchRows || matchRows.length === 0) {
+  const rows = (matchRows || []) as MatchRow[]
+  if (rows.length === 0) {
     return NextResponse.json({ matches: [] })
   }
 
-  // Fetch the related grants and join in JS — no DB foreign key needed.
-  const grantIds = matchRows.map((m) => m.opportunity_id)
+  // Fetch the related grants and join in JS -- no DB foreign key needed.
+  const grantIds = rows.map((m) => m.opportunity_id)
   const { data: grants } = await admin
     .from('opportunities')
     .select('*')
     .in('id', grantIds)
 
-  const grantMap = {}
-  for (const g of grants || []) {
+  const grantMap: Record<string, Grant> = {}
+  for (const g of (grants || []) as Grant[]) {
     grantMap[g.id] = g
   }
 
-  const matches = matchRows
+  const matches = rows
     .filter((row) => grantMap[row.opportunity_id])
     .map((row) => ({
       fit_score: row.fit_score,

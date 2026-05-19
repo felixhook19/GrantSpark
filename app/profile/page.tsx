@@ -59,12 +59,28 @@ const CHARITY_SECTORS = [
   'Social Enterprise', 'Clean Tech / Net Zero', 'Other',
 ]
 
-function getSectors(orgType) {
+type ProfileForm = {
+  org_name: string
+  org_description: string
+  org_category: string
+  innovation_stage: string
+  rd_active: boolean
+  nation: string
+  postcode_area: string
+  employee_count_band: string
+  website: string
+  themes: string[]
+  has_match_funding: boolean
+}
+
+type FormField = keyof ProfileForm
+
+function getSectors(orgType: string): string[] {
   if (orgType === 'charity' || orgType === 'social_enterprise') return CHARITY_SECTORS
   return BUSINESS_SECTORS
 }
 
-function getStages(orgType) {
+function getStages(orgType: string) {
   if (orgType === 'charity' || orgType === 'social_enterprise') return CHARITY_STAGES
   return BUSINESS_STAGES
 }
@@ -76,7 +92,7 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<ProfileForm>({
     org_name: '',
     org_description: '',
     org_category: 'business',
@@ -115,12 +131,12 @@ export default function ProfilePage() {
       .catch(() => setLoading(false))
   }, [])
 
-  function update(field, value) {
+  function update<K extends FormField>(field: K, value: ProfileForm[K]) {
     setForm((f) => ({ ...f, [field]: value }))
     setSaved(false)
   }
 
-  function toggleTheme(t) {
+  function toggleTheme(t: string) {
     setForm((f) => ({
       ...f,
       themes: f.themes.includes(t) ? f.themes.filter((x) => x !== t) : [...f.themes, t],
@@ -186,7 +202,7 @@ export default function ProfilePage() {
           <h1 className="font-display text-3xl font-bold text-chalk">Your profile</h1>
           <p className="mt-2 text-slate">
             Update your details to refine your grant matches. Every change you save
-            triggers a fresh matching run against all {form.org_category === 'charity' || form.org_category === 'social_enterprise' ? 'charity and community' : 'business and innovation'} funding in the database.
+            triggers a fresh matching run against all {isCharity ? 'charity and community' : 'business and innovation'} funding in the database.
           </p>
         </div>
 

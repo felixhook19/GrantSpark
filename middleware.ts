@@ -1,16 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 // Middleware runs ONLY on /dashboard and /onboarding (see matcher below).
-// Login, signup, landing and blog pages are never touched by it —
+// Login, signup, landing and blog pages are never touched by it --
 // this is deliberate, to eliminate any risk of redirect loops or
 // stalled pages during authentication.
-export async function middleware(request) {
+export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string,
     {
       cookies: {
         getAll() {
@@ -33,7 +33,7 @@ export async function middleware(request) {
   try {
     const result = await supabase.auth.getUser()
     user = result.data.user
-  } catch (e) {
+  } catch {
     // If Supabase is briefly unreachable, treat the visitor as
     // signed-out rather than crashing the page.
     user = null

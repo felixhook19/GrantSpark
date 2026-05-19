@@ -5,6 +5,8 @@ export const dynamic = 'force-dynamic'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
 
+type SitemapPost = { slug: string; published_at: string | null }
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes = [
     { url: `${siteUrl}/`, priority: 1 },
@@ -17,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: r.priority,
   }))
 
-  let postRoutes = []
+  let postRoutes: MetadataRoute.Sitemap = []
   try {
     const admin = createSupabaseAdminClient()
     const { data: posts } = await admin
@@ -25,9 +27,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('slug, published_at')
       .eq('published', true)
 
-    postRoutes = (posts || []).map((post) => ({
+    postRoutes = ((posts || []) as SitemapPost[]).map((post) => ({
       url: `${siteUrl}/blog/${post.slug}`,
-      lastModified: new Date(post.published_at),
+      lastModified: post.published_at ? new Date(post.published_at) : new Date(),
       priority: 0.7,
     }))
   } catch {

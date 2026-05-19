@@ -1,15 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { requireEnv } from '@/lib/env'
 
 // Server client bound to the request cookies. Used to read the
-// authenticated user. No type annotations on the cookie handlers
-// on purpose — keeps the build immune to @supabase/ssr version drift.
+// authenticated user from a Server Component or Route Handler.
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies()
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    requireEnv('NEXT_PUBLIC_SUPABASE_URL'),
+    requireEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
     {
       cookies: {
         getAll() {
@@ -20,8 +20,8 @@ export async function createSupabaseServerClient() {
             cookiesToSet.forEach((item) => {
               cookieStore.set(item.name, item.value, item.options)
             })
-          } catch (e) {
-            // Called from a Server Component — safe to ignore,
+          } catch {
+            // Called from a Server Component -- safe to ignore,
             // the middleware refreshes the session cookie.
           }
         },
