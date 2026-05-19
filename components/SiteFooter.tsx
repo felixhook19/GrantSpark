@@ -1,61 +1,49 @@
 import Link from 'next/link'
-import { Logo } from '@/components/Logo'
+import { Wordmark } from './Logo'
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/5 px-6 py-12">
-      <div className="mx-auto max-w-6xl">
-        <div className="flex flex-col gap-8 md:flex-row md:justify-between">
-          <div className="max-w-xs">
-            <div className="flex items-center gap-2.5">
-              <Logo size={24} />
-              <span className="font-display text-base font-extrabold text-chalk">
-                Grant<span className="text-spark">Spark</span>
-              </span>
-            </div>
-            <p className="mt-3 text-sm leading-relaxed text-slate">
-              Funding found. The AI grant-matching platform for UK founders
-              and small businesses.
+    <footer className="border-t border-border bg-surface">
+      <div className="mx-auto max-w-6xl px-6 py-14">
+        <div className="grid gap-10 md:grid-cols-4">
+          <div className="md:col-span-2">
+            <Wordmark size={24} />
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-text-secondary">
+              AI grant discovery for UK charities, CICs, community groups and
+              social enterprises. Find relevant funding, understand eligibility
+              and track deadlines — all in one place.
             </p>
           </div>
-          <div className="flex gap-12">
-            <div>
-              <p className="mb-3 font-mono text-xs uppercase tracking-widest text-slate">
-                Product
-              </p>
-              <div className="flex flex-col gap-2 text-sm text-slate">
-                <Link href="/#how" className="hover:text-spark">How it works</Link>
-                <Link href="/#features" className="hover:text-spark">Features</Link>
-                <Link href="/#pricing" className="hover:text-spark">Pricing</Link>
-                <Link href="/login" className="hover:text-spark">Sign in</Link>
-              </div>
-            </div>
-            <div>
-              <p className="mb-3 font-mono text-xs uppercase tracking-widest text-slate">
-                Company
-              </p>
-              <div className="flex flex-col gap-2 text-sm text-slate">
-                <Link href="/blog" className="hover:text-spark">Blog</Link>
-                <a href="mailto:hello@grantspark.co.uk" className="hover:text-spark">Contact</a>
-              </div>
-            </div>
-            <div>
-              <p className="mb-3 font-mono text-xs uppercase tracking-widest text-slate">
-                Legal
-              </p>
-              <div className="flex flex-col gap-2 text-sm text-slate">
-                <Link href="/terms" className="hover:text-spark">Terms</Link>
-                <Link href="/privacy" className="hover:text-spark">Privacy</Link>
-                <Link href="/cookies" className="hover:text-spark">Cookies</Link>
-                <Link href="/ai-disclaimer" className="hover:text-spark">AI disclaimer</Link>
-              </div>
-            </div>
+
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Product
+            </p>
+            <ul className="mt-4 space-y-2 text-sm">
+              <li><Link className="text-text-secondary hover:text-text" href="/#how">How it works</Link></li>
+              <li><Link className="text-text-secondary hover:text-text" href="/#features">Features</Link></li>
+              <li><Link className="text-text-secondary hover:text-text" href="/#pricing">Pricing</Link></li>
+              <li><Link className="text-text-secondary hover:text-text" href="/signup">Get started</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Company
+            </p>
+            <ul className="mt-4 space-y-2 text-sm">
+              <li><Link className="text-text-secondary hover:text-text" href="/blog">Blog</Link></li>
+              <li><Link className="text-text-secondary hover:text-text" href="/privacy">Privacy</Link></li>
+              <li><Link className="text-text-secondary hover:text-text" href="/terms">Terms</Link></li>
+              <li><a className="text-text-secondary hover:text-text" href="mailto:hello@grantspark.co.uk">Contact</a></li>
+            </ul>
           </div>
         </div>
-        <div className="mt-10 border-t border-white/5 pt-6">
-          <p className="font-mono text-xs text-slate">
-            © 2026 GrantSpark — a trading name of Grant Finder Ltd, registered
-            in England &amp; Wales.
+
+        <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-xs text-text-secondary sm:flex-row sm:items-center sm:justify-between">
+          <p>© {new Date().getFullYear()} Grant Finder Limited. All rights reserved.</p>
+          <p>
+            GrantSpark surfaces grant opportunities. We do not guarantee funding outcomes.
           </p>
         </div>
       </div>

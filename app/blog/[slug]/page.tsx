@@ -106,7 +106,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
   }
 
   return (
-    <div className="min-h-screen bg-midnight">
+    <div className="min-h-screen bg-background">
       <SiteNav />
 
       <script
@@ -118,34 +118,34 @@ export default async function BlogPostPage({ params }: RouteParams) {
         <div className="mx-auto max-w-2xl">
           <Link
             href="/blog"
-            className="font-mono text-xs text-slate transition-colors hover:text-spark"
+            className="text-xs font-semibold uppercase tracking-wider text-text-secondary transition-colors hover:text-primary"
           >
             ← Back to blog
           </Link>
 
           <div className="mt-6 flex items-center gap-3">
             {post.tag && (
-              <span className="rounded-full border border-spark/20 bg-spark/10 px-2.5 py-0.5 text-xs font-medium text-spark">
+              <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">
                 {post.tag}
               </span>
             )}
-            <span className="font-mono text-xs text-slate">
+            <span className="text-xs text-text-secondary">
               {formatDate(post.published_at)}
               {post.read_minutes ? ` · ${post.read_minutes} min read` : ''}
             </span>
           </div>
 
-          <h1 className="mt-4 font-display text-4xl font-extrabold leading-tight tracking-tight text-chalk">
+          <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tightish text-text md:text-4xl">
             {post.title}
           </h1>
 
           {post.excerpt && (
-            <p className="mt-4 text-lg leading-relaxed text-slate">
+            <p className="mt-4 text-lg leading-relaxed text-text-secondary">
               {post.excerpt}
             </p>
           )}
 
-          <div className="mt-6 border-t border-white/5 pt-8">
+          <div className="mt-6 border-t border-border pt-8">
             <div
               className="blog-content"
               dangerouslySetInnerHTML={{ __html: post.content_html || '' }}
@@ -153,17 +153,17 @@ export default async function BlogPostPage({ params }: RouteParams) {
           </div>
 
           {/* In-article CTA */}
-          <div className="mt-12 rounded-2xl border border-spark/20 bg-spark/5 p-7 text-center">
-            <h2 className="font-display text-xl font-bold text-chalk">
+          <div className="mt-12 rounded-2xl border-2 border-primary bg-primary-soft p-7 text-center shadow-soft">
+            <h2 className="text-xl font-semibold text-text">
               Find the grants you&apos;re eligible for
             </h2>
-            <p className="mt-2 text-sm text-slate">
+            <p className="mt-2 text-sm text-text-secondary">
               GrantSpark scans every UK funder and matches the opportunities
               that fit your organisation.
             </p>
             <Link
               href="/signup"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-spark px-6 py-3 text-sm font-semibold text-midnight transition-colors hover:bg-spark/90"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
             >
               Start free <span aria-hidden="true">→</span>
             </Link>

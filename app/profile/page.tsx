@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Logo } from '@/components/Logo'
+import { Wordmark } from '@/components/Logo'
 
 const ORG_TYPES = [
   { value: 'business', label: 'Business / Startup', desc: 'Limited company, LLP or sole trader' },
@@ -84,6 +84,27 @@ function getStages(orgType: string) {
   if (orgType === 'charity' || orgType === 'social_enterprise') return CHARITY_STAGES
   return BUSINESS_STAGES
 }
+
+const inputCls =
+  'w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none'
+
+const selectedPillCls =
+  'rounded-xl border border-primary bg-primary-soft px-3 py-2 text-sm font-medium text-primary'
+const unselectedPillCls =
+  'rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+
+const selectedRowCls =
+  'w-full rounded-xl border border-primary bg-primary-soft px-4 py-3 text-left text-sm font-medium text-primary'
+const unselectedRowCls =
+  'w-full rounded-xl border border-border bg-background px-4 py-3 text-left text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+
+const selectedToggleCls =
+  'flex-1 rounded-xl border border-primary bg-primary-soft py-3 text-sm font-semibold text-primary'
+const unselectedToggleCls =
+  'flex-1 rounded-xl border border-border bg-background py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+
+const selectedCardCls = 'rounded-xl border border-primary bg-primary-soft p-4 text-left'
+const unselectedCardCls = 'rounded-xl border border-border bg-background p-4 text-left transition-colors hover:bg-surface'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -175,23 +196,20 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-midnight">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-spark border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-surface">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-midnight">
-      <nav className="sticky top-0 z-10 border-b border-white/5 bg-midnight/90 backdrop-blur-md">
+    <div className="min-h-screen bg-surface">
+      <nav className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
-          <Link href="/dashboard" className="flex items-center gap-2.5">
-            <Logo size={24} />
-            <span className="font-display font-extrabold text-chalk">
-              Grant<span className="text-spark">Spark</span>
-            </span>
+          <Link href="/dashboard" aria-label="GrantSpark — dashboard">
+            <Wordmark size={24} />
           </Link>
-          <Link href="/dashboard" className="text-sm text-slate hover:text-chalk">
+          <Link href="/dashboard" className="text-sm font-medium text-text-secondary hover:text-text">
             ← Back to matches
           </Link>
         </div>
@@ -199,20 +217,17 @@ export default function ProfilePage() {
 
       <div className="mx-auto max-w-3xl px-6 py-10">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-bold text-chalk">Your profile</h1>
-          <p className="mt-2 text-slate">
-            Update your details to refine your grant matches. Every change you save
-            triggers a fresh matching run against all {isCharity ? 'charity and community' : 'business and innovation'} funding in the database.
+          <h1 className="text-2xl font-semibold tracking-tightish text-text md:text-3xl">Your profile</h1>
+          <p className="mt-2 text-text-secondary">
+            Update your details to refine your grant matches. Every change you save triggers a fresh matching run against all {isCharity ? 'charity and community' : 'business and innovation'} funding in the database.
           </p>
         </div>
 
-        <div className="space-y-8">
+        <div className="space-y-6">
 
           {/* Organisation type */}
-          <div className="rounded-2xl border border-white/5 bg-midnight-2 p-6">
-            <h2 className="mb-4 font-display text-lg font-semibold text-chalk">
-              Organisation type
-            </h2>
+          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
+            <h2 className="mb-4 text-base font-semibold text-text">Organisation type</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {ORG_TYPES.map((t) => (
                 <button
@@ -222,43 +237,35 @@ export default function ProfilePage() {
                     update('org_category', t.value)
                     update('themes', [])
                   }}
-                  className={
-                    form.org_category === t.value
-                      ? 'rounded-xl border border-spark bg-spark/10 p-4 text-left'
-                      : 'rounded-xl border border-white/10 p-4 text-left hover:border-white/20'
-                  }
+                  className={form.org_category === t.value ? selectedCardCls : unselectedCardCls}
                 >
-                  <p className={form.org_category === t.value ? 'font-medium text-spark' : 'font-medium text-chalk'}>
+                  <p className={form.org_category === t.value ? 'font-semibold text-primary' : 'font-semibold text-text'}>
                     {t.label}
                   </p>
-                  <p className="mt-0.5 text-xs text-slate">{t.desc}</p>
+                  <p className="mt-0.5 text-xs text-text-secondary">{t.desc}</p>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Basic info */}
-          <div className="rounded-2xl border border-white/5 bg-midnight-2 p-6">
-            <h2 className="mb-4 font-display text-lg font-semibold text-chalk">
-              About your organisation
-            </h2>
+          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
+            <h2 className="mb-4 text-base font-semibold text-text">About your organisation</h2>
             <div className="space-y-5">
               <div>
-                <label className="mb-2 block text-sm font-medium text-chalk/70">
-                  Organisation name *
-                </label>
+                <label className="mb-2 block text-sm font-medium text-text">Organisation name *</label>
                 <input
                   type="text"
                   value={form.org_name}
                   onChange={(e) => update('org_name', e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
+                  className={inputCls}
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-chalk/70">
+                <label className="mb-2 block text-sm font-medium text-text">
                   {isCharity ? 'What does your organisation do and who does it help? *' : 'What does your organisation do? *'}
                 </label>
-                <p className="mb-2 text-xs text-slate">
+                <p className="mb-2 text-xs text-text-secondary">
                   {isCharity
                     ? 'Describe your charitable objectives, who you support and what outcomes you achieve. The more specific, the better your matches.'
                     : 'Describe your product, technology and market. The more specific, the better your matches.'}
@@ -270,44 +277,40 @@ export default function ProfilePage() {
                   placeholder={isCharity
                     ? 'e.g. We provide free mental health counselling and peer support groups for young people aged 16–25 in South London, helping them manage anxiety and build resilience.'
                     : 'e.g. We build AI software that helps NHS trusts cut waiting times by predicting patient no-shows.'}
-                  className="w-full resize-none rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
+                  className={`${inputCls} resize-none`}
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-chalk/70">Website</label>
+                <label className="mb-2 block text-sm font-medium text-text">Website</label>
                 <input
                   type="text"
                   value={form.website}
                   onChange={(e) => update('website', e.target.value)}
                   placeholder="https://yourorganisation.org"
-                  className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
+                  className={inputCls}
                 />
               </div>
             </div>
           </div>
 
           {/* Stage & size */}
-          <div className="rounded-2xl border border-white/5 bg-midnight-2 p-6">
-            <h2 className="mb-4 font-display text-lg font-semibold text-chalk">
-              Stage and size
-            </h2>
+          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
+            <h2 className="mb-4 text-base font-semibold text-text">Stage and size</h2>
             <div className="space-y-5">
               <div>
-                <label className="mb-2 block text-sm font-medium text-chalk/70">
+                <label className="mb-2 block text-sm font-medium text-text">
                   {isCharity ? 'How established are you?' : 'What stage is your business at?'}
                 </label>
                 <select
                   value={form.innovation_stage}
                   onChange={(e) => update('innovation_stage', e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk focus:border-spark focus:outline-none"
+                  className={inputCls}
                 >
-                  {stages.map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
+                  {stages.map((s) => (<option key={s.value} value={s.value}>{s.label}</option>))}
                 </select>
               </div>
               <div>
-                <label className="mb-3 block text-sm font-medium text-chalk/70">
+                <label className="mb-3 block text-sm font-medium text-text">
                   {isCharity ? 'Team / staff size (including volunteers)' : 'Team size'}
                 </label>
                 <div className="space-y-2">
@@ -316,11 +319,7 @@ export default function ProfilePage() {
                       key={t.value}
                       type="button"
                       onClick={() => update('employee_count_band', t.value)}
-                      className={
-                        form.employee_count_band === t.value
-                          ? 'w-full rounded-xl border border-spark bg-spark/10 px-4 py-3 text-left text-sm text-chalk'
-                          : 'w-full rounded-xl border border-white/10 px-4 py-3 text-left text-sm text-slate hover:border-white/20'
-                      }
+                      className={form.employee_count_band === t.value ? selectedRowCls : unselectedRowCls}
                     >
                       {t.label}
                     </button>
@@ -331,43 +330,39 @@ export default function ProfilePage() {
           </div>
 
           {/* Location */}
-          <div className="rounded-2xl border border-white/5 bg-midnight-2 p-6">
-            <h2 className="mb-4 font-display text-lg font-semibold text-chalk">Location</h2>
+          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
+            <h2 className="mb-4 text-base font-semibold text-text">Location</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-chalk/70">Nation</label>
+                <label className="mb-2 block text-sm font-medium text-text">Nation</label>
                 <select
                   value={form.nation}
                   onChange={(e) => update('nation', e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk focus:border-spark focus:outline-none"
+                  className={inputCls}
                 >
-                  {NATIONS.map((n) => (
-                    <option key={n.value} value={n.value}>{n.label}</option>
-                  ))}
+                  {NATIONS.map((n) => (<option key={n.value} value={n.value}>{n.label}</option>))}
                 </select>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-chalk/70">
-                  Postcode area
-                </label>
+                <label className="mb-2 block text-sm font-medium text-text">Postcode area</label>
                 <input
                   type="text"
                   value={form.postcode_area}
                   onChange={(e) => update('postcode_area', e.target.value.toUpperCase())}
                   maxLength={4}
                   placeholder="e.g. EC1, M1, BS1"
-                  className="w-full rounded-xl border border-white/10 bg-midnight px-4 py-3 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
+                  className={inputCls}
                 />
               </div>
             </div>
           </div>
 
           {/* Sectors */}
-          <div className="rounded-2xl border border-white/5 bg-midnight-2 p-6">
-            <h2 className="mb-1 font-display text-lg font-semibold text-chalk">
+          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
+            <h2 className="mb-1 text-base font-semibold text-text">
               {isCharity ? 'Cause areas and activities' : 'Sectors and focus'}
             </h2>
-            <p className="mb-4 text-sm text-slate">
+            <p className="mb-4 text-sm text-text-secondary">
               {isCharity
                 ? 'Select all the cause areas your organisation works in. This is the most important factor in matching you to relevant grants.'
                 : 'Select all sectors that apply to your work.'}
@@ -378,11 +373,7 @@ export default function ProfilePage() {
                   key={s}
                   type="button"
                   onClick={() => toggleTheme(s)}
-                  className={
-                    form.themes.includes(s)
-                      ? 'rounded-lg border border-spark bg-spark/10 px-3 py-2 text-sm text-spark'
-                      : 'rounded-lg border border-white/10 px-3 py-2 text-sm text-slate hover:border-white/20'
-                  }
+                  className={form.themes.includes(s) ? selectedPillCls : unselectedPillCls}
                 >
                   {s}
                 </button>
@@ -391,14 +382,12 @@ export default function ProfilePage() {
           </div>
 
           {/* Funding preferences */}
-          <div className="rounded-2xl border border-white/5 bg-midnight-2 p-6">
-            <h2 className="mb-4 font-display text-lg font-semibold text-chalk">
-              Funding preferences
-            </h2>
+          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
+            <h2 className="mb-4 text-base font-semibold text-text">Funding preferences</h2>
             <div className="space-y-4">
               {!isCharity && (
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-chalk/70">
+                  <label className="mb-2 block text-sm font-medium text-text">
                     Do you conduct research &amp; development?
                   </label>
                   <div className="flex gap-3">
@@ -407,11 +396,7 @@ export default function ProfilePage() {
                         key={opt}
                         type="button"
                         onClick={() => update('rd_active', opt === 'Yes')}
-                        className={
-                          (opt === 'Yes') === form.rd_active
-                            ? 'flex-1 rounded-xl border border-spark bg-spark/10 py-3 text-sm font-medium text-spark'
-                            : 'flex-1 rounded-xl border border-white/10 py-3 text-sm font-medium text-slate hover:border-white/20'
-                        }
+                        className={(opt === 'Yes') === form.rd_active ? selectedToggleCls : unselectedToggleCls}
                       >
                         {opt}
                       </button>
@@ -420,7 +405,7 @@ export default function ProfilePage() {
                 </div>
               )}
               <div>
-                <label className="mb-2 block text-sm font-medium text-chalk/70">
+                <label className="mb-2 block text-sm font-medium text-text">
                   {isCharity
                     ? 'Can you provide match funding or co-investment if required?'
                     : 'Can you provide match funding if required?'}
@@ -431,11 +416,7 @@ export default function ProfilePage() {
                       key={opt}
                       type="button"
                       onClick={() => update('has_match_funding', opt === 'Yes')}
-                      className={
-                        (opt === 'Yes') === form.has_match_funding
-                          ? 'flex-1 rounded-xl border border-spark bg-spark/10 py-3 text-sm font-medium text-spark'
-                          : 'flex-1 rounded-xl border border-white/10 py-3 text-sm font-medium text-slate hover:border-white/20'
-                      }
+                      className={(opt === 'Yes') === form.has_match_funding ? selectedToggleCls : unselectedToggleCls}
                     >
                       {opt}
                     </button>
@@ -445,9 +426,8 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Error */}
           {error && (
-            <div className="rounded-xl border border-rose/20 bg-rose/10 px-4 py-3 text-sm text-rose">
+            <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
               {error}
             </div>
           )}
@@ -458,7 +438,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => handleSave(false)}
               disabled={saving}
-              className="flex-1 rounded-xl border border-white/10 py-4 text-sm font-medium text-chalk transition-colors hover:bg-white/5 disabled:opacity-40"
+              className="flex-1 rounded-xl border border-border bg-background py-3.5 text-sm font-semibold text-text transition-colors hover:bg-surface disabled:opacity-50"
             >
               {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save changes'}
             </button>
@@ -466,9 +446,9 @@ export default function ProfilePage() {
               type="button"
               onClick={() => handleSave(true)}
               disabled={saving}
-              className="flex-1 rounded-xl bg-spark py-4 text-sm font-semibold text-midnight transition-colors hover:bg-spark/90 disabled:opacity-40"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
             >
-              {saving ? 'Saving…' : 'Save and re-run matching →'}
+              {saving ? 'Saving…' : <>Save and re-run matching <span aria-hidden="true">→</span></>}
             </button>
           </div>
 

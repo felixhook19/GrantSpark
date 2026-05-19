@@ -12,7 +12,7 @@ export const revalidate = 300
 export const metadata: Metadata = {
   title: 'Blog — UK grants, funding guides and tips',
   description:
-    'Practical guides to UK grant funding for founders and small businesses — eligibility, deadlines, application tips and the latest opportunities.',
+    'Practical guides to UK grant funding for charities, CICs and community organisations — eligibility, deadlines, application tips and the latest opportunities.',
   alternates: {
     canonical: '/blog',
   },
@@ -42,20 +42,21 @@ export default async function BlogIndexPage() {
   const list = (posts || []) as BlogPost[]
 
   return (
-    <div className="min-h-screen bg-midnight">
+    <div className="min-h-screen bg-background">
       <SiteNav />
 
-      <section className="border-b border-white/5 px-6 py-16">
+      <section className="border-b border-border bg-surface px-6 py-16">
         <div className="mx-auto max-w-4xl">
-          <p className="font-mono text-xs uppercase tracking-widest text-spark">
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
             GrantSpark Blog
           </p>
-          <h1 className="mt-4 font-display text-4xl font-extrabold tracking-tight text-chalk md:text-5xl">
+          <h1 className="mt-3 text-3xl font-semibold tracking-tightish text-text md:text-5xl">
             UK grants, decoded.
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-slate">
-            Practical guides to funding for UK founders and small businesses —
-            eligibility, deadlines, and how to actually win.
+          <p className="mt-4 max-w-xl text-lg text-text-secondary">
+            Practical guides to grant funding for UK charities, CICs and
+            community organisations — eligibility, deadlines, and how to
+            actually win.
           </p>
         </div>
       </section>
@@ -63,40 +64,38 @@ export default async function BlogIndexPage() {
       <section className="px-6 py-14">
         <div className="mx-auto max-w-4xl">
           {list.length === 0 ? (
-            <div className="rounded-2xl border border-white/5 bg-midnight-2 py-16 text-center">
-              <p className="text-slate">
+            <div className="rounded-2xl border border-border bg-background py-16 text-center shadow-soft">
+              <p className="text-text-secondary">
                 No articles published yet. Check back soon.
               </p>
             </div>
           ) : (
-            <div className="grid gap-6">
+            <div className="grid gap-5">
               {list.map((post: BlogPost) => (
                 <Link
                   key={post.slug}
                   href={`/blog/${post.slug}`}
-                  className="block rounded-2xl border border-white/5 bg-midnight-2 p-7 transition-colors hover:border-spark/20"
+                  className="block rounded-2xl border border-border bg-background p-7 shadow-soft transition-all hover:-translate-y-px hover:shadow-card"
                 >
                   <div className="flex items-center gap-3">
                     {post.tag && (
-                      <span className="rounded-full border border-spark/20 bg-spark/10 px-2.5 py-0.5 text-xs font-medium text-spark">
+                      <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">
                         {post.tag}
                       </span>
                     )}
-                    <span className="font-mono text-xs text-slate">
+                    <span className="text-xs text-text-secondary">
                       {formatDate(post.published_at)}
-                      {post.read_minutes
-                        ? ` · ${post.read_minutes} min read`
-                        : ''}
+                      {post.read_minutes ? ` · ${post.read_minutes} min read` : ''}
                     </span>
                   </div>
-                  <h2 className="mt-3 font-display text-2xl font-bold tracking-tight text-chalk">
+                  <h2 className="mt-3 text-2xl font-semibold tracking-tightish text-text">
                     {post.title}
                   </h2>
-                  <p className="mt-2 leading-relaxed text-slate">
+                  <p className="mt-2 leading-relaxed text-text-secondary">
                     {post.excerpt}
                   </p>
-                  <span className="mt-4 inline-block text-sm font-medium text-spark">
-                    Read article →
+                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                    Read article <span aria-hidden="true">→</span>
                   </span>
                 </Link>
               ))}

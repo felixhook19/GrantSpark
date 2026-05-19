@@ -1,35 +1,43 @@
-import Link from 'next/link'
-
+/**
+ * GrantSpark logo mark.
+ *
+ * A clean, SaaS-style spark glyph in primary blue — a stylised four-point
+ * burst built from two intersecting strokes. Sized by `size` prop.
+ */
 export function Logo({ size = 28 }: { size?: number }) {
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 200 200"
+      viewBox="0 0 32 32"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
+      <rect width="32" height="32" rx="8" fill="#2563EB" />
       <path
-        d="M118 12 C124 64, 136 76, 188 82 C136 88, 124 100, 118 152 C112 100, 100 88, 48 82 C100 76, 112 64, 118 12 Z"
-        fill="#19E88F"
+        d="M16 6.5 L17.6 13.2 L24 14.8 L17.6 16.4 L16 23.1 L14.4 16.4 L8 14.8 L14.4 13.2 Z"
+        fill="#FFFFFF"
       />
-      <path
-        d="M52 116 C55 146, 61 152, 91 155 C61 158, 55 164, 52 194 C49 164, 43 158, 13 155 C43 152, 49 146, 52 116 Z"
-        fill="#19E88F"
-        fillOpacity="0.85"
-      />
+      <circle cx="16" cy="14.8" r="2" fill="#2563EB" />
     </svg>
   )
 }
 
-export function Wordmark({ size = 28 }: { size?: number }) {
+/**
+ * Inline wordmark + logo for use in nav / footer / auth pages.
+ * Renders the icon plus a tightly-tracked "GrantSpark" lockup.
+ */
+export function Wordmark({ size = 26 }: { size?: number }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5">
+    <span className="inline-flex items-center gap-2.5">
       <Logo size={size} />
-      <span className="font-display font-extrabold text-[1.15rem] tracking-tight text-chalk">
-        Grant<span className="text-spark">Spark</span>
+      <span
+        className="font-semibold tracking-tightish text-text"
+        style={{ fontSize: Math.max(15, size * 0.62) }}
+      >
+        GrantSpark
       </span>
-    </Link>
+    </span>
   )
 }

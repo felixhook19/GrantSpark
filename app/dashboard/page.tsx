@@ -4,44 +4,25 @@ import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
-import { Logo } from '@/components/Logo'
+import { Wordmark } from '@/components/Logo'
+import { MatchRing } from '@/components/MatchRing'
 import type { Match, Grant, Org, Decision } from '@/types/db'
-
-function ScoreBadge({ score }: { score: number }) {
-  let cls = 'border-white/10 bg-white/5 text-slate'
-  if (score >= 75) cls = 'border-spark/25 bg-spark/10 text-spark'
-  else if (score >= 50) cls = 'border-warn/25 bg-warn/10 text-warn'
-  return (
-    <div className={`flex h-14 w-14 flex-shrink-0 flex-col items-center justify-center rounded-xl border ${cls}`}>
-      <span className="font-display text-xl font-extrabold leading-none">{score}</span>
-      <span className="mt-0.5 text-[9px] uppercase tracking-wide opacity-70">match</span>
-    </div>
-  )
-}
 
 function DecisionTag({ decision }: { decision: Decision | string }) {
   const map: Record<string, { cls: string; label: string }> = {
-    apply: { cls: 'border-spark/20 bg-spark/10 text-spark', label: '✓ Apply' },
-    consider: { cls: 'border-warn/20 bg-warn/10 text-warn', label: '◑ Consider' },
-    skip: { cls: 'border-white/10 bg-white/5 text-slate', label: '✗ Skip' },
+    apply: { cls: 'border-success/30 bg-success-soft text-success', label: 'Apply' },
+    consider: { cls: 'border-warning/30 bg-warning-soft text-warning', label: 'Consider' },
+    skip: { cls: 'border-border bg-surface text-text-secondary', label: 'Skip' },
   }
   const item = map[decision] || map.consider
   return (
-    <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${item.cls}`}>
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${item.cls}`}>
       {item.label}
     </span>
   )
 }
 
-function GrantCard({
-  match,
-  isSaved,
-  onToggleSave,
-}: {
-  match: Match
-  isSaved: boolean
-  onToggleSave: (opportunityId: string, currentlySaved: boolean) => void
-}) {
+function GrantCard({ match }: { match: Match }) {
   const [open, setOpen] = useState(false)
   const g: Grant = match.grant
 
@@ -55,30 +36,39 @@ function GrantCard({
     return '£' + Number(v).toLocaleString()
   }
 
+  const deadlineColor =
+    daysLeft !== null && daysLeft <= 14 ? 'text-warning' : 'text-text'
+
   return (
-    <div className="rounded-2xl border border-white/5 bg-midnight-2 p-6 transition-colors hover:border-white/10">
-      <div className="mb-4 flex items-start gap-4">
-        <ScoreBadge score={match.fit_score} />
+    <article className="rounded-2xl border border-border bg-background p-6 shadow-soft transition-all hover:shadow-card">
+      {/* Header — score + title + decision */}
+      <div className="flex items-start gap-5">
+        <MatchRing score={match.fit_score} size="md" />
+
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-start justify-between gap-3">
-            <h3 className="font-display text-base font-semibold leading-snug text-chalk">
-              {g.title}
-            </h3>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-base font-semibold leading-snug text-text">
+                {g.title}
+              </h3>
+              <p className="mt-0.5 text-sm text-text-secondary">{g.funder}</p>
+            </div>
             <DecisionTag decision={match.decision} />
           </div>
-          <p className="text-sm text-slate">{g.funder}</p>
         </div>
       </div>
 
+      {/* Summary */}
       {g.summary && (
-        <p className="mb-4 text-sm leading-relaxed text-chalk/60">{g.summary}</p>
+        <p className="mt-4 text-sm leading-relaxed text-text-secondary">{g.summary}</p>
       )}
 
-      <div className="mb-4 flex flex-wrap gap-4 text-sm">
+      {/* Meta strip */}
+      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
         {(g.grant_amount_min || g.grant_amount_max) && (
-          <span className="text-chalk/80">
-            <span className="text-slate">Amount: </span>
-            <span className="font-medium">
+          <span className="text-text">
+            <span className="text-text-secondary">Amount: </span>
+            <span className="tabular font-semibold">
               {money(g.grant_amount_min)}
               {g.grant_amount_min && g.grant_amount_max ? ' – ' : ''}
               {money(g.grant_amount_max)}
@@ -86,61 +76,67 @@ function GrantCard({
           </span>
         )}
         {daysLeft !== null && (
-          <span className={daysLeft <= 14 ? 'text-warn' : 'text-chalk/60'}>
-            <span className="text-slate">Deadline: </span>
-            <span className="font-medium">
-              {daysLeft <= 0 ? 'Closed' : daysLeft + ' days left'}
+          <span className={deadlineColor}>
+            <span className="text-text-secondary">Deadline: </span>
+            <span className="font-semibold">
+              {daysLeft <= 0 ? 'Closed' : `${daysLeft} days left`}
             </span>
           </span>
         )}
         {!g.deadline && (
-          <span className="text-chalk/60">
-            <span className="text-slate">Deadline: </span>
-            <span className="font-medium">Rolling / ongoing</span>
+          <span className="text-text">
+            <span className="text-text-secondary">Deadline: </span>
+            <span className="font-semibold">Rolling / ongoing</span>
           </span>
         )}
       </div>
 
+      {/* Tags */}
       {g.sector_tags && g.sector_tags.length > 0 && (
-        <div className="mb-4 flex flex-wrap gap-1.5">
+        <div className="mt-4 flex flex-wrap gap-1.5">
           {g.sector_tags.map((tag: string) => (
-            <span key={tag} className="rounded-lg border border-white/8 bg-white/5 px-2 py-1 text-xs text-slate">
+            <span
+              key={tag}
+              className="rounded-lg border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-secondary"
+            >
               {tag}
             </span>
           ))}
         </div>
       )}
 
-      <div className="flex items-center gap-4">
-        <button onClick={() => setOpen(!open)} className="text-sm text-spark hover:underline">
-          {open ? '↑ Show less' : '↓ Why this matches'}
+      {/* Footer */}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+        <button
+          onClick={() => setOpen(!open)}
+          className="text-sm font-medium text-primary transition-colors hover:text-primary-hover"
+        >
+          {open ? 'Hide reasoning' : 'Why this matches'}
         </button>
         {g.url && (
-          <a href={g.url} target="_blank" rel="noopener noreferrer" className="text-sm text-slate hover:text-chalk">
-            View grant ↗
+          <a
+            href={g.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
+          >
+            View grant <span aria-hidden="true">→</span>
           </a>
         )}
-        <button
-          onClick={() => onToggleSave(g.id, isSaved)}
-          className={
-            isSaved
-              ? 'ml-auto text-sm text-spark hover:underline'
-              : 'ml-auto text-sm text-slate transition-colors hover:text-chalk'
-          }
-        >
-          {isSaved ? '★ Saved' : '☆ Save'}
-        </button>
       </div>
 
       {open && (
-        <div className="fade-up mt-4 space-y-4 border-t border-white/5 pt-4">
+        <div className="fade-up mt-4 space-y-4 border-t border-border pt-4">
           {match.why_match && match.why_match.length > 0 && (
             <div>
-              <p className="mb-2 font-mono text-xs uppercase tracking-wider text-slate">Why it matches</p>
-              <ul className="space-y-1">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                Why it matches
+              </p>
+              <ul className="space-y-1.5">
                 {match.why_match.map((r: string, i: number) => (
-                  <li key={i} className="flex gap-2 text-sm text-chalk/70">
-                    <span className="flex-shrink-0 text-spark">✓</span>{r}
+                  <li key={i} className="flex gap-2 text-sm text-text">
+                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    {r}
                   </li>
                 ))}
               </ul>
@@ -148,11 +144,14 @@ function GrantCard({
           )}
           {match.risks && match.risks.length > 0 && (
             <div>
-              <p className="mb-2 font-mono text-xs uppercase tracking-wider text-slate">Watch out for</p>
-              <ul className="space-y-1">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                Watch out for
+              </p>
+              <ul className="space-y-1.5">
                 {match.risks.map((r: string, i: number) => (
-                  <li key={i} className="flex gap-2 text-sm text-chalk/70">
-                    <span className="flex-shrink-0 text-warn">!</span>{r}
+                  <li key={i} className="flex gap-2 text-sm text-text">
+                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-warning" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 0 0-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" /></svg>
+                    {r}
                   </li>
                 ))}
               </ul>
@@ -160,11 +159,14 @@ function GrantCard({
           )}
           {match.next_steps && match.next_steps.length > 0 && (
             <div>
-              <p className="mb-2 font-mono text-xs uppercase tracking-wider text-slate">Next steps</p>
-              <ul className="space-y-1">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                Next steps
+              </p>
+              <ul className="space-y-1.5">
                 {match.next_steps.map((s: string, i: number) => (
-                  <li key={i} className="flex gap-2 text-sm text-chalk/70">
-                    <span className="flex-shrink-0 text-spark">{i + 1}.</span>{s}
+                  <li key={i} className="flex gap-2 text-sm text-text">
+                    <span className="tabular flex-shrink-0 font-semibold text-primary">{i + 1}.</span>
+                    {s}
                   </li>
                 ))}
               </ul>
@@ -172,7 +174,7 @@ function GrantCard({
           )}
         </div>
       )}
-    </div>
+    </article>
   )
 }
 
@@ -194,8 +196,6 @@ function DashboardInner() {
   const [retryAt, setRetryAt] = useState<number | null>(null)
   const [now, setNow] = useState<number>(() => Date.now())
 
-  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
-
   // Filters
   const [decisionFilter, setDecisionFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -203,8 +203,6 @@ function DashboardInner() {
   const [maxAmount, setMaxAmount] = useState('')
   const [showFilters, setShowFilters] = useState(false)
 
-  // Tick the clock while we're inside a rate-limit window so the button
-  // label counts down. Stops the moment retryAt is null or in the past.
   useEffect(() => {
     if (retryAt === null) return
     const interval = setInterval(() => {
@@ -256,19 +254,6 @@ function DashboardInner() {
         }
         setOrg(profileData.org as Org)
 
-        // Load saved grant IDs in parallel (best-effort)
-        fetch('/api/saved-grants')
-          .then((r) => r.json())
-          .then((d) => {
-            if (!active) return
-            const ids = new Set<string>(
-              (d.saved || []).map((s: { opportunity_id: string }) => s.opportunity_id)
-            )
-            setSavedIds(ids)
-          })
-          .catch(() => {})
-
-        // If coming back from profile edit with rematch flag, run matching
         if (searchParams.get('rematch') === '1') {
           setLoading(false)
           runMatching()
@@ -303,31 +288,6 @@ function DashboardInner() {
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()
-  }
-
-  async function toggleSave(opportunityId: string, currentlySaved: boolean) {
-    // Optimistic update
-    setSavedIds((prev) => {
-      const next = new Set(prev)
-      if (currentlySaved) next.delete(opportunityId)
-      else next.add(opportunityId)
-      return next
-    })
-    try {
-      const res = await fetch('/api/saved-grants', {
-        method: currentlySaved ? 'DELETE' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ opportunity_id: opportunityId }),
-      })
-      if (!res.ok) throw new Error()
-    } catch {
-      setSavedIds((prev) => {
-        const next = new Set(prev)
-        if (currentlySaved) next.add(opportunityId)
-        else next.delete(opportunityId)
-        return next
-      })
-    }
   }
 
   function clearFilters() {
@@ -368,39 +328,33 @@ function DashboardInner() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-midnight">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-spark border-t-transparent" />
-          <p className="text-slate">Loading your dashboard…</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-text-secondary">Loading your dashboard…</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-midnight">
-      <nav className="sticky top-0 z-10 border-b border-white/5 bg-midnight/90 backdrop-blur-md">
+    <div className="min-h-screen bg-surface">
+      <nav className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Logo size={26} />
-            <span className="font-display font-extrabold text-chalk">
-              Grant<span className="text-spark">Spark</span>
-            </span>
+          <Link href="/" aria-label="GrantSpark — home">
+            <Wordmark size={24} />
           </Link>
           <div className="flex items-center gap-5">
             {org && (
-              <span className="hidden text-sm text-slate md:block">{org.org_name}</span>
+              <span className="hidden text-sm text-text-secondary md:block">{org.org_name}</span>
             )}
-            <Link href="/profile" className="text-sm text-slate transition-colors hover:text-chalk">
+            <Link href="/profile" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
               Edit profile
             </Link>
-            <Link href="/saved" className="text-sm text-slate transition-colors hover:text-chalk">
-              Saved
-            </Link>
-            <Link href="/blog" className="text-sm text-slate transition-colors hover:text-chalk">
+            <Link href="/blog" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
               Blog
             </Link>
-            <button onClick={handleSignOut} className="text-sm text-slate transition-colors hover:text-chalk">
+            <button onClick={handleSignOut} className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
               Sign out
             </button>
           </div>
@@ -410,32 +364,32 @@ function DashboardInner() {
       <div className="mx-auto max-w-5xl px-6 py-10">
 
         {/* Header */}
-        <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-display text-3xl font-bold text-chalk">
+            <h1 className="text-2xl font-semibold tracking-tightish text-text md:text-3xl">
               {matching ? 'Finding your matches…' : `${matches.length} grants found`}
             </h1>
-            <p className="mt-1 text-slate">
-              {org ? org.org_name : ''} · AI-matched and scored for your profile
+            <p className="mt-1 text-text-secondary">
+              {org ? org.org_name : ''} · AI-matched and scored against your profile
             </p>
           </div>
           <button
             onClick={runMatching}
             disabled={refreshDisabled}
-            className="flex flex-shrink-0 items-center gap-2 rounded-xl border border-spark/30 px-4 py-2 text-sm text-spark transition-colors hover:bg-spark/5 disabled:opacity-40"
+            className="inline-flex flex-shrink-0 items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-text shadow-soft transition-all hover:bg-surface disabled:opacity-50"
           >
             {matching ? (
-              <><span className="h-4 w-4 animate-spin rounded-full border border-spark border-t-transparent" /> Matching…</>
+              <><span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /> Matching…</>
             ) : rateLimited ? (
               `Try again in ${formatCountdown(cooldownLeft)}`
             ) : (
-              '↻ Refresh matches'
+              <><svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15" /></svg> Refresh matches</>
             )}
           </button>
         </div>
 
         {error && (
-          <div className="mb-6 rounded-xl border border-rose/20 bg-rose/10 px-4 py-3 text-sm text-rose">
+          <div className="mb-6 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
             {error}
           </div>
         )}
@@ -443,54 +397,58 @@ function DashboardInner() {
         {/* Stats */}
         {!matching && matches.length > 0 && (
           <div className="mb-6 grid grid-cols-3 gap-4">
-            <div className="rounded-xl border border-spark/20 bg-spark/5 p-4">
-              <p className="font-display text-3xl font-bold text-spark">{applyCount}</p>
-              <p className="mt-1 text-sm text-slate">Ready to apply</p>
+            <div className="rounded-2xl border border-border bg-background p-5 shadow-soft">
+              <p className="tabular text-2xl font-semibold text-success md:text-3xl">{applyCount}</p>
+              <p className="mt-1 text-sm text-text-secondary">Ready to apply</p>
             </div>
-            <div className="rounded-xl border border-warn/20 bg-warn/5 p-4">
-              <p className="font-display text-3xl font-bold text-warn">{considerCount}</p>
-              <p className="mt-1 text-sm text-slate">Worth considering</p>
+            <div className="rounded-2xl border border-border bg-background p-5 shadow-soft">
+              <p className="tabular text-2xl font-semibold text-warning md:text-3xl">{considerCount}</p>
+              <p className="mt-1 text-sm text-text-secondary">Worth considering</p>
             </div>
-            <div className="rounded-xl border border-white/5 bg-midnight-2 p-4">
-              <p className="font-display text-3xl font-bold text-chalk">{matches.length}</p>
-              <p className="mt-1 text-sm text-slate">Total matches</p>
+            <div className="rounded-2xl border border-border bg-background p-5 shadow-soft">
+              <p className="tabular text-2xl font-semibold text-text md:text-3xl">{matches.length}</p>
+              <p className="mt-1 text-sm text-text-secondary">Total matches</p>
             </div>
           </div>
         )}
 
-        {/* Search and filters */}
+        {/* Search + filters */}
         {!matching && matches.length > 0 && (
           <div className="mb-6 space-y-3">
             <div className="flex gap-3">
               <div className="relative flex-1">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate">⌕</span>
+                <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.34-4.34M17 10.5A6.5 6.5 0 1 1 4 10.5a6.5 6.5 0 0 1 13 0Z" /></svg>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search by grant name, funder or keyword…"
-                  className="w-full rounded-xl border border-white/10 bg-midnight-2 pl-10 pr-4 py-3 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
+                  className="w-full rounded-xl border border-border bg-background py-3 pl-10 pr-4 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
                 />
               </div>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`rounded-xl border px-4 py-3 text-sm transition-colors ${showFilters ? 'border-spark bg-spark/10 text-spark' : 'border-white/10 text-slate hover:border-white/20 hover:text-chalk'}`}
+                className={
+                  showFilters
+                    ? 'rounded-xl border border-primary bg-primary-soft px-4 py-3 text-sm font-semibold text-primary'
+                    : 'rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+                }
               >
                 Filters {hasActiveFilters ? '●' : ''}
               </button>
             </div>
 
             {showFilters && (
-              <div className="fade-up rounded-2xl border border-white/5 bg-midnight-2 p-5">
+              <div className="fade-up rounded-2xl border border-border bg-background p-5 shadow-soft">
                 <div className="grid gap-5 sm:grid-cols-3">
                   <div>
-                    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate">
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
                       Decision
                     </label>
                     <select
                       value={decisionFilter}
                       onChange={(e) => setDecisionFilter(e.target.value)}
-                      className="w-full rounded-xl border border-white/10 bg-midnight px-3 py-2.5 text-sm text-chalk focus:border-spark focus:outline-none"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
                     >
                       <option value="all">All decisions</option>
                       <option value="apply">Apply ({applyCount})</option>
@@ -499,7 +457,7 @@ function DashboardInner() {
                     </select>
                   </div>
                   <div>
-                    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate">
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
                       Min grant amount (£)
                     </label>
                     <input
@@ -507,11 +465,11 @@ function DashboardInner() {
                       value={minAmount}
                       onChange={(e) => setMinAmount(e.target.value)}
                       placeholder="e.g. 10000"
-                      className="w-full rounded-xl border border-white/10 bg-midnight px-3 py-2.5 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="mb-2 block text-xs font-medium uppercase tracking-wider text-slate">
+                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
                       Max grant amount (£)
                     </label>
                     <input
@@ -519,16 +477,16 @@ function DashboardInner() {
                       value={maxAmount}
                       onChange={(e) => setMaxAmount(e.target.value)}
                       placeholder="e.g. 100000"
-                      className="w-full rounded-xl border border-white/10 bg-midnight px-3 py-2.5 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
+                      className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
                     />
                   </div>
                 </div>
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className="mt-4 text-sm text-slate hover:text-chalk"
+                    className="mt-4 text-sm font-medium text-text-secondary hover:text-text"
                   >
-                    ✕ Clear all filters
+                    Clear all filters
                   </button>
                 )}
               </div>
@@ -536,12 +494,12 @@ function DashboardInner() {
           </div>
         )}
 
-        {/* Matching spinner */}
+        {/* Matching loading state */}
         {matching && (
-          <div className="py-20 text-center">
-            <div className="mx-auto mb-6 h-16 w-16 animate-spin rounded-full border-2 border-spark border-t-transparent" />
-            <h2 className="font-display text-xl font-semibold text-chalk">AI is scanning every grant</h2>
-            <p className="mt-2 text-slate">Matching against your profile and scoring eligibility…</p>
+          <div className="rounded-2xl border border-border bg-background py-20 text-center shadow-soft">
+            <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <h2 className="text-xl font-semibold text-text">Scanning grants for you</h2>
+            <p className="mt-2 text-text-secondary">Matching every opportunity against your profile and scoring eligibility…</p>
           </div>
         )}
 
@@ -549,27 +507,25 @@ function DashboardInner() {
         {!matching && visible.length > 0 && (
           <div className="space-y-4">
             {hasActiveFilters && (
-              <p className="text-sm text-slate">
+              <p className="text-sm text-text-secondary">
                 Showing {visible.length} of {matches.length} grants
               </p>
             )}
             {visible.map((match: Match, i: number) => (
-              <GrantCard
-                key={i}
-                match={match}
-                isSaved={savedIds.has(match.grant.id)}
-                onToggleSave={toggleSave}
-              />
+              <GrantCard key={i} match={match} />
             ))}
           </div>
         )}
 
         {/* No results after filtering */}
         {!matching && matches.length > 0 && visible.length === 0 && (
-          <div className="rounded-2xl border border-white/5 py-16 text-center">
-            <h2 className="font-display text-xl font-semibold text-chalk">No grants match your filters</h2>
-            <p className="mt-2 text-slate">Try broadening your search or clearing the filters.</p>
-            <button onClick={clearFilters} className="mt-6 rounded-xl bg-spark px-6 py-3 font-medium text-midnight transition-colors hover:bg-spark/90">
+          <div className="rounded-2xl border border-border bg-background py-16 text-center shadow-soft">
+            <h2 className="text-lg font-semibold text-text">No grants match your filters</h2>
+            <p className="mt-2 text-text-secondary">Try broadening your search or clearing the filters.</p>
+            <button
+              onClick={clearFilters}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
+            >
               Clear filters
             </button>
           </div>
@@ -577,13 +533,13 @@ function DashboardInner() {
 
         {/* No matches at all */}
         {!matching && matches.length === 0 && (
-          <div className="rounded-2xl border border-white/5 py-20 text-center">
-            <h2 className="font-display text-xl font-semibold text-chalk">No matches yet</h2>
-            <p className="mt-2 text-slate">Run the matching engine to scan every grant against your profile.</p>
+          <div className="rounded-2xl border border-border bg-background py-20 text-center shadow-soft">
+            <h2 className="text-lg font-semibold text-text">No matches yet</h2>
+            <p className="mt-2 text-text-secondary">Run the matching engine to scan every grant against your profile.</p>
             <button
               onClick={runMatching}
               disabled={refreshDisabled}
-              className="mt-6 rounded-xl bg-spark px-6 py-3 font-medium text-midnight transition-colors hover:bg-spark/90 disabled:opacity-40"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
             >
               {rateLimited ? `Try again in ${formatCountdown(cooldownLeft)}` : 'Run matching now →'}
             </button>
@@ -592,25 +548,15 @@ function DashboardInner() {
 
         {/* Profile nudge */}
         {!matching && matches.length > 0 && (
-          <div className="mt-8 rounded-2xl border border-white/5 bg-midnight-2 p-6 text-center">
-            <p className="text-sm text-slate">
+          <div className="mt-8 rounded-2xl border border-border bg-background p-6 text-center shadow-soft">
+            <p className="text-sm text-text-secondary">
               Want better matches?{' '}
-              <Link href="/profile" className="text-spark hover:underline">
+              <Link href="/profile" className="font-medium text-primary hover:underline">
                 Update your profile
               </Link>
               {' '}to refine what you&apos;re looking for.
             </p>
           </div>
-        )}
-
-        {/* AI disclaimer — always visible at point of use */}
-        {!matching && matches.length > 0 && (
-          <p className="mt-6 text-center text-xs text-slate">
-            Matches are AI-assisted decision support, not advice.{' '}
-            <Link href="/ai-disclaimer" className="text-slate hover:text-spark">
-              Verify eligibility on the funder&apos;s page before applying.
-            </Link>
-          </p>
         )}
 
       </div>
@@ -622,8 +568,8 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-midnight">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-spark border-t-transparent" />
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         </div>
       }
     >
