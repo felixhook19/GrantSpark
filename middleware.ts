@@ -1,6 +1,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
 
+// Local shape for the cookies passed by @supabase/ssr's setAll callback.
+type CookieToSet = {
+  name: string
+  value: string
+  options?: Record<string, unknown>
+}
+
 // Middleware runs ONLY on /dashboard and /onboarding (see matcher below).
 // Login, signup, landing and blog pages are never touched by it --
 // this is deliberate, to eliminate any risk of redirect loops or
@@ -16,13 +23,13 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll()
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: CookieToSet[]) {
           cookiesToSet.forEach((item) => {
             request.cookies.set(item.name, item.value)
           })
           response = NextResponse.next({ request })
           cookiesToSet.forEach((item) => {
-            response.cookies.set(item.name, item.value, item.options)
+            response.cookies.set(item.name, item.value, item.options as never)
           })
         },
       },
