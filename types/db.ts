@@ -1,7 +1,6 @@
 // Lightweight shared shapes for rows we read out of Supabase.
-// These are intentionally loose -- they describe the columns the app
-// actually touches, not the full table schema. Tighten over time
-// (or replace with generated types from `supabase gen types typescript`).
+// Updated in Phase 4 to match the actual DB column types — geography,
+// sector_tags and audience are TEXT[] arrays in Postgres, not strings.
 
 export type Decision = 'apply' | 'consider' | 'skip'
 
@@ -10,18 +9,21 @@ export type Grant = {
   title: string
   funder?: string | null
   summary?: string | null
+  description?: string | null
   eligibility_summary?: string | null
   sector_tags?: string[] | null
-  audience?: string | null
+  audience?: string[] | null
   grant_amount_min?: number | null
   grant_amount_max?: number | null
   deadline?: string | null
-  geography?: string | null
+  geography: string[]
   max_employees?: number | null
+  min_years_trading?: number | null
   match_funding_required?: boolean | null
   funding_type?: string | null
-  url?: string | null
+  url: string
   status?: string | null
+  last_seen_at?: string | null
 }
 
 export type Match = {
@@ -47,7 +49,10 @@ export type Org = {
   rd_active?: boolean | null
   website?: string | null
   themes?: string[] | null
+  beneficiaries?: string[] | null
   has_match_funding?: boolean | null
+  typical_grant_size?: string | null
+  annual_income_band?: string | null
 }
 
 export type BlogPost = {
