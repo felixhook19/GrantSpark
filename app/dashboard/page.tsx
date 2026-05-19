@@ -538,6 +538,16 @@ function DashboardInner() {
           </div>
         )}
 
+        {/* AI disclaimer — always visible at point of use */}
+        {!matching && matches.length > 0 && (
+          <p className="mt-6 text-center text-xs text-slate">
+            Matches are AI-assisted decision support, not advice.{' '}
+            <Link href="/ai-disclaimer" className="text-slate hover:text-spark">
+              Verify eligibility on the funder&apos;s page before applying.
+            </Link>
+          </p>
+        )}
+
       </div>
     </div>
   )

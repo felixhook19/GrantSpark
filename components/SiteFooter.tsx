@@ -39,6 +39,17 @@ export function SiteFooter() {
                 <a href="mailto:hello@grantspark.co.uk" className="hover:text-spark">Contact</a>
               </div>
             </div>
+            <div>
+              <p className="mb-3 font-mono text-xs uppercase tracking-widest text-slate">
+                Legal
+              </p>
+              <div className="flex flex-col gap-2 text-sm text-slate">
+                <Link href="/terms" className="hover:text-spark">Terms</Link>
+                <Link href="/privacy" className="hover:text-spark">Privacy</Link>
+                <Link href="/cookies" className="hover:text-spark">Cookies</Link>
+                <Link href="/ai-disclaimer" className="hover:text-spark">AI disclaimer</Link>
+              </div>
+            </div>
           </div>
         </div>
         <div className="mt-10 border-t border-white/5 pt-6">

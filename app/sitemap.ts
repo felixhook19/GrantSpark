@@ -1,8 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { createSupabasePublicClient } from '@/lib/supabase/public'
 
-// Cache the sitemap for 5 minutes. Search-engine bots re-fetch it on a
-// regular cadence; we don't need every hit to round-trip to Supabase.
 export const revalidate = 300
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
@@ -15,6 +13,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${siteUrl}/blog`, priority: 0.8 },
     { url: `${siteUrl}/signup`, priority: 0.6 },
     { url: `${siteUrl}/login`, priority: 0.4 },
+    { url: `${siteUrl}/terms`, priority: 0.3 },
+    { url: `${siteUrl}/privacy`, priority: 0.3 },
+    { url: `${siteUrl}/cookies`, priority: 0.3 },
+    { url: `${siteUrl}/ai-disclaimer`, priority: 0.4 },
   ].map((r) => ({
     url: r.url,
     lastModified: new Date(),
