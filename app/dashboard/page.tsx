@@ -158,6 +158,13 @@ function GrantCard({ match }: { match: Match }) {
   )
 }
 
+function formatCountdown(seconds: number): string {
+  if (seconds <= 0) return ''
+  if (seconds < 60) return `${seconds}s`
+  if (seconds < 3600) return `${Math.ceil(seconds / 60)}m`
+  return `${Math.ceil(seconds / 3600)}h`
+}
+
 function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -166,6 +173,8 @@ function DashboardInner() {
   const [loading, setLoading] = useState(true)
   const [matching, setMatching] = useState(false)
   const [error, setError] = useState('')
+  const [retryAt, setRetryAt] = useState<number | null>(null)
+  const [now, setNow] = useState<number>(() => Date.now())
 
   // Filters
   const [decisionFilter, setDecisionFilter] = useState<string>('all')
@@ -174,13 +183,32 @@ function DashboardInner() {
   const [maxAmount, setMaxAmount] = useState('')
   const [showFilters, setShowFilters] = useState(false)
 
+  // Tick the clock while we're inside a rate-limit window so the button
+  // label counts down. Stops the moment retryAt is null or in the past.
+  useEffect(() => {
+    if (retryAt === null) return
+    const interval = setInterval(() => {
+      const t = Date.now()
+      setNow(t)
+      if (t >= retryAt) {
+        setRetryAt(null)
+        clearInterval(interval)
+      }
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [retryAt])
+
   const runMatching = useCallback(async () => {
     setMatching(true)
     setError('')
     try {
       const res = await fetch('/api/match', { method: 'POST' })
       const data = await res.json()
-      if (!res.ok) {
+      if (res.status === 429) {
+        const seconds = Number(data?.retry_after_seconds || 60)
+        setRetryAt(Date.now() + seconds * 1000)
+        setError(data?.error || 'You’ve hit the rate limit. Please try again later.')
+      } else if (!res.ok) {
         setError(data.error || 'Matching failed. Please try again.')
       } else {
         setMatches((data.matches || []) as Match[])
@@ -277,6 +305,10 @@ function DashboardInner() {
   const hasActiveFilters =
     decisionFilter !== 'all' || Boolean(searchQuery) || Boolean(minAmount) || Boolean(maxAmount)
 
+  const cooldownLeft = retryAt !== null ? Math.max(0, Math.ceil((retryAt - now) / 1000)) : 0
+  const rateLimited = cooldownLeft > 0
+  const refreshDisabled = matching || rateLimited
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-midnight">
@@ -329,12 +361,16 @@ function DashboardInner() {
           </div>
           <button
             onClick={runMatching}
-            disabled={matching}
+            disabled={refreshDisabled}
             className="flex flex-shrink-0 items-center gap-2 rounded-xl border border-spark/30 px-4 py-2 text-sm text-spark transition-colors hover:bg-spark/5 disabled:opacity-40"
           >
             {matching ? (
               <><span className="h-4 w-4 animate-spin rounded-full border border-spark border-t-transparent" /> Matching…</>
-            ) : '↻ Refresh matches'}
+            ) : rateLimited ? (
+              `Try again in ${formatCountdown(cooldownLeft)}`
+            ) : (
+              '↻ Refresh matches'
+            )}
           </button>
         </div>
 
@@ -481,9 +517,10 @@ function DashboardInner() {
             <p className="mt-2 text-slate">Run the matching engine to scan every grant against your profile.</p>
             <button
               onClick={runMatching}
-              className="mt-6 rounded-xl bg-spark px-6 py-3 font-medium text-midnight transition-colors hover:bg-spark/90"
+              disabled={refreshDisabled}
+              className="mt-6 rounded-xl bg-spark px-6 py-3 font-medium text-midnight transition-colors hover:bg-spark/90 disabled:opacity-40"
             >
-              Run matching now →
+              {rateLimited ? `Try again in ${formatCountdown(cooldownLeft)}` : 'Run matching now →'}
             </button>
           </div>
         )}

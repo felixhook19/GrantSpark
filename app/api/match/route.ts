@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireEnv } from '@/lib/env'
+import { tryRateLimit } from '@/lib/ratelimit'
 import type { Grant, Org, Decision } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
@@ -36,6 +37,27 @@ export async function POST() {
   } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+
+  // Rate limit BEFORE the expensive Anthropic call. Keyed on user.id
+  // (stable, server-validated). Returns 429 with a friendly message
+  // and Retry-After header if either the burst or daily window is full.
+  const limit = await tryRateLimit(user.id)
+  if (!limit.allowed) {
+    return NextResponse.json(
+      {
+        error: limit.message,
+        code: 'rate_limit_exceeded',
+        limit_type: limit.limitType,
+        retry_after_seconds: limit.retryAfterSeconds,
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(limit.retryAfterSeconds),
+        },
+      }
+    )
   }
 
   const admin = createSupabaseAdminClient()
@@ -178,5 +200,15 @@ Include all grants. Sort by fit_score descending.`
     .filter((m) => m.grant)
     .sort((a, b) => b.fit_score - a.fit_score)
 
-  return NextResponse.json({ matches: enriched })
+  // Surface remaining budget to the client so the UI can warn before they
+  // hit the daily cap. Null when Upstash isn't configured (dev / preview).
+  const headers: Record<string, string> = {}
+  if (limit.dailyRemaining !== null) {
+    headers['X-RateLimit-Daily-Remaining'] = String(limit.dailyRemaining)
+  }
+  if (limit.burstRemaining !== null) {
+    headers['X-RateLimit-Burst-Remaining'] = String(limit.burstRemaining)
+  }
+
+  return NextResponse.json({ matches: enriched }, { headers })
 }
