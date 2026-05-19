@@ -2,10 +2,12 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
-import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { createSupabasePublicClient } from '@/lib/supabase/public'
 import type { BlogPost } from '@/types/db'
 
-export const dynamic = 'force-dynamic'
+// Cache the rendered HTML for 5 minutes. Reduces Supabase reads on crawler
+// and social-bot traffic while keeping new posts visible within the window.
+export const revalidate = 300
 
 export const metadata: Metadata = {
   title: 'Blog — UK grants, funding guides and tips',
@@ -30,8 +32,8 @@ function formatDate(value: string | null | undefined): string {
 }
 
 export default async function BlogIndexPage() {
-  const admin = createSupabaseAdminClient()
-  const { data: posts } = await admin
+  const supabase = createSupabasePublicClient()
+  const { data: posts } = await supabase
     .from('blog_posts')
     .select('slug, title, excerpt, tag, read_minutes, published_at, author')
     .eq('published', true)

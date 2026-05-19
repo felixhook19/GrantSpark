@@ -3,9 +3,11 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
-import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { createSupabasePublicClient } from '@/lib/supabase/public'
 
-export const dynamic = 'force-dynamic'
+// Cache the rendered HTML for 5 minutes. Article edits become visible
+// within the window without redeploying.
+export const revalidate = 300
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
 
@@ -24,8 +26,8 @@ type BlogPostFull = {
 type RouteParams = { params: Promise<{ slug: string }> }
 
 async function getPost(slug: string): Promise<BlogPostFull | null> {
-  const admin = createSupabaseAdminClient()
-  const { data } = await admin
+  const supabase = createSupabasePublicClient()
+  const { data } = await supabase
     .from('blog_posts')
     .select('*')
     .eq('slug', slug)

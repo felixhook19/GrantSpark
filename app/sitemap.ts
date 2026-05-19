@@ -1,7 +1,9 @@
 import type { MetadataRoute } from 'next'
-import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { createSupabasePublicClient } from '@/lib/supabase/public'
 
-export const dynamic = 'force-dynamic'
+// Cache the sitemap for 5 minutes. Search-engine bots re-fetch it on a
+// regular cadence; we don't need every hit to round-trip to Supabase.
+export const revalidate = 300
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
 
@@ -21,8 +23,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   let postRoutes: MetadataRoute.Sitemap = []
   try {
-    const admin = createSupabaseAdminClient()
-    const { data: posts } = await admin
+    const supabase = createSupabasePublicClient()
+    const { data: posts } = await supabase
       .from('blog_posts')
       .select('slug, published_at')
       .eq('published', true)
