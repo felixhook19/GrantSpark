@@ -1,6 +1,11 @@
 // Claude calls for the ingestion pipeline.
 //   - extractCandidates: turn a listing-page HTML into [{title, url}]
 //   - normaliseGrant:    turn a detail-page HTML into a NormalisedGrant
+//
+// Despite explicit "no prose" instructions, Claude occasionally appends
+// a sentence of explanation after the JSON it returns. We extract the
+// first balanced JSON value from the response rather than feeding the
+// whole reply to JSON.parse.
 
 import { requireEnv } from '@/lib/env'
 import type { CandidateGrant, NormalisedGrant } from './types'
@@ -38,6 +43,62 @@ async function callClaude(prompt: string, maxTokens = 2000): Promise<string> {
     .trim()
 }
 
+// Find the first balanced JSON value (object or array) in a string and
+// return it as a substring, ignoring any prose that follows. Returns
+// null if no JSON-looking value is present.
+function extractFirstJson(text: string): string | null {
+  let start = -1
+  let openChar: '[' | '{' | null = null
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+    if (ch === '[' || ch === '{') {
+      start = i
+      openChar = ch
+      break
+    }
+  }
+  if (start === -1 || !openChar) return null
+  const closeChar = openChar === '[' ? ']' : '}'
+
+  let depth = 0
+  let inString = false
+  let escape = false
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i]
+    if (escape) {
+      escape = false
+      continue
+    }
+    if (ch === '\\') {
+      escape = true
+      continue
+    }
+    if (ch === '"') {
+      inString = !inString
+      continue
+    }
+    if (inString) continue
+    if (ch === openChar) depth++
+    else if (ch === closeChar) {
+      depth--
+      if (depth === 0) return text.slice(start, i + 1)
+    }
+  }
+  return null
+}
+
+function parseJsonOrThrow(raw: string, label: string): unknown {
+  const extracted = extractFirstJson(raw)
+  if (!extracted) {
+    throw new Error(`${label} returned no JSON: ${raw.slice(0, 200)}`)
+  }
+  try {
+    return JSON.parse(extracted)
+  } catch (err) {
+    throw new Error(`${label} returned malformed JSON: ${extracted.slice(0, 200)}`)
+  }
+}
+
 export async function extractCandidates(
   listingHtml: string,
   baseUrl: string,
@@ -52,7 +113,7 @@ LISTING PAGE BASE URL: ${baseUrl}
 LISTING PAGE HTML (cleaned, may be truncated):
 ${listingHtml}
 
-Return ONLY a JSON array (no prose, no markdown) of up to ${maxCandidates} individual grant opportunities found on this page. Each element:
+Return ONLY a JSON array (no prose before or after, no markdown) of up to ${maxCandidates} individual grant opportunities found on this page. Each element:
 {"title": "<grant title>", "url": "<absolute URL to the grant detail page>"}
 
 Rules:
@@ -60,15 +121,10 @@ Rules:
 - Skip news posts, blog entries, archives, FAQs, about pages, generic guidance.
 - Skip grants explicitly marked as closed, expired, or "applications closed".
 - Each entry must point to a SPECIFIC grant programme, not a category overview.
-- If no real grant opportunities are present, return an empty array: []`
+- If no real grant opportunities are present (e.g. the page is a JS shell with no rendered content), return [] — and nothing else, no explanation.`
 
   const raw = await callClaude(prompt, 1500)
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(raw)
-  } catch (err) {
-    throw new Error(`Listing extraction returned non-JSON: ${raw.slice(0, 200)}`)
-  }
+  const parsed = parseJsonOrThrow(raw, 'Listing extraction')
   if (!Array.isArray(parsed)) {
     throw new Error('Listing extraction did not return an array')
   }
@@ -94,7 +150,7 @@ SOURCE URL: ${sourceUrl}
 GRANT DETAIL PAGE HTML (cleaned, may be truncated):
 ${detailHtml}
 
-Return ONLY a JSON object (no prose, no markdown) with this exact shape:
+Return ONLY a JSON object (no prose before or after, no markdown) with this exact shape:
 {
   "title": string,
   "funder": string | null,
@@ -123,16 +179,10 @@ Rules:
 - Be precise. Don't invent figures or eligibility criteria that aren't on the page.`
 
   const raw = await callClaude(prompt, 2000)
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(raw)
-  } catch (err) {
-    throw new Error(`Normalisation returned non-JSON: ${raw.slice(0, 200)}`)
-  }
+  const parsed = parseJsonOrThrow(raw, 'Normalisation')
   if (!parsed || typeof parsed !== 'object') {
     throw new Error('Normalisation did not return an object')
   }
-  // Defensive defaults — Claude occasionally drops a field on long pages
   const g = parsed as Record<string, unknown>
   return {
     title: typeof g.title === 'string' ? g.title : 'Untitled grant',
