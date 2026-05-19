@@ -1,6 +1,4 @@
 // Lightweight shared shapes for rows we read out of Supabase.
-// Updated in Phase 4 to match the actual DB column types — geography,
-// sector_tags and audience are TEXT[] arrays in Postgres, not strings.
 
 export type Decision = 'apply' | 'consider' | 'skip'
 
@@ -66,4 +64,33 @@ export type BlogPost = {
   body?: string | null
   meta_description?: string | null
   published?: boolean | null
+}
+
+// Phase 2 schema additions
+
+export type SavedStatus =
+  | 'interested'
+  | 'applied'
+  | 'awarded'
+  | 'rejected'
+  | 'withdrawn'
+
+export const SAVED_STATUSES: SavedStatus[] = [
+  'interested',
+  'applied',
+  'awarded',
+  'rejected',
+  'withdrawn',
+]
+
+export type SavedGrant = {
+  id: string
+  org_id: string
+  opportunity_id: string
+  status: SavedStatus
+  notes: string | null
+  internal_deadline: string | null
+  created_at: string
+  updated_at: string
+  grant?: Grant
 }

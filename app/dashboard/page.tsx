@@ -33,7 +33,15 @@ function DecisionTag({ decision }: { decision: Decision | string }) {
   )
 }
 
-function GrantCard({ match }: { match: Match }) {
+function GrantCard({
+  match,
+  isSaved,
+  onToggleSave,
+}: {
+  match: Match
+  isSaved: boolean
+  onToggleSave: (opportunityId: string, currentlySaved: boolean) => void
+}) {
   const [open, setOpen] = useState(false)
   const g: Grant = match.grant
 
@@ -112,6 +120,16 @@ function GrantCard({ match }: { match: Match }) {
             View grant ↗
           </a>
         )}
+        <button
+          onClick={() => onToggleSave(g.id, isSaved)}
+          className={
+            isSaved
+              ? 'ml-auto text-sm text-spark hover:underline'
+              : 'ml-auto text-sm text-slate transition-colors hover:text-chalk'
+          }
+        >
+          {isSaved ? '★ Saved' : '☆ Save'}
+        </button>
       </div>
 
       {open && (
@@ -176,6 +194,8 @@ function DashboardInner() {
   const [retryAt, setRetryAt] = useState<number | null>(null)
   const [now, setNow] = useState<number>(() => Date.now())
 
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+
   // Filters
   const [decisionFilter, setDecisionFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -236,6 +256,18 @@ function DashboardInner() {
         }
         setOrg(profileData.org as Org)
 
+        // Load saved grant IDs in parallel (best-effort)
+        fetch('/api/saved-grants')
+          .then((r) => r.json())
+          .then((d) => {
+            if (!active) return
+            const ids = new Set<string>(
+              (d.saved || []).map((s: { opportunity_id: string }) => s.opportunity_id)
+            )
+            setSavedIds(ids)
+          })
+          .catch(() => {})
+
         // If coming back from profile edit with rematch flag, run matching
         if (searchParams.get('rematch') === '1') {
           setLoading(false)
@@ -271,6 +303,31 @@ function DashboardInner() {
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()
+  }
+
+  async function toggleSave(opportunityId: string, currentlySaved: boolean) {
+    // Optimistic update
+    setSavedIds((prev) => {
+      const next = new Set(prev)
+      if (currentlySaved) next.delete(opportunityId)
+      else next.add(opportunityId)
+      return next
+    })
+    try {
+      const res = await fetch('/api/saved-grants', {
+        method: currentlySaved ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunity_id: opportunityId }),
+      })
+      if (!res.ok) throw new Error()
+    } catch {
+      setSavedIds((prev) => {
+        const next = new Set(prev)
+        if (currentlySaved) next.add(opportunityId)
+        else next.delete(opportunityId)
+        return next
+      })
+    }
   }
 
   function clearFilters() {
@@ -336,6 +393,9 @@ function DashboardInner() {
             )}
             <Link href="/profile" className="text-sm text-slate transition-colors hover:text-chalk">
               Edit profile
+            </Link>
+            <Link href="/saved" className="text-sm text-slate transition-colors hover:text-chalk">
+              Saved
             </Link>
             <Link href="/blog" className="text-sm text-slate transition-colors hover:text-chalk">
               Blog
@@ -494,7 +554,12 @@ function DashboardInner() {
               </p>
             )}
             {visible.map((match: Match, i: number) => (
-              <GrantCard key={i} match={match} />
+              <GrantCard
+                key={i}
+                match={match}
+                isSaved={savedIds.has(match.grant.id)}
+                onToggleSave={toggleSave}
+              />
             ))}
           </div>
         )}
