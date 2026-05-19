@@ -5,8 +5,6 @@ import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
 import { createSupabasePublicClient } from '@/lib/supabase/public'
 
-// Cache the rendered HTML for 5 minutes. Article edits become visible
-// within the window without redeploying.
 export const revalidate = 300
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
@@ -118,14 +116,14 @@ export default async function BlogPostPage({ params }: RouteParams) {
         <div className="mx-auto max-w-2xl">
           <Link
             href="/blog"
-            className="text-xs font-semibold uppercase tracking-wider text-text-secondary transition-colors hover:text-primary"
+            className="text-xs font-semibold uppercase tracking-wider text-accent-hover transition-colors hover:text-accent"
           >
-            ← Back to blog
+            ← Back to journal
           </Link>
 
           <div className="mt-6 flex items-center gap-3">
             {post.tag && (
-              <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">
+              <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-hover">
                 {post.tag}
               </span>
             )}
@@ -135,7 +133,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
             </span>
           </div>
 
-          <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tightish text-text md:text-4xl">
+          <h1 className="mt-4 font-display text-3xl font-medium leading-tight tracking-tightish text-text md:text-4xl">
             {post.title}
           </h1>
 
@@ -153,17 +151,17 @@ export default async function BlogPostPage({ params }: RouteParams) {
           </div>
 
           {/* In-article CTA */}
-          <div className="mt-12 rounded-2xl border-2 border-primary bg-primary-soft p-7 text-center shadow-soft">
-            <h2 className="text-xl font-semibold text-text">
+          <div className="mt-12 rounded-2xl border-2 border-accent bg-background p-7 text-center shadow-soft">
+            <h2 className="font-display text-xl font-medium text-text">
               Find the grants you&apos;re eligible for
             </h2>
             <p className="mt-2 text-sm text-text-secondary">
-              GrantSpark scans every UK funder and matches the opportunities
-              that fit your organisation.
+              GrantSpark surfaces UK grant opportunities and matches them to
+              your organisation — with plain-English eligibility.
             </p>
             <Link
               href="/signup"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
+              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
             >
               Start free <span aria-hidden="true">→</span>
             </Link>

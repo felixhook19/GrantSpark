@@ -5,8 +5,6 @@ import { SiteFooter } from '@/components/SiteFooter'
 import { createSupabasePublicClient } from '@/lib/supabase/public'
 import type { BlogPost } from '@/types/db'
 
-// Cache the rendered HTML for 5 minutes. Reduces Supabase reads on crawler
-// and social-bot traffic while keeping new posts visible within the window.
 export const revalidate = 300
 
 export const metadata: Metadata = {
@@ -47,16 +45,15 @@ export default async function BlogIndexPage() {
 
       <section className="border-b border-border bg-surface px-6 py-16">
         <div className="mx-auto max-w-4xl">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-            GrantSpark Blog
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent-hover">
+            GrantSpark journal
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tightish text-text md:text-5xl">
+          <h1 className="mt-3 font-display text-4xl font-medium tracking-tightish text-text md:text-5xl">
             UK grants, decoded.
           </h1>
           <p className="mt-4 max-w-xl text-lg text-text-secondary">
             Practical guides to grant funding for UK charities, CICs and
-            community organisations — eligibility, deadlines, and how to
-            actually win.
+            community organisations — and the consultants who support them.
           </p>
         </div>
       </section>
@@ -79,7 +76,7 @@ export default async function BlogIndexPage() {
                 >
                   <div className="flex items-center gap-3">
                     {post.tag && (
-                      <span className="rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary">
+                      <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-hover">
                         {post.tag}
                       </span>
                     )}
@@ -88,7 +85,7 @@ export default async function BlogIndexPage() {
                       {post.read_minutes ? ` · ${post.read_minutes} min read` : ''}
                     </span>
                   </div>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tightish text-text">
+                  <h2 className="mt-3 font-display text-2xl font-medium tracking-tightish text-text">
                     {post.title}
                   </h2>
                   <p className="mt-2 leading-relaxed text-text-secondary">

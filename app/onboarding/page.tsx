@@ -174,10 +174,10 @@ export default function OnboardingPage() {
             ))}
           </div>
 
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent-hover">
             Step {step} of 3
           </p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-tightish text-text md:text-3xl">
+          <h1 className="mt-2 font-display text-2xl font-medium tracking-tightish text-text md:text-3xl">
             {step === 1 && 'Tell us about your organisation'}
             {step === 2 && 'Location and size'}
             {step === 3 && 'Sectors and focus'}
@@ -352,7 +352,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={() => setStep((s) => s + 1)}
                 disabled={step === 1 && (!form.org_name || !form.org_description)}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Continue <span aria-hidden="true">→</span>
               </button>
@@ -361,7 +361,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
               >
                 {loading ? 'Setting up…' : <>Find my grants <span aria-hidden="true">→</span></>}
               </button>

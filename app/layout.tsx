@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({
@@ -8,16 +8,23 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-fraunces',
+  axes: ['SOFT', 'opsz'],
+})
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'GrantSpark — AI grant discovery for UK charities and community organisations',
+    default: 'GrantSpark — AI funding intelligence for UK charities and community organisations',
     template: '%s · GrantSpark',
   },
   description:
-    'GrantSpark is an AI grant discovery and matching platform for charities, CICs, community groups and social enterprises. Find relevant grants faster, understand eligibility before applying, and track deadlines in one place.',
+    'GrantSpark is a funding intelligence platform for UK charities, CICs, community groups and social enterprises — and the consultants who support them. Find relevant grants, understand eligibility before applying, and track deadlines in one place.',
   keywords: [
     'UK grants',
     'grant finder',
@@ -26,13 +33,14 @@ export const metadata: Metadata = {
     'community grants',
     'social enterprise funding',
     'AI grant matching',
-    'grant discovery',
+    'funding intelligence',
     'fundraising software',
+    'grant consultants UK',
   ],
   openGraph: {
-    title: 'GrantSpark — AI grant discovery for UK charities and community organisations',
+    title: 'GrantSpark — AI funding intelligence for UK charities and community organisations',
     description:
-      'Find the grants your organisation is actually eligible for, with plain-English eligibility, deadline tracking and an AI assistant that helps you apply.',
+      'Find grants worth applying for. With care. Built for UK charities, CICs and community organisations — and the consultants who support them.',
     url: siteUrl,
     siteName: 'GrantSpark',
     locale: 'en_GB',
@@ -40,9 +48,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GrantSpark — AI grant discovery for UK charities and community organisations',
+    title: 'GrantSpark — AI funding intelligence for UK charities and community organisations',
     description:
-      'Relevant grants, plain-English eligibility and deadline tracking — built for UK charities, CICs and community groups.',
+      'Relevant grants, plain-English eligibility and deadline tracking — built for UK civil society.',
   },
   robots: {
     index: true,
@@ -56,7 +64,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en-GB" className={inter.variable}>
+    <html lang="en-GB" className={`${inter.variable} ${fraunces.variable}`}>
       <body className="bg-background font-sans text-text antialiased">
         {children}
       </body>

@@ -1,8 +1,9 @@
 /**
- * GrantSpark logo mark.
+ * GrantSpark logo mark (Forest Heritage direction).
  *
- * A clean, SaaS-style spark glyph in primary blue — a stylised four-point
- * burst built from two intersecting strokes. Sized by `size` prop.
+ * Deep forest-green circular field with a stylised four-point spark in
+ * cream-white and a small gold centre dot — uses all three brand colours
+ * in a single mark.
  */
 export function Logo({ size = 28 }: { size?: number }) {
   return (
@@ -14,27 +15,27 @@ export function Logo({ size = 28 }: { size?: number }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <rect width="32" height="32" rx="8" fill="#2563EB" />
+      <circle cx="16" cy="16" r="16" fill="#14532D" />
       <path
-        d="M16 6.5 L17.6 13.2 L24 14.8 L17.6 16.4 L16 23.1 L14.4 16.4 L8 14.8 L14.4 13.2 Z"
-        fill="#FFFFFF"
+        d="M16 6.5 L17.5 14.5 L25 16 L17.5 17.5 L16 25.5 L14.5 17.5 L7 16 L14.5 14.5 Z"
+        fill="#FBFAF7"
       />
-      <circle cx="16" cy="14.8" r="2" fill="#2563EB" />
+      <circle cx="16" cy="16" r="1.6" fill="#CA8A04" />
     </svg>
   )
 }
 
 /**
- * Inline wordmark + logo for use in nav / footer / auth pages.
- * Renders the icon plus a tightly-tracked "GrantSpark" lockup.
+ * Logo + wordmark lockup. The wordmark uses the editorial serif (Fraunces)
+ * to anchor the Forest Heritage brand tone.
  */
 export function Wordmark({ size = 26 }: { size?: number }) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <Logo size={size} />
       <span
-        className="font-semibold tracking-tightish text-text"
-        style={{ fontSize: Math.max(15, size * 0.62) }}
+        className="font-display font-medium tracking-tightish text-text"
+        style={{ fontSize: Math.max(16, size * 0.66) }}
       >
         GrantSpark
       </span>

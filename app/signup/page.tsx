@@ -48,7 +48,7 @@ export default function SignupPage() {
           <Link href="/" className="mb-8 inline-flex" aria-label="GrantSpark — home">
             <Wordmark size={28} />
           </Link>
-          <h1 className="text-3xl font-semibold tracking-tightish text-text">
+          <h1 className="font-display text-3xl font-medium tracking-tightish text-text">
             Create your account
           </h1>
           <p className="mt-2 text-text-secondary">
@@ -62,15 +62,15 @@ export default function SignupPage() {
               <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" /></svg>
               </div>
-              <h2 className="text-xl font-semibold text-text">Check your email</h2>
+              <h2 className="font-display text-xl font-medium text-text">Check your email</h2>
               <p className="mt-2 text-sm leading-relaxed text-text-secondary">
                 We&apos;ve sent a confirmation link to{' '}
-                <span className="font-medium text-text">{email}</span>. Click it to
+                <span className="font-semibold text-text">{email}</span>. Click it to
                 activate your account, then sign in.
               </p>
               <Link
                 href="/login"
-                className="mt-6 inline-flex rounded-xl border border-border bg-background px-6 py-3 text-sm font-semibold text-text transition-colors hover:bg-surface"
+                className="mt-6 inline-flex rounded-xl border border-primary px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary-soft"
               >
                 Go to sign in
               </Link>
@@ -113,14 +113,14 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? 'Creating account…' : <>Create account <span aria-hidden="true">→</span></>}
                 </button>
               </form>
               <p className="mt-6 text-center text-sm text-text-secondary">
                 Already have an account?{' '}
-                <Link href="/login" className="font-medium text-primary hover:underline">
+                <Link href="/login" className="font-semibold text-primary hover:underline">
                   Sign in
                 </Link>
               </p>

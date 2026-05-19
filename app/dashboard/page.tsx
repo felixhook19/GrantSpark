@@ -10,8 +10,8 @@ import type { Match, Grant, Org, Decision } from '@/types/db'
 
 function DecisionTag({ decision }: { decision: Decision | string }) {
   const map: Record<string, { cls: string; label: string }> = {
-    apply: { cls: 'border-success/30 bg-success-soft text-success', label: 'Apply' },
-    consider: { cls: 'border-warning/30 bg-warning-soft text-warning', label: 'Consider' },
+    apply: { cls: 'border-primary/30 bg-primary-soft text-primary', label: 'Apply' },
+    consider: { cls: 'border-accent/40 bg-accent-soft text-accent-hover', label: 'Consider' },
     skip: { cls: 'border-border bg-surface text-text-secondary', label: 'Skip' },
   }
   const item = map[decision] || map.consider
@@ -41,14 +41,13 @@ function GrantCard({ match }: { match: Match }) {
 
   return (
     <article className="rounded-2xl border border-border bg-background p-6 shadow-soft transition-all hover:shadow-card">
-      {/* Header — score + title + decision */}
       <div className="flex items-start gap-5">
         <MatchRing score={match.fit_score} size="md" />
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="text-base font-semibold leading-snug text-text">
+              <h3 className="font-display text-lg font-medium leading-snug tracking-tightish text-text">
                 {g.title}
               </h3>
               <p className="mt-0.5 text-sm text-text-secondary">{g.funder}</p>
@@ -58,12 +57,10 @@ function GrantCard({ match }: { match: Match }) {
         </div>
       </div>
 
-      {/* Summary */}
       {g.summary && (
         <p className="mt-4 text-sm leading-relaxed text-text-secondary">{g.summary}</p>
       )}
 
-      {/* Meta strip */}
       <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
         {(g.grant_amount_min || g.grant_amount_max) && (
           <span className="text-text">
@@ -91,7 +88,6 @@ function GrantCard({ match }: { match: Match }) {
         )}
       </div>
 
-      {/* Tags */}
       {g.sector_tags && g.sector_tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
           {g.sector_tags.map((tag: string) => (
@@ -105,11 +101,10 @@ function GrantCard({ match }: { match: Match }) {
         </div>
       )}
 
-      {/* Footer */}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
         <button
           onClick={() => setOpen(!open)}
-          className="text-sm font-medium text-primary transition-colors hover:text-primary-hover"
+          className="text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
         >
           {open ? 'Hide reasoning' : 'Why this matches'}
         </button>
@@ -118,7 +113,7 @@ function GrantCard({ match }: { match: Match }) {
             href={g.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-text shadow-soft transition-all hover:-translate-y-px hover:bg-accent-hover hover:text-background"
           >
             View grant <span aria-hidden="true">→</span>
           </a>
@@ -135,7 +130,7 @@ function GrantCard({ match }: { match: Match }) {
               <ul className="space-y-1.5">
                 {match.why_match.map((r: string, i: number) => (
                   <li key={i} className="flex gap-2 text-sm text-text">
-                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-success" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     {r}
                   </li>
                 ))}
@@ -196,7 +191,6 @@ function DashboardInner() {
   const [retryAt, setRetryAt] = useState<number | null>(null)
   const [now, setNow] = useState<number>(() => Date.now())
 
-  // Filters
   const [decisionFilter, setDecisionFilter] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [minAmount, setMinAmount] = useState('')
@@ -366,7 +360,7 @@ function DashboardInner() {
         {/* Header */}
         <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tightish text-text md:text-3xl">
+            <h1 className="font-display text-3xl font-medium tracking-tightish text-text md:text-4xl">
               {matching ? 'Finding your matches…' : `${matches.length} grants found`}
             </h1>
             <p className="mt-1 text-text-secondary">
@@ -398,15 +392,15 @@ function DashboardInner() {
         {!matching && matches.length > 0 && (
           <div className="mb-6 grid grid-cols-3 gap-4">
             <div className="rounded-2xl border border-border bg-background p-5 shadow-soft">
-              <p className="tabular text-2xl font-semibold text-success md:text-3xl">{applyCount}</p>
+              <p className="tabular font-display text-2xl font-medium text-primary md:text-3xl">{applyCount}</p>
               <p className="mt-1 text-sm text-text-secondary">Ready to apply</p>
             </div>
             <div className="rounded-2xl border border-border bg-background p-5 shadow-soft">
-              <p className="tabular text-2xl font-semibold text-warning md:text-3xl">{considerCount}</p>
+              <p className="tabular font-display text-2xl font-medium text-accent-hover md:text-3xl">{considerCount}</p>
               <p className="mt-1 text-sm text-text-secondary">Worth considering</p>
             </div>
             <div className="rounded-2xl border border-border bg-background p-5 shadow-soft">
-              <p className="tabular text-2xl font-semibold text-text md:text-3xl">{matches.length}</p>
+              <p className="tabular font-display text-2xl font-medium text-text md:text-3xl">{matches.length}</p>
               <p className="mt-1 text-sm text-text-secondary">Total matches</p>
             </div>
           </div>
@@ -494,16 +488,14 @@ function DashboardInner() {
           </div>
         )}
 
-        {/* Matching loading state */}
         {matching && (
           <div className="rounded-2xl border border-border bg-background py-20 text-center shadow-soft">
             <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <h2 className="text-xl font-semibold text-text">Scanning grants for you</h2>
+            <h2 className="font-display text-xl font-medium text-text">Scanning grants for you</h2>
             <p className="mt-2 text-text-secondary">Matching every opportunity against your profile and scoring eligibility…</p>
           </div>
         )}
 
-        {/* Results */}
         {!matching && visible.length > 0 && (
           <div className="space-y-4">
             {hasActiveFilters && (
@@ -517,36 +509,33 @@ function DashboardInner() {
           </div>
         )}
 
-        {/* No results after filtering */}
         {!matching && matches.length > 0 && visible.length === 0 && (
           <div className="rounded-2xl border border-border bg-background py-16 text-center shadow-soft">
-            <h2 className="text-lg font-semibold text-text">No grants match your filters</h2>
+            <h2 className="font-display text-xl font-medium text-text">No grants match your filters</h2>
             <p className="mt-2 text-text-secondary">Try broadening your search or clearing the filters.</p>
             <button
               onClick={clearFilters}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
             >
               Clear filters
             </button>
           </div>
         )}
 
-        {/* No matches at all */}
         {!matching && matches.length === 0 && (
           <div className="rounded-2xl border border-border bg-background py-20 text-center shadow-soft">
-            <h2 className="text-lg font-semibold text-text">No matches yet</h2>
+            <h2 className="font-display text-xl font-medium text-text">No matches yet</h2>
             <p className="mt-2 text-text-secondary">Run the matching engine to scan every grant against your profile.</p>
             <button
               onClick={runMatching}
               disabled={refreshDisabled}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
             >
               {rateLimited ? `Try again in ${formatCountdown(cooldownLeft)}` : 'Run matching now →'}
             </button>
           </div>
         )}
 
-        {/* Profile nudge */}
         {!matching && matches.length > 0 && (
           <div className="mt-8 rounded-2xl border border-border bg-background p-6 text-center shadow-soft">
             <p className="text-sm text-text-secondary">

@@ -217,7 +217,7 @@ export default function ProfilePage() {
 
       <div className="mx-auto max-w-3xl px-6 py-10">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tightish text-text md:text-3xl">Your profile</h1>
+          <h1 className="font-display text-3xl font-medium tracking-tightish text-text md:text-4xl">Your profile</h1>
           <p className="mt-2 text-text-secondary">
             Update your details to refine your grant matches. Every change you save triggers a fresh matching run against all {isCharity ? 'charity and community' : 'business and innovation'} funding in the database.
           </p>
@@ -225,7 +225,6 @@ export default function ProfilePage() {
 
         <div className="space-y-6">
 
-          {/* Organisation type */}
           <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
             <h2 className="mb-4 text-base font-semibold text-text">Organisation type</h2>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -248,7 +247,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Basic info */}
           <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
             <h2 className="mb-4 text-base font-semibold text-text">About your organisation</h2>
             <div className="space-y-5">
@@ -293,7 +291,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Stage & size */}
           <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
             <h2 className="mb-4 text-base font-semibold text-text">Stage and size</h2>
             <div className="space-y-5">
@@ -329,7 +326,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Location */}
           <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
             <h2 className="mb-4 text-base font-semibold text-text">Location</h2>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -357,7 +353,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Sectors */}
           <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
             <h2 className="mb-1 text-base font-semibold text-text">
               {isCharity ? 'Cause areas and activities' : 'Sectors and focus'}
@@ -381,7 +376,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Funding preferences */}
           <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
             <h2 className="mb-4 text-base font-semibold text-text">Funding preferences</h2>
             <div className="space-y-4">
@@ -432,7 +426,6 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Actions */}
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               type="button"
@@ -446,7 +439,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => handleSave(true)}
               disabled={saving}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
             >
               {saving ? 'Saving…' : <>Save and re-run matching <span aria-hidden="true">→</span></>}
             </button>

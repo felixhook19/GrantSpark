@@ -9,9 +9,10 @@ export function SiteFooter() {
           <div className="md:col-span-2">
             <Wordmark size={24} />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-text-secondary">
-              AI grant discovery for UK charities, CICs, community groups and
-              social enterprises. Find relevant funding, understand eligibility
-              and track deadlines — all in one place.
+              A modern funding intelligence service for UK charities, CICs and
+              community organisations — and the consultants who support them.
+              Find relevant grants, understand eligibility and track deadlines
+              in one place.
             </p>
           </div>
 
@@ -22,6 +23,7 @@ export function SiteFooter() {
             <ul className="mt-4 space-y-2 text-sm">
               <li><Link className="text-text-secondary hover:text-text" href="/#how">How it works</Link></li>
               <li><Link className="text-text-secondary hover:text-text" href="/#features">Features</Link></li>
+              <li><Link className="text-text-secondary hover:text-text" href="/#consultants">For consultants</Link></li>
               <li><Link className="text-text-secondary hover:text-text" href="/#pricing">Pricing</Link></li>
               <li><Link className="text-text-secondary hover:text-text" href="/signup">Get started</Link></li>
             </ul>

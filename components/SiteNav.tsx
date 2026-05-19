@@ -23,6 +23,12 @@ export function SiteNav() {
             Features
           </Link>
           <Link
+            href="/#consultants"
+            className="text-sm font-medium text-text-secondary transition-colors hover:text-text"
+          >
+            For consultants
+          </Link>
+          <Link
             href="/#pricing"
             className="text-sm font-medium text-text-secondary transition-colors hover:text-text"
           >
@@ -45,7 +51,7 @@ export function SiteNav() {
           </Link>
           <Link
             href="/signup"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
           >
             Start free
             <span aria-hidden="true">→</span>

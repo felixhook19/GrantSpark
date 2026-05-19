@@ -41,7 +41,7 @@ export default function LoginPage() {
           <Link href="/" className="mb-8 inline-flex" aria-label="GrantSpark — home">
             <Wordmark size={28} />
           </Link>
-          <h1 className="text-3xl font-semibold tracking-tightish text-text">
+          <h1 className="font-display text-3xl font-medium tracking-tightish text-text">
             Welcome back
           </h1>
           <p className="mt-2 text-text-secondary">Sign in to see your grant matches</p>
@@ -83,14 +83,14 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-white shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'Signing in…' : <>Sign in <span aria-hidden="true">→</span></>}
             </button>
           </form>
           <p className="mt-6 text-center text-sm text-text-secondary">
             No account yet?{' '}
-            <Link href="/signup" className="font-medium text-primary hover:underline">
+            <Link href="/signup" className="font-semibold text-primary hover:underline">
               Sign up free
             </Link>
           </p>
