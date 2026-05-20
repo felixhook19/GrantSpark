@@ -9,31 +9,31 @@ const config: Config = {
     extend: {
       colors: {
         // --- Forest Heritage palette ---
-        background: '#FBFAF7',        // warm cream / parchment
-        surface: '#F4F1EA',           // slightly deeper cream
+        background: '#FBFAF7',
+        surface: '#F4F1EA',
         'surface-2': '#ECE8DE',
         border: '#E7E5E0',
         'border-strong': '#D6D3CC',
-        text: '#1C1917',              // warm near-black
-        'text-secondary': '#57534E',  // warm grey
+        text: '#1C1917',
+        'text-secondary': '#57534E',
         muted: '#A8A29E',
 
-        primary: '#14532D',           // deep forest green (brand, CTAs)
+        primary: '#14532D',
         'primary-hover': '#166534',
-        'primary-soft': '#E8EFE9',    // very soft green tint
+        'primary-soft': '#E8EFE9',
 
-        accent: '#CA8A04',            // mustard gold (highlights, view buttons)
+        accent: '#CA8A04',
         'accent-hover': '#A16207',
         'accent-soft': '#FEF3C7',
 
-        success: '#0F6E56',           // teal-leaning emerald (90+ match)
+        success: '#0F6E56',
         'success-soft': '#D8EFE5',
-        warning: '#B45309',           // burnt amber (60-74 match)
+        warning: '#B45309',
         'warning-soft': '#FEF3C7',
         danger: '#B91C1C',
         'danger-soft': '#FEE2E2',
 
-        // --- Legacy aliases (so any leftover classes still resolve) ---
+        // --- Legacy aliases ---
         midnight: '#FBFAF7',
         'midnight-2': '#F4F1EA',
         'midnight-3': '#ECE8DE',
@@ -46,7 +46,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['var(--font-fraunces)', 'Georgia', 'serif'],
+        display: ['var(--font-newsreader)', 'Georgia', 'serif'],
         body: ['var(--font-inter)', 'system-ui', '-apple-system', 'sans-serif'],
         mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },

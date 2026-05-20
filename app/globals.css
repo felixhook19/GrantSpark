@@ -32,8 +32,7 @@ body {
 
 /* Editorial serif via .font-display utility */
 .font-display {
-  font-family: var(--font-fraunces), Georgia, "Source Serif Pro", serif;
-  font-feature-settings: "ss01", "ss02";
+  font-family: var(--font-newsreader), Georgia, "Source Serif Pro", serif;
 }
 
 h1, h2, h3, h4 {
@@ -106,7 +105,7 @@ h1, h2, h3, h4 {
   color: #292524;
 }
 .blog-content h2 {
-  font-family: var(--font-fraunces), Georgia, serif;
+  font-family: var(--font-newsreader), Georgia, serif;
   font-weight: 500;
   font-size: 1.7rem;
   letter-spacing: -0.02em;
@@ -115,7 +114,7 @@ h1, h2, h3, h4 {
   margin-bottom: 0.9rem;
 }
 .blog-content h3 {
-  font-family: var(--font-fraunces), Georgia, serif;
+  font-family: var(--font-newsreader), Georgia, serif;
   font-weight: 500;
   font-size: 1.3rem;
   letter-spacing: -0.015em;
@@ -150,7 +149,7 @@ h1, h2, h3, h4 {
   margin: 1.4rem 0;
   color: #44403C;
   font-style: italic;
-  font-family: var(--font-fraunces), Georgia, serif;
+  font-family: var(--font-newsreader), Georgia, serif;
   font-size: 1.1rem;
 }
 .blog-content code {
