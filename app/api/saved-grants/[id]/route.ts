@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrg } from '@/lib/orgs'
 import { SAVED_STATUSES, type SavedStatus } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
@@ -15,12 +16,8 @@ type PatchBody = {
 
 async function getOrgId(userId: string): Promise<string | null> {
   const admin = createSupabaseAdminClient()
-  const { data } = await admin
-    .from('orgs')
-    .select('id')
-    .eq('owner_user_id', userId)
-    .maybeSingle()
-  return (data as { id: string } | null)?.id ?? null
+  const org = await getActiveOrg(admin, userId)
+  return org?.id ?? null
 }
 
 // PATCH /api/saved-grants/:id — update status / notes / internal_deadline

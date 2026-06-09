@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrg } from '@/lib/orgs'
 import type { Grant, SavedGrant, SavedStatus } from '@/types/db'
 import { SAVED_STATUSES } from '@/types/db'
 
@@ -11,12 +12,8 @@ type DeleteBody = { opportunity_id?: string }
 
 async function getOrgId(userId: string): Promise<string | null> {
   const admin = createSupabaseAdminClient()
-  const { data } = await admin
-    .from('orgs')
-    .select('id')
-    .eq('owner_user_id', userId)
-    .maybeSingle()
-  return (data as { id: string } | null)?.id ?? null
+  const org = await getActiveOrg(admin, userId)
+  return org?.id ?? null
 }
 
 // GET /api/saved-grants — list with joined grant

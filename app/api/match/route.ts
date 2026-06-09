@@ -15,7 +15,8 @@ import {
   recordMatchRun,
   FREE_MONTHLY_MATCH_RUNS,
 } from '@/lib/billing'
-import type { Grant, Org, Decision, Match } from '@/types/db'
+import { getActiveOrg } from '@/lib/orgs'
+import type { Grant, Decision, Match } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
@@ -76,13 +77,7 @@ export async function POST() {
 
   // --- Org lookup -----------------------------------------------------------
   const admin = createSupabaseAdminClient()
-  const { data: orgData } = await admin
-    .from('orgs')
-    .select('*')
-    .eq('owner_user_id', user.id)
-    .maybeSingle()
-
-  const org = orgData as Org | null
+  const org = await getActiveOrg(admin, user.id)
   if (!org) {
     return NextResponse.json({ error: 'No organisation profile found' }, { status: 404 })
   }

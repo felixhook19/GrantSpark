@@ -156,10 +156,14 @@ export async function runWeeklyDigest(
 
   for (const u of targeted) {
     if (!u.email) continue
+    // Multi-org users get their digest for the first (original) org —
+    // there's no request cookie here to know which one is "active".
     const { data: orgRaw } = await admin
       .from('orgs')
       .select('*')
       .eq('owner_user_id', u.id)
+      .order('created_at', { ascending: true })
+      .limit(1)
       .maybeSingle()
     const org = orgRaw as Org | null
     if (!org) {

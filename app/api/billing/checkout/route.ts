@@ -43,10 +43,14 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // First (original) org — used only for the Stripe customer's display
+  // name and the incidental subscriptions.org_id link.
   const { data: org } = await admin
     .from('orgs')
     .select('id, org_name')
     .eq('owner_user_id', user.id)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle()
 
   const siteUrl = optionalEnv('NEXT_PUBLIC_SITE_URL', 'https://grantspark.co.uk')

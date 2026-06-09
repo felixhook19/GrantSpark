@@ -53,7 +53,7 @@ const PLANS = [
       'Everything in Pro',
       '5 team seats',
       'Multiple organisation profiles',
-      'Consultant portfolio view (coming soon)',
+      'Consultant portfolio view',
     ],
   },
 ]
