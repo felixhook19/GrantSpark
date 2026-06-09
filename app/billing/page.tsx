@@ -40,7 +40,7 @@ const PLANS = [
       'Unlimited AI matching',
       'Deadline alerts',
       'AI fit scoring with risks & next steps',
-      'Application assistant (coming soon)',
+      'AI application assistant',
       'Priority support',
     ],
   },
