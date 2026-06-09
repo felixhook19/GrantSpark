@@ -188,6 +188,7 @@ function DashboardInner() {
   const [loading, setLoading] = useState(true)
   const [matching, setMatching] = useState(false)
   const [error, setError] = useState('')
+  const [planLimited, setPlanLimited] = useState(false)
   const [retryAt, setRetryAt] = useState<number | null>(null)
   const [now, setNow] = useState<number>(() => Date.now())
 
@@ -213,10 +214,14 @@ function DashboardInner() {
   const runMatching = useCallback(async () => {
     setMatching(true)
     setError('')
+    setPlanLimited(false)
     try {
       const res = await fetch('/api/match', { method: 'POST' })
       const data = await res.json()
-      if (res.status === 429) {
+      if (res.status === 402 && data?.code === 'plan_limit_exceeded') {
+        setPlanLimited(true)
+        setError(data.error || 'You’ve used your free match runs for this month.')
+      } else if (res.status === 429) {
         const seconds = Number(data?.retry_after_seconds || 60)
         setRetryAt(Date.now() + seconds * 1000)
         setError(data?.error || 'You’ve hit the rate limit. Please try again later.')
@@ -345,6 +350,9 @@ function DashboardInner() {
             <Link href="/profile" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
               Edit profile
             </Link>
+            <Link href="/billing" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
+              Billing
+            </Link>
             <Link href="/blog" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
               Blog
             </Link>
@@ -385,6 +393,14 @@ function DashboardInner() {
         {error && (
           <div className="mb-6 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
             {error}
+            {planLimited && (
+              <>
+                {' '}
+                <Link href="/billing" className="font-semibold underline">
+                  Upgrade your plan
+                </Link>
+              </>
+            )}
           </div>
         )}
 

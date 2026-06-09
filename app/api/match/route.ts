@@ -8,6 +8,13 @@ import {
   blendScores,
   TOP_N_FOR_AI,
 } from '@/lib/matching'
+import {
+  getSubscription,
+  effectivePlan,
+  countMatchRunsThisMonth,
+  recordMatchRun,
+  FREE_MONTHLY_MATCH_RUNS,
+} from '@/lib/billing'
 import type { Grant, Org, Decision, Match } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
@@ -78,6 +85,27 @@ export async function POST() {
   const org = orgData as Org | null
   if (!org) {
     return NextResponse.json({ error: 'No organisation profile found' }, { status: 404 })
+  }
+
+  // --- Plan enforcement -------------------------------------------------
+  // Free tier gets a fixed number of match runs per calendar month; paid
+  // plans are unlimited (still behind the abuse rate limits above).
+  const subscription = await getSubscription(admin, user.id)
+  const plan = effectivePlan(subscription)
+  let planRunsRemaining: number | null = null
+  if (plan === 'free') {
+    const used = await countMatchRunsThisMonth(admin, user.id)
+    if (used >= FREE_MONTHLY_MATCH_RUNS) {
+      return NextResponse.json(
+        {
+          error: `You've used all ${FREE_MONTHLY_MATCH_RUNS} free match runs this month. Upgrade to Pro for unlimited matching.`,
+          code: 'plan_limit_exceeded',
+          plan,
+        },
+        { status: 402 }
+      )
+    }
+    planRunsRemaining = FREE_MONTHLY_MATCH_RUNS - used - 1
   }
 
   // --- Stage 1: hard SQL pre-filter -----------------------------------------
@@ -248,6 +276,9 @@ Return ONLY a valid JSON array of these objects, no markdown, no explanation, no
     await admin.from('matches').insert(rows)
   }
 
+  // Only successful runs count against the free-tier monthly quota.
+  await recordMatchRun(admin, user.id, org.id)
+
   // --- Build response ------------------------------------------------------
   const enriched: Match[] = rows
     .map((row): Match | null => {
@@ -270,6 +301,10 @@ Return ONLY a valid JSON array of these objects, no markdown, no explanation, no
     'X-Match-Pool-Size': String(allCandidates.length),
     'X-Match-Candidates-Sent-To-AI': String(ranked.length),
     'X-Match-Top-N': String(TOP_N_FOR_AI),
+    'X-Plan': plan,
+  }
+  if (planRunsRemaining !== null) {
+    headers['X-Plan-Runs-Remaining'] = String(planRunsRemaining)
   }
   if (limit.dailyRemaining !== null) {
     headers['X-RateLimit-Daily-Remaining'] = String(limit.dailyRemaining)
