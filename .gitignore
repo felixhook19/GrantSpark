@@ -4,6 +4,7 @@
 # next.js build output
 /.next
 /out
+next-env.d.ts
 
 # env files — secrets live in Vercel env vars only
 .env
