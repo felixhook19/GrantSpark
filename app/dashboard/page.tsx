@@ -305,10 +305,15 @@ function formatCountdown(seconds: number): string {
   return `${Math.ceil(seconds / 3600)}h`
 }
 
+type OrgSummary = { id: string; org_name: string }
+
 function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [org, setOrg] = useState<Org | null>(null)
+  const [orgList, setOrgList] = useState<OrgSummary[]>([])
+  const [activeOrgId, setActiveOrgId] = useState<string>('')
+  const [canAddOrg, setCanAddOrg] = useState(false)
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [matching, setMatching] = useState(false)
@@ -378,6 +383,18 @@ function DashboardInner() {
         }
         setOrg(profileData.org as Org)
 
+        // Org list for the switcher — fire and forget, the dashboard
+        // works without it.
+        fetch('/api/orgs')
+          .then((res) => res.json())
+          .then((data) => {
+            if (!active || !data?.orgs) return
+            setOrgList(data.orgs as OrgSummary[])
+            setActiveOrgId(data.active_org_id || '')
+            setCanAddOrg(Boolean(data.can_add))
+          })
+          .catch(() => {})
+
         if (searchParams.get('rematch') === '1') {
           setLoading(false)
           runMatching()
@@ -412,6 +429,27 @@ function DashboardInner() {
     await supabase.auth.signOut()
     router.push('/')
     router.refresh()
+  }
+
+  async function handleOrgSwitch(value: string) {
+    if (value === '__add') {
+      router.push('/onboarding?new=1')
+      return
+    }
+    if (!value || value === activeOrgId) return
+    try {
+      const res = await fetch('/api/orgs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ org_id: value }),
+      })
+      if (res.ok) {
+        // Full reload so every fetch picks up the new active org.
+        window.location.href = '/dashboard'
+      }
+    } catch {
+      // Switch failed — leave the current org in place.
+    }
   }
 
   function clearFilters() {
@@ -469,8 +507,29 @@ function DashboardInner() {
             <Wordmark size={24} />
           </Link>
           <div className="flex items-center gap-5">
-            {org && (
-              <span className="hidden text-sm text-text-secondary md:block">{org.org_name}</span>
+            {orgList.length > 1 || canAddOrg ? (
+              <select
+                value={activeOrgId}
+                onChange={(e) => handleOrgSwitch(e.target.value)}
+                aria-label="Switch organisation"
+                className="hidden max-w-[200px] rounded-xl border border-border bg-background px-3 py-1.5 text-sm font-medium text-text focus:border-primary focus:outline-none md:block"
+              >
+                {orgList.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.org_name}
+                  </option>
+                ))}
+                {canAddOrg && <option value="__add">+ Add organisation</option>}
+              </select>
+            ) : (
+              org && (
+                <span className="hidden text-sm text-text-secondary md:block">{org.org_name}</span>
+              )
+            )}
+            {orgList.length > 1 && (
+              <Link href="/portfolio" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
+                Portfolio
+              </Link>
             )}
             <Link href="/profile" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
               Edit profile

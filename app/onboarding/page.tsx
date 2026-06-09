@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Wordmark } from '@/components/Logo'
 
 const SECTORS = [
@@ -69,8 +69,11 @@ const selectedToggleCls =
 const unselectedToggleCls =
   'flex-1 rounded-xl border border-border bg-background py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
 
-export default function OnboardingPage() {
+function OnboardingInner() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // ?new=1 — Team-plan users adding another organisation profile.
+  const isNewOrg = searchParams.get('new') === '1'
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
@@ -90,6 +93,12 @@ export default function OnboardingPage() {
   })
 
   useEffect(() => {
+    // Adding a second profile: never bounce to the dashboard just
+    // because an org already exists.
+    if (isNewOrg) {
+      setChecking(false)
+      return
+    }
     let active = true
     fetch('/api/profile')
       .then((res) => res.json())
@@ -107,7 +116,7 @@ export default function OnboardingPage() {
     return () => {
       active = false
     }
-  }, [router])
+  }, [router, isNewOrg])
 
   function update<K extends FormField>(field: K, value: OnboardingForm[K]) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -129,7 +138,7 @@ export default function OnboardingPage() {
       const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, create_new: isNewOrg }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -137,7 +146,8 @@ export default function OnboardingPage() {
         setLoading(false)
         return
       }
-      router.push('/dashboard')
+      // The new/edited org is now the active one; run matching for it.
+      router.push(isNewOrg ? '/dashboard?rematch=1' : '/dashboard')
       router.refresh()
     } catch {
       setError('Network error. Please try again.')
@@ -370,5 +380,19 @@ export default function OnboardingPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <OnboardingInner />
+    </Suspense>
   )
 }

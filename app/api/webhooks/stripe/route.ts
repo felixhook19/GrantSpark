@@ -90,10 +90,14 @@ async function upsertFromSubscription(
     )
   }
 
+  // Subscriptions are per-user; org_id is just an informational link to
+  // the user's first org, so multi-org users don't break this lookup.
   const { data: org } = await admin
     .from('orgs')
     .select('id')
     .eq('owner_user_id', userId)
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle()
 
   const { error } = await admin.from('subscriptions').upsert(

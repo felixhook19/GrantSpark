@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { getActiveOrg } from '@/lib/orgs'
 import type { Grant } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
@@ -27,11 +28,7 @@ export async function GET() {
 
   const admin = createSupabaseAdminClient()
 
-  const { data: org } = await admin
-    .from('orgs')
-    .select('id')
-    .eq('owner_user_id', user.id)
-    .maybeSingle()
+  const org = await getActiveOrg(admin, user.id)
 
   if (!org) {
     return NextResponse.json({ matches: [] })

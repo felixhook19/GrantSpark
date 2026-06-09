@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { getSubscription, effectivePlan } from '@/lib/billing'
+import {
+  getOrgsForUser,
+  getActiveOrg,
+  orgLimitForPlan,
+  ACTIVE_ORG_COOKIE,
+  ACTIVE_ORG_COOKIE_OPTIONS,
+} from '@/lib/orgs'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +24,7 @@ type OnboardingBody = {
   website?: string
   themes?: string[]
   has_match_funding?: boolean
+  create_new?: boolean
 }
 
 export async function POST(request: NextRequest) {
@@ -57,20 +66,42 @@ export async function POST(request: NextRequest) {
     has_match_funding: body.has_match_funding === true,
   }
 
-  // If the user already has an org, update it; otherwise insert.
-  const { data: existing } = await admin
-    .from('orgs')
-    .select('id')
-    .eq('owner_user_id', user.id)
-    .maybeSingle()
+  const existingOrgs = await getOrgsForUser(admin, user.id)
 
-  const result = existing
-    ? await admin.from('orgs').update(row).eq('id', existing.id).select().single()
-    : await admin.from('orgs').insert(row).select().single()
+  // Decide between creating a new profile and updating the active one.
+  // create_new is plan-gated: Team can hold multiple org profiles,
+  // free/Pro are limited to one.
+  let result
+  if (body.create_new && existingOrgs.length > 0) {
+    const sub = await getSubscription(admin, user.id)
+    const limit = orgLimitForPlan(effectivePlan(sub))
+    if (existingOrgs.length >= limit) {
+      return NextResponse.json(
+        {
+          error:
+            limit === 1
+              ? 'Multiple organisation profiles are a Team plan feature. Upgrade to add more.'
+              : `You've reached the limit of ${limit} organisation profiles.`,
+          code: 'org_limit_exceeded',
+        },
+        { status: 402 }
+      )
+    }
+    result = await admin.from('orgs').insert(row).select().single()
+  } else if (existingOrgs.length > 0) {
+    const active = await getActiveOrg(admin, user.id)
+    const targetId = active?.id || existingOrgs[0].id
+    result = await admin.from('orgs').update(row).eq('id', targetId).select().single()
+  } else {
+    result = await admin.from('orgs').insert(row).select().single()
+  }
 
   if (result.error) {
     return NextResponse.json({ error: result.error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ org: result.data })
+  // Whatever org was just created or edited becomes the active one.
+  const response = NextResponse.json({ org: result.data })
+  response.cookies.set(ACTIVE_ORG_COOKIE, result.data.id, ACTIVE_ORG_COOKIE_OPTIONS)
+  return response
 }
