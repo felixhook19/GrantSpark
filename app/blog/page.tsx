@@ -8,11 +8,26 @@ import type { BlogPost } from '@/types/db'
 export const revalidate = 300
 
 export const metadata: Metadata = {
-  title: 'Blog — UK grants, funding guides and tips',
+  title: 'Grant Intelligence — UK grants, decoded',
   description:
     'Practical guides to UK grant funding for charities, CICs and community organisations — eligibility, deadlines, application tips and the latest opportunities.',
   alternates: {
     canonical: '/blog',
+  },
+  openGraph: {
+    title: 'Grant Intelligence — UK grants, decoded',
+    description:
+      'Practical guides to UK grant funding for charities, CICs and community organisations — honest, specific and written by grant writers.',
+    url: '/blog',
+    type: 'website',
+    siteName: 'GrantSpark',
+    locale: 'en_GB',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Grant Intelligence — UK grants, decoded',
+    description:
+      'Practical guides to UK grant funding for charities, CICs and community organisations.',
   },
 }
 
@@ -45,10 +60,10 @@ export default async function BlogIndexPage() {
 
       <section className="border-b border-border bg-surface px-6 py-16">
         <div className="mx-auto max-w-4xl">
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent-hover">
-            GrantSpark journal
+          <p className="font-mono text-xs font-medium uppercase tracking-wider text-primary-hover">
+            Grant Intelligence
           </p>
-          <h1 className="mt-3 font-display text-4xl font-medium tracking-tightish text-text md:text-5xl">
+          <h1 className="mt-3 font-display text-4xl tracking-tightest text-text md:text-5xl">
             UK grants, decoded.
           </h1>
           <p className="mt-4 max-w-xl text-lg text-text-secondary">

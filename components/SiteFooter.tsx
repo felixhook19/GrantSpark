@@ -9,10 +9,11 @@ export function SiteFooter() {
           <div className="md:col-span-2">
             <Wordmark size={24} />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-text-secondary">
-              A modern funding intelligence service for UK charities, CICs and
-              community organisations — and the consultants who support them.
-              Find relevant grants, understand eligibility and track deadlines
-              in one place.
+              AI grant matching for UK charities. We find the grants you can
+              actually win — and tell you exactly why.
+            </p>
+            <p className="mt-3 text-sm font-medium text-text">
+              Built by a grant writer, for grant writers.
             </p>
           </div>
 
@@ -44,9 +45,7 @@ export function SiteFooter() {
 
         <div className="mt-10 flex flex-col gap-3 border-t border-border pt-6 text-xs text-text-secondary sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} Grant Finder Limited. All rights reserved.</p>
-          <p>
-            GrantSpark surfaces grant opportunities. We do not guarantee funding outcomes.
-          </p>
+          <p className="font-display text-sm text-text">Funding found.</p>
         </div>
       </div>
     </footer>

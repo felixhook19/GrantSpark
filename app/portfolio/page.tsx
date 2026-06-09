@@ -149,7 +149,7 @@ export default function PortfolioPage() {
               href="/billing"
               className="inline-flex flex-shrink-0 items-center gap-1.5 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-text shadow-soft transition-all hover:bg-surface"
             >
-              Upgrade to Team for more profiles
+              Upgrade to Strategist for more profiles
             </Link>
           )}
         </div>
@@ -231,14 +231,14 @@ export default function PortfolioPage() {
           ))}
         </div>
 
-        {data && data.portfolio.length <= 1 && data.plan !== 'team' && (
+        {data && data.portfolio.length <= 1 && data.plan !== 'multi' && (
           <div className="mt-8 rounded-2xl border border-border bg-background p-6 shadow-soft">
             <h2 className="font-display text-lg font-medium text-text">
               Managing funding for more than one organisation?
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-              The Team plan lets you hold up to {data.org_limit > 1 ? data.org_limit : 10} organisation
-              profiles — ideal for consultants and umbrella bodies running grant pipelines across
+              The Strategist plan lets you hold up to {data.org_limit > 1 ? data.org_limit : 10} organisation
+              profiles — built for consultants and umbrella bodies running grant pipelines across
               multiple clients. Each profile gets its own AI matching, saved-grant pipeline and
               application drafts.
             </p>
@@ -246,7 +246,7 @@ export default function PortfolioPage() {
               href="/billing"
               className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
             >
-              See Team plan <span aria-hidden="true">→</span>
+              See the Strategist plan <span aria-hidden="true">→</span>
             </Link>
           </div>
         )}

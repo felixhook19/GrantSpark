@@ -1,4 +1,4 @@
-// Multi-organisation support (Team plan).
+// Multi-organisation support (Strategist plan).
 //
 // A user can own several org profiles. Which one is "active" is tracked
 // by a cookie holding the org id; every API route resolves the active
@@ -6,7 +6,8 @@
 // user actually owns — a tampered cookie just falls back to the first
 // org, so the cookie needs no signing.
 //
-// Plan limits: free/pro get 1 org profile; team gets up to 10.
+// Plan limits: Scout (free) and Seeker (pro) get 1 org profile;
+// Strategist (multi) gets up to 10.
 
 import { cookies } from 'next/headers'
 import type { SupabaseClient } from '@supabase/supabase-js'
@@ -24,7 +25,7 @@ export const ACTIVE_ORG_COOKIE_OPTIONS = {
 }
 
 export function orgLimitForPlan(plan: Plan): number {
-  return plan === 'team' || plan === 'multi' ? 10 : 1
+  return plan === 'multi' ? 10 : 1
 }
 
 // Oldest first, so orgs[0] is the original profile — the stable default

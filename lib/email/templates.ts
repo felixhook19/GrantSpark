@@ -16,9 +16,9 @@ export type DigestPayload = {
 }
 
 const SPARK = '#19E88F'
-const MIDNIGHT = '#0B1220'
-const CHALK = '#F4F1EA'
-const SLATE = '#7E8AA0'
+const MIDNIGHT = '#1A1A2E'
+const CHALK = '#F5F3F0'
+const SLATE = '#546E7A'
 
 function money(v: number | null | undefined): string {
   if (!v && v !== 0) return ''

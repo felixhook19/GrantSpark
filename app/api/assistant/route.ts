@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
   if (plan === 'free') {
     return NextResponse.json(
       {
-        error: 'The application assistant is a Pro feature. Upgrade to draft application answers.',
+        error: 'The application assistant is a Seeker feature. Upgrade to draft application answers.',
         code: 'pro_feature',
       },
       { status: 402 }

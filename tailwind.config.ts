@@ -1,5 +1,11 @@
 import type { Config } from 'tailwindcss'
 
+// "Purposeful Intelligence" brand refresh (June 2026) — Type-First Dark.
+//
+// Semantic tokens (background/surface/text/primary/...) are what pages
+// use; the named brand tokens (midnight/teal/spark/...) are the approved
+// palette. spark green is RESERVED for match scores, success states and
+// the wordmark — interactive elements use Trust Teal.
 const config: Config = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -8,56 +14,66 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // --- Forest Heritage palette ---
-        background: '#FBFAF7',
-        surface: '#F4F1EA',
-        'surface-2': '#ECE8DE',
-        border: '#E7E5E0',
-        'border-strong': '#D6D3CC',
-        text: '#1C1917',
-        'text-secondary': '#57534E',
-        muted: '#A8A29E',
+        // --- Core palette ---
+        midnight: '#1A1A2E',
+        'midnight-2': '#23233B',
+        'midnight-3': '#2C2C48',
+        teal: '#00897B',
+        chalk: '#F5F3F0',
+        spark: '#19E88F',
 
-        primary: '#14532D',
-        'primary-hover': '#166534',
-        'primary-soft': '#E8EFE9',
+        // --- Accent palette ---
+        action: '#E65100', // Apply badges, deadline urgency
+        gold: '#D4A017', // Consider state
+        rose: '#C62828', // Skip state, errors
+        purple: '#4A148C', // premium tier indicators
+        slate: '#546E7A', // secondary text (badges/metadata)
 
-        accent: '#CA8A04',
-        'accent-hover': '#A16207',
-        'accent-soft': '#FEF3C7',
+        // --- Semantic mappings ---
+        background: '#1A1A2E',
+        surface: '#23233B',
+        'surface-2': '#2C2C48',
+        border: '#32324F',
+        'border-strong': '#3E3E5E',
+        text: '#F5F3F0',
+        // slate lightened two steps for body-copy contrast on midnight;
+        // raw slate (#546E7A) stays for low-emphasis metadata.
+        'text-secondary': '#9DAEB8',
+        muted: '#6E8694',
 
-        success: '#0F6E56',
-        'success-soft': '#D8EFE5',
-        warning: '#B45309',
-        'warning-soft': '#FEF3C7',
-        danger: '#B91C1C',
-        'danger-soft': '#FEE2E2',
+        primary: '#00897B',
+        'primary-hover': '#00A693',
+        'primary-soft': '#10332F',
 
-        // --- Legacy aliases ---
-        midnight: '#FBFAF7',
-        'midnight-2': '#F4F1EA',
-        'midnight-3': '#ECE8DE',
-        chalk: '#1C1917',
-        slate: '#57534E',
-        spark: '#14532D',
-        ink: '#E7E5E0',
-        warn: '#B45309',
-        rose: '#B91C1C',
+        accent: '#D4A017',
+        'accent-hover': '#E8B52E',
+        'accent-soft': '#332B10',
+
+        success: '#19E88F',
+        'success-soft': '#10362A',
+        warning: '#E65100',
+        'warning-soft': '#36210F',
+        danger: '#E05656',
+        'danger-soft': '#391A1F',
+
+        // --- Legacy aliases (older components reference these) ---
+        ink: '#32324F',
+        warn: '#E65100',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'system-ui', '-apple-system', 'sans-serif'],
-        display: ['var(--font-newsreader)', 'Georgia', 'serif'],
-        body: ['var(--font-inter)', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans: ['var(--font-dm-sans)', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['var(--font-syne)', 'system-ui', 'sans-serif'],
+        body: ['var(--font-dm-sans)', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['var(--font-jetbrains)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       letterSpacing: {
         tightish: '-0.02em',
         tightest: '-0.03em',
       },
       boxShadow: {
-        soft: '0 1px 3px rgba(28, 25, 23, 0.06)',
-        card: '0 1px 2px rgba(28, 25, 23, 0.04), 0 4px 16px -4px rgba(28, 25, 23, 0.06)',
-        focus: '0 0 0 4px rgba(20, 83, 45, 0.18)',
+        soft: '0 1px 3px rgba(0, 0, 0, 0.3)',
+        card: '0 1px 2px rgba(0, 0, 0, 0.25), 0 6px 20px -4px rgba(0, 0, 0, 0.35)',
+        focus: '0 0 0 4px rgba(0, 137, 123, 0.35)',
       },
       borderRadius: {
         xl: '12px',

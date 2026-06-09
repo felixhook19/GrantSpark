@@ -3,6 +3,9 @@
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { fetchHtml, canonicalKey } from './adapter'
 import { extractCandidates, normaliseGrant } from './normalize'
+import { fetchPage, type StructuredAdapter } from './structured'
+import { govukAdapter } from './govuk'
+import { ukriAdapter } from './ukri'
 import {
   type Source,
   type IngestionResult,
@@ -12,6 +15,13 @@ import {
 } from './types'
 
 type SupabaseLike = ReturnType<typeof createSupabaseAdminClient>
+
+// Structured adapters are deterministic (no AI calls), so they can afford
+// more detail fetches per run than the AI pipeline.
+const STRUCTURED_DETAIL_FETCHES = 10
+// Never run the closed-marking sweep off a suspiciously thin listing —
+// a markup change that drops most cards must not close the catalogue.
+const MIN_LISTING_FOR_CLOSURE_SWEEP = 5
 
 async function startJobRun(
   admin: SupabaseLike,
@@ -35,16 +45,21 @@ async function startJobRun(
 async function finishJobRun(
   admin: SupabaseLike,
   jobRunId: string | null,
-  result: IngestionResult
+  result: IngestionResult,
+  rowsUpdated = 0
 ) {
   if (!jobRunId) return
   await admin
     .from('job_runs')
     .update({
-      status: result.status === 'success' ? 'success' : 'failed',
+      // The job_runs status check allows running|success|fail — 'failed'
+      // violates it and the update is silently dropped. 'partial' runs
+      // count as success: some rows landed.
+      status: result.status === 'failed' ? 'fail' : 'success',
       finished_at: new Date().toISOString(),
       rows_processed: result.candidates_found,
       rows_inserted: result.new_grants_inserted,
+      rows_updated: rowsUpdated,
       error_message: result.errors.length > 0 ? result.errors.join(' | ') : null,
       meta: {
         source_name: result.source_name,
@@ -55,7 +70,174 @@ async function finishJobRun(
     .eq('id', jobRunId)
 }
 
+// ── Structured (deterministic) sources: GOV.UK Find a Grant, UKRI ──────
+
+const STRUCTURED_ADAPTERS: Record<string, StructuredAdapter> = {
+  govuk_find_grant: govukAdapter,
+  ukri: ukriAdapter,
+}
+
+async function runStructuredSource(
+  source: Source,
+  adapter: StructuredAdapter
+): Promise<IngestionResult> {
+  const started = Date.now()
+  const admin = createSupabaseAdminClient()
+  const jobRunId = await startJobRun(admin, source, adapter.jobName)
+  const errors: string[] = []
+  let inserted = 0
+  let updated = 0
+  let entries: ReturnType<StructuredAdapter['parseListing']> = []
+
+  try {
+    const listingHtml = await fetchPage(source.base_url, 15000)
+    entries = adapter.parseListing(listingHtml, source)
+
+    if (entries.length === 0) {
+      errors.push('listing parsed to zero entries — markup may have changed')
+    } else {
+      const keys = entries.map((e) => e.canonical_key)
+      const { data: existingRows } = await admin
+        .from('opportunities')
+        .select('canonical_key')
+        .in('canonical_key', keys)
+      const existingKeys = new Set(
+        ((existingRows || []) as { canonical_key: string }[]).map((r) => r.canonical_key)
+      )
+
+      // Existing grants: refresh last_seen_at so the closure sweep knows
+      // they're still listed. Detail-level fields are left untouched.
+      const stillListed = keys.filter((k) => existingKeys.has(k))
+      if (stillListed.length > 0) {
+        const { error: touchErr } = await admin
+          .from('opportunities')
+          .update({ last_seen_at: new Date().toISOString() })
+          .in('canonical_key', stillListed)
+        if (touchErr) {
+          errors.push(`touch existing: ${touchErr.message}`)
+        } else {
+          updated = stillListed.length
+        }
+      }
+
+      // New grants: fetch + parse detail pages, then idempotent upsert
+      // on canonical_key.
+      const fresh = entries
+        .filter((e) => !existingKeys.has(e.canonical_key))
+        .slice(0, STRUCTURED_DETAIL_FETCHES)
+      for (let entry of fresh) {
+        try {
+          const detailHtml = await fetchPage(entry.url, 15000)
+          entry = adapter.parseDetail(detailHtml, entry)
+        } catch (err) {
+          // Listing-level data is still worth keeping.
+          errors.push(`detail ${entry.url}: ${String(err)}`)
+        }
+
+        const { error: upsertErr } = await admin.from('opportunities').upsert(
+          {
+            source_id: source.id,
+            canonical_key: entry.canonical_key,
+            title: entry.title,
+            funder: entry.funder ?? source.name,
+            url: entry.url,
+            summary: entry.summary,
+            description: entry.description,
+            eligibility_summary: entry.eligibility_summary,
+            sector_tags: [],
+            funding_type: 'grant',
+            audience: [],
+            grant_amount_min: entry.grant_amount_min,
+            grant_amount_max: entry.grant_amount_max,
+            open_date: entry.open_date,
+            deadline: entry.deadline,
+            geography: entry.geography.length > 0 ? entry.geography : ['UK'],
+            status: entry.status,
+            last_seen_at: new Date().toISOString(),
+          },
+          { onConflict: 'canonical_key' }
+        )
+        if (upsertErr) {
+          errors.push(`upsert ${entry.canonical_key}: ${upsertErr.message}`)
+        } else {
+          inserted++
+        }
+      }
+
+      // Grants this source previously listed but that have dropped off the
+      // listing have closed. Guarded against thin/failed listing parses.
+      if (entries.length >= MIN_LISTING_FOR_CLOSURE_SWEEP) {
+        const quoted = keys.map((k) => `"${k.replace(/"/g, '')}"`).join(',')
+        const { error: closeErr } = await admin
+          .from('opportunities')
+          .update({ status: 'closed' })
+          .eq('source_id', source.id)
+          .in('status', ['open', 'rolling', 'upcoming'])
+          .not('canonical_key', 'in', `(${quoted})`)
+        if (closeErr) {
+          errors.push(`closure sweep: ${closeErr.message}`)
+        }
+      }
+    }
+
+    const status: IngestionResult['status'] =
+      errors.length === 0
+        ? 'success'
+        : inserted > 0 || updated > 0
+          ? 'partial'
+          : 'failed'
+
+    const result: IngestionResult = {
+      source_id: source.id,
+      source_name: source.name,
+      status,
+      candidates_found: entries.length,
+      new_grants_inserted: inserted,
+      errors,
+      duration_ms: Date.now() - started,
+    }
+
+    await admin
+      .from('sources')
+      .update({
+        last_run_at: new Date().toISOString(),
+        last_success_at: status === 'failed' ? null : new Date().toISOString(),
+        last_error: errors.length > 0 ? errors.join(' | ') : null,
+      })
+      .eq('id', source.id)
+
+    await finishJobRun(admin, jobRunId, result, updated)
+    return result
+  } catch (err) {
+    const result: IngestionResult = {
+      source_id: source.id,
+      source_name: source.name,
+      status: 'failed',
+      candidates_found: entries.length,
+      new_grants_inserted: inserted,
+      errors: [...errors, String(err)],
+      duration_ms: Date.now() - started,
+    }
+    await admin
+      .from('sources')
+      .update({
+        last_run_at: new Date().toISOString(),
+        last_error: result.errors.join(' | '),
+      })
+      .eq('id', source.id)
+    await finishJobRun(admin, jobRunId, result, updated)
+    return result
+  }
+}
+
 export async function runIngestionForSource(source: Source): Promise<IngestionResult> {
+  // Source-specific structured adapters take priority; everything else
+  // falls through to the generic AI pipeline below.
+  const structured = STRUCTURED_ADAPTERS[source.adapter]
+  if (structured) {
+    return runStructuredSource(source, structured)
+  }
+
   const started = Date.now()
   const admin = createSupabaseAdminClient()
   const jobRunId = await startJobRun(admin, source, 'ingestion_html_list')
@@ -119,27 +301,31 @@ export async function runIngestionForSource(source: Source): Promise<IngestionRe
         const grant = await normaliseGrant(detailHtml, cand.url, source.name)
         const key = canonicalKey(cand.url)
 
-        const { error: insertErr } = await admin.from('opportunities').insert({
-          source_id: source.id,
-          canonical_key: key,
-          title: grant.title,
-          funder: grant.funder ?? source.name,
-          url: cand.url,
-          summary: grant.summary,
-          description: grant.description,
-          eligibility_summary: grant.eligibility_summary,
-          sector_tags: grant.sector_tags,
-          funding_type: grant.funding_type,
-          audience: grant.audience,
-          grant_amount_min: grant.grant_amount_min,
-          grant_amount_max: grant.grant_amount_max,
-          deadline: grant.deadline,
-          geography: grant.geography.length > 0 ? grant.geography : ['UK'],
-          max_employees: grant.max_employees,
-          min_years_trading: grant.min_years_trading,
-          match_funding_required: grant.match_funding_required,
-          status: grant.status,
-        })
+        const { error: insertErr } = await admin.from('opportunities').upsert(
+          {
+            source_id: source.id,
+            canonical_key: key,
+            title: grant.title,
+            funder: grant.funder ?? source.name,
+            url: cand.url,
+            summary: grant.summary,
+            description: grant.description,
+            eligibility_summary: grant.eligibility_summary,
+            sector_tags: grant.sector_tags,
+            funding_type: grant.funding_type,
+            audience: grant.audience,
+            grant_amount_min: grant.grant_amount_min,
+            grant_amount_max: grant.grant_amount_max,
+            deadline: grant.deadline,
+            geography: grant.geography.length > 0 ? grant.geography : ['UK'],
+            max_employees: grant.max_employees,
+            min_years_trading: grant.min_years_trading,
+            match_funding_required: grant.match_funding_required,
+            status: grant.status,
+            last_seen_at: new Date().toISOString(),
+          },
+          { onConflict: 'canonical_key' }
+        )
 
         if (insertErr) {
           errors.push(`insert ${cand.url}: ${insertErr.message}`)

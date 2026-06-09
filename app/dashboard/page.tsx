@@ -8,15 +8,16 @@ import { Wordmark } from '@/components/Logo'
 import { MatchRing } from '@/components/MatchRing'
 import type { Match, Grant, Org, Decision } from '@/types/db'
 
+// Decision badges: action orange / deep gold / confident rose.
 function DecisionTag({ decision }: { decision: Decision | string }) {
   const map: Record<string, { cls: string; label: string }> = {
-    apply: { cls: 'border-primary/30 bg-primary-soft text-primary', label: 'Apply' },
-    consider: { cls: 'border-accent/40 bg-accent-soft text-accent-hover', label: 'Consider' },
-    skip: { cls: 'border-border bg-surface text-text-secondary', label: 'Skip' },
+    apply: { cls: 'border-action/60 bg-warning-soft text-action', label: 'Apply' },
+    consider: { cls: 'border-gold/60 bg-accent-soft text-gold', label: 'Consider' },
+    skip: { cls: 'border-rose/60 bg-danger-soft text-danger', label: 'Skip' },
   }
   const item = map[decision] || map.consider
   return (
-    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${item.cls}`}>
+    <span className={`inline-flex items-center rounded-full border px-3.5 py-1 text-sm font-bold uppercase tracking-wide ${item.cls}`}>
       {item.label}
     </span>
   )
@@ -56,7 +57,7 @@ function GrantCard({ match }: { match: Match }) {
       const data = await res.json()
       if (res.status === 402 && data?.code === 'pro_feature') {
         setNeedsUpgrade(true)
-        setDraftError(data.error || 'The application assistant is a Pro feature.')
+        setDraftError(data.error || 'The application assistant is a paid feature.')
       } else if (!res.ok) {
         setDraftError(data.error || 'Could not draft answers. Please try again.')
       } else {
@@ -93,13 +94,14 @@ function GrantCard({ match }: { match: Match }) {
 
   return (
     <article className="rounded-2xl border border-border bg-background p-6 shadow-soft transition-all hover:shadow-card">
-      <div className="flex items-start gap-5">
-        <MatchRing score={match.fit_score} size="md" />
+      <div className="flex items-start gap-6">
+        {/* Score Ring — the hero element of every match card */}
+        <MatchRing score={match.fit_score} size="lg" showLabel />
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-display text-lg font-medium leading-snug tracking-tightish text-text">
+              <h3 className="font-display text-lg leading-snug tracking-tightish text-text">
                 {g.title}
               </h3>
               <p className="mt-0.5 text-sm text-text-secondary">{g.funder}</p>
@@ -113,11 +115,11 @@ function GrantCard({ match }: { match: Match }) {
         <p className="mt-4 text-sm leading-relaxed text-text-secondary">{g.summary}</p>
       )}
 
-      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 font-mono text-sm">
         {(g.grant_amount_min || g.grant_amount_max) && (
           <span className="text-text">
             <span className="text-text-secondary">Amount: </span>
-            <span className="tabular font-semibold">
+            <span className="tabular font-medium">
               {money(g.grant_amount_min)}
               {g.grant_amount_min && g.grant_amount_max ? ' – ' : ''}
               {money(g.grant_amount_max)}
@@ -127,7 +129,7 @@ function GrantCard({ match }: { match: Match }) {
         {daysLeft !== null && (
           <span className={deadlineColor}>
             <span className="text-text-secondary">Deadline: </span>
-            <span className="font-semibold">
+            <span className="font-medium">
               {daysLeft <= 0 ? 'Closed' : `${daysLeft} days left`}
             </span>
           </span>
@@ -135,7 +137,7 @@ function GrantCard({ match }: { match: Match }) {
         {!g.deadline && (
           <span className="text-text">
             <span className="text-text-secondary">Deadline: </span>
-            <span className="font-semibold">Rolling / ongoing</span>
+            <span className="font-medium">Rolling / ongoing</span>
           </span>
         )}
       </div>
@@ -186,16 +188,17 @@ function GrantCard({ match }: { match: Match }) {
       </div>
 
       {open && (
-        <div className="fade-up mt-4 space-y-4 border-t border-border pt-4">
+        <div className="fade-up mt-4 space-y-5 border-t border-border pt-5">
+          {/* "Why this match" is the product's key intelligence, not fine print. */}
           {match.why_match && match.why_match.length > 0 && (
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                Why it matches
+              <p className="mb-2.5 font-mono text-xs font-medium uppercase tracking-wider text-primary-hover">
+                Why this match
               </p>
-              <ul className="space-y-1.5">
+              <ul className="space-y-2">
                 {match.why_match.map((r: string, i: number) => (
-                  <li key={i} className="flex gap-2 text-sm text-text">
-                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <li key={i} className="flex gap-2.5 text-base font-medium leading-relaxed text-text">
+                    <svg className="mt-1 h-4 w-4 flex-shrink-0 text-spark" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                     {r}
                   </li>
                 ))}
@@ -203,14 +206,14 @@ function GrantCard({ match }: { match: Match }) {
             </div>
           )}
           {match.risks && match.risks.length > 0 && (
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+            <div className="rounded-r-xl border-l-4 border-gold bg-accent-soft/60 py-3 pl-4 pr-3">
+              <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-gold">
                 Watch out for
               </p>
               <ul className="space-y-1.5">
                 {match.risks.map((r: string, i: number) => (
-                  <li key={i} className="flex gap-2 text-sm text-text">
-                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-warning" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 0 0-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" /></svg>
+                  <li key={i} className="flex gap-2 text-sm leading-relaxed text-text">
+                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-gold" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 0 0-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" /></svg>
                     {r}
                   </li>
                 ))}
@@ -219,13 +222,13 @@ function GrantCard({ match }: { match: Match }) {
           )}
           {match.next_steps && match.next_steps.length > 0 && (
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              <p className="mb-2.5 font-mono text-xs font-medium uppercase tracking-wider text-text-secondary">
                 Next steps
               </p>
-              <ul className="space-y-1.5">
+              <ul className="space-y-2">
                 {match.next_steps.map((s: string, i: number) => (
-                  <li key={i} className="flex gap-2 text-sm text-text">
-                    <span className="tabular flex-shrink-0 font-semibold text-primary">{i + 1}.</span>
+                  <li key={i} className="flex gap-3 text-sm font-semibold leading-relaxed text-text">
+                    <span className="tabular flex-shrink-0 font-mono font-medium text-primary-hover">{String(i + 1).padStart(2, '0')}</span>
                     {s}
                   </li>
                 ))}
@@ -258,7 +261,7 @@ function GrantCard({ match }: { match: Match }) {
                 <>
                   {' '}
                   <Link href="/billing" className="font-semibold underline">
-                    Upgrade to Pro
+                    Upgrade to Seeker
                   </Link>
                 </>
               )}

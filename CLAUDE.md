@@ -8,10 +8,13 @@ Supabase project: vbrccttfsfplgyibdqwf (eu-west-2, London)
 Vercel project: grant-spark (team_fxAXqmvqNZ2x8dfA0s3owAUG / prj_DP3itF3i87yUVthiDUB6zONmi3uk)
 
 ## Tech Stack
-- Next.js 15.1 / React 19 / TypeScript (strict: false, ignoreBuildErrors: true)
+- Next.js 15.1 / React 19 / TypeScript (strict builds — the codebase typechecks clean;
+  do NOT reintroduce ignoreBuildErrors without fixing the underlying errors)
 - Tailwind CSS with custom brand tokens (see tailwind.config.ts)
 - Supabase (PostgreSQL 15) — auth + database
-- Anthropic Claude API — AI grant matching engine
+- Anthropic Claude API — AI grant matching engine (native fetch only)
+- Stripe via native fetch (lib/stripe.ts) — no stripe npm package
+- Resend for email (lib/email) — degrades gracefully without a key
 - Vercel — hosting, auto-deploys from main branch
 
 ## CRITICAL RULES — READ BEFORE WRITING ANY CODE
@@ -45,11 +48,14 @@ const { data: { user } } = await supabase.auth.getUser()
 if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
 const admin = createSupabaseAdminClient()  // data reads/writes
-const { data } = await admin.from('orgs').select('*').eq('owner_user_id', user.id).maybeSingle()
+const org = await getActiveOrg(admin, user.id)  // lib/orgs.ts — NOT a raw orgs query
 ```
 
 NEVER query data tables with the server client or browser client.
 NEVER import admin.ts in any file with 'use client'.
+Users can own MULTIPLE orgs (Strategist plan) — never `.maybeSingle()` on
+`orgs` by owner_user_id; use `getActiveOrg()` / `getOrgsForUser()` from
+lib/orgs.ts, or an ordered `.limit(1).maybeSingle()` where "first org" is fine.
 
 ### 3. Middleware — scope is deliberately narrow
 middleware.ts matches ONLY: /dashboard/:path* and /onboarding/:path*
@@ -72,6 +78,7 @@ Pattern: export DashboardInner() with the hook, export default DashboardPage() w
 - NEVER mix DDL and DML in one call
 - Grant upserts: ON CONFLICT (canonical_key) DO UPDATE SET ... last_seen_at = now()
 - Use .maybeSingle() not .single() for queries that may return 0 rows
+- job_runs.status check allows ONLY: running | success | fail  ('failed' violates it)
 
 ### 7. Constraint validation before any schema change
 Always query pg_constraint BEFORE inserting to verify allowed values:
@@ -86,33 +93,77 @@ Then test with a dummy UUID INSERT before the real operation.
 ```typescript
 export const dynamic = 'force-dynamic'
 ```
+DB-reading pages that must be fresh (e.g. the landing page grants count)
+also use it; blog pages use `revalidate` instead.
 
 ### 9. No route groups
 No parentheses in folder names. All routes are flat.
 
+## Commercial model (June 2026 — charity-sector tier names)
+| Tier (UI name) | DB plan value | Price | Limits |
+|---|---|---|---|
+| Scout | `free` | £0 | 5 AI match runs/month, 1 org profile |
+| Seeker | `pro` | £29/month | unlimited matching, assistant, 1 org profile |
+| Strategist | `multi` | £99/month | everything + up to 10 org profiles, portfolio view |
+
+- `starter` is a LEGACY free alias — never paid, never shown in UI.
+- subscriptions_plan_check allows EXACTLY: free | starter | pro | multi. There is NO 'team'.
+- isPaidPlan() returns true only for 'pro' and 'multi'.
+- Stripe prices: STRIPE_PRICE_ID_SEEKER (→ 'pro'), STRIPE_PRICE_ID_STRATEGIST (→ 'multi').
+- Tier display names live in PLAN_TIER_NAMES (lib/billing.ts).
+
 ## Deployment
 - Push to main branch → Vercel auto-deploys (60-90 seconds)
-- Build errors do NOT fail due to TypeScript (ignoreBuildErrors: true)
-- Secrets live in Vercel environment variables ONLY — never in the repo
-- The .gitignore excludes .env.local
+- Builds are STRICT (TypeScript + ESLint enforced) — run `npm run typecheck` before pushing
+- Secrets live in Vercel environment variables ONLY — never in the repo (it is PUBLIC)
+- The .gitignore excludes .env.local; .env.example holds placeholders only
 
-## Environment Variables (set in Vercel)
+## Environment Variables (set in Vercel; see .env.example)
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://vbrccttfsfplgyibdqwf.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...   # safe to expose, auth only
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...        # server-only, bypasses RLS
-ANTHROPIC_API_KEY=sk-ant-api03-...           # server-only
-NEXT_PUBLIC_SITE_URL=https://grantspark.co.uk
+NEXT_PUBLIC_SUPABASE_URL              # public, auth only
+NEXT_PUBLIC_SUPABASE_ANON_KEY         # public, auth only
+SUPABASE_SERVICE_ROLE_KEY             # server-only, bypasses RLS
+ANTHROPIC_API_KEY                     # server-only
+NEXT_PUBLIC_SITE_URL                  # https://grantspark.co.uk
+STRIPE_SECRET_KEY                     # server-only
+STRIPE_WEBHOOK_SECRET                 # server-only
+STRIPE_PRICE_ID_SEEKER                # Seeker £29/month → plan 'pro'
+STRIPE_PRICE_ID_STRATEGIST            # Strategist £99/month → plan 'multi'
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY    # public
+RESEND_API_KEY                        # optional — email degrades gracefully
+CRON_SECRET                           # protects /api/cron/* + admin triggers
+UPSTASH_REDIS_REST_URL                # optional — rate limiter no-ops without it
+UPSTASH_REDIS_REST_TOKEN              # optional
+RATE_LIMIT_DAILY_MAX                  # default 50
+RATE_LIMIT_BURST_PER_MIN              # default 6
+ADMIN_EMAILS                          # optional, comma-separated /admin allowlist
 ```
-For local dev, copy these into .env.local (gitignored).
+For local dev, copy .env.example to .env.local (gitignored) and fill in.
 
-## Brand Tokens (tailwind.config.ts)
+## Brand — "Purposeful Intelligence" (June 2026, Type-First Dark)
+Core (tailwind.config.ts):
 ```
-midnight: '#0B1220'    midnight-2: '#0F1729'   midnight-3: '#141E33'
-spark: '#19E88F'       chalk: '#F4F1EA'         slate: '#8892A0'
-warn: '#FFB454'        rose: '#FF6B7A'          ink: '#1E2A3A'
+midnight: '#1A1A2E'   midnight-2: '#23233B'   midnight-3: '#2C2C48'
+teal:     '#00897B'   ← PRIMARY accent: buttons, links, interactive
+chalk:    '#F5F3F0'   ← primary text
+spark:    '#19E88F'   ← RESERVED: match scores, success states, wordmark ONLY
 ```
-Fonts: Syne (display/headings), DM Sans (body), JetBrains Mono (mono)
+Accents:
+```
+action: '#E65100' (Apply badges, deadline urgency)   gold: '#D4A017' (Consider)
+rose:   '#C62828' (Skip, errors)   purple: '#4A148C' (premium tier)
+slate:  '#546E7A' (low-emphasis metadata; text-secondary uses a lightened
+        derivative #9DAEB8 for body-copy contrast on midnight)
+```
+Typography: Syne 800 (display, -0.03em, hero 72px+), DM Sans 400/500 (body,
+16px min, line-height 1.6), JetBrains Mono (ALL scores, amounts, deadlines,
+metadata). Fonts loaded in app/layout.tsx as --font-syne / --font-dm-sans /
+--font-jetbrains.
+MatchRing (components/MatchRing.tsx) is the brand graphic device: arc shifts
+rose (<50) → gold (50-74) → spark (75+). It is the hero element of match cards.
+Copy tone: British English, short sentences. BANNED: "making a difference",
+"empowering communities", "transformative", "seamless".
+Tagline: "Funding found." Footer: "Built by a grant writer, for grant writers."
 
 ## Key orgs Table Constraints
 ```
@@ -124,17 +175,43 @@ innovation_stage: idea | pre-revenue | early-revenue | growth | scale | NULL
 annual_income_band: 0-30k | 30-100k | 100-500k | 500k-1m | 1m+
 typical_grant_size: 300-5000 | 5000-20000 | 20000-100000
 matches.decision: apply | consider | skip
+opportunities.status: open | closed | upcoming | rolling
+subscriptions.plan: free | starter | pro | multi
+saved_grants.status: interested | applied | awarded | rejected | withdrawn
+job_runs.status: running | success | fail
+sources.adapter: rss | html_list | html_detail | json | govuk_find_grant | ukri
 ```
 
+## Ingestion pipeline (lib/ingestion)
+- Generic AI pipeline (adapter 'html_list'): listing → extractCandidates →
+  normaliseGrant via Claude. Capped by MAX_GRANTS_PER_RUN.
+- Structured adapters (no AI): govuk.ts ('govuk_find_grant', GOV.UK Find a
+  Grant, OGL-licensed) and ukri.ts ('ukri', UKRI/Innovate UK). Deterministic
+  canonical keys ("govuk:{slug}", "ukri:{slug}"), idempotent upserts, and a
+  guarded closed-marking sweep for grants a source stops listing.
+- Every run logs to job_runs and writes last_run_at / last_success_at /
+  last_error back to sources. The admin dashboard (/admin) surfaces these.
+
+## Cron routes (vercel.json — crons require Vercel Pro)
+- /api/cron/ingest  — daily 06:00 UTC, grant database refresh
+- /api/cron/digest  — Mondays 09:00 UTC, weekly email digest
+- /api/cron/blog    — Mondays 06:00 UTC, "Grant Intelligence" article generator
+  (20-topic rotation, Claude-written, validated before insert)
+All require `Authorization: Bearer ${CRON_SECRET}`; admin-session-gated
+manual triggers live under /api/admin/*.
+
 ## Current Database State
-- 63 grants in opportunities table (48 open, 12 rolling)
-- All tables have RLS enabled but NO policies (service-role bypasses RLS)
+- opportunities table: ~63 grants + structured-adapter intake (GOV.UK, UKRI)
+- All tables have RLS enabled but NO policies (service-role bypasses RLS),
+  EXCEPT opportunities + opportunity_details where RLS is currently DISABLED
+  (flagged by Supabase advisor — pending a decision; blog_posts is read by
+  the anon public client)
 - Supabase email confirmation is DISABLED (Auth → Providers → Email)
 
 ## Outstanding Work (priority order)
-1. Automated daily grant database refresh (cron job — needs Vercel Pro)
-2. Stripe billing wired to UI (schema exists, keys in env vars)
-3. Saved grants feature (saved_grants table exists, needs API routes + UI)
-4. Email notifications (email_log + digests tables exist, need Resend integration)
-5. Blog automation cron (route designed, needs Vercel Pro)
-6. Match route pre-filtering (needed as DB grows beyond 50 grants)
+1. Stripe go-live: Felix creates live Products/Prices and sets
+   STRIPE_PRICE_ID_SEEKER / STRIPE_PRICE_ID_STRATEGIST + webhook secret
+2. Vercel Pro upgrade so the three crons actually run
+3. RESEND_API_KEY so digests send
+4. Team seats / invites for Strategist (multi-user access — not built)
+5. Real, attributed testimonials for the landing page
