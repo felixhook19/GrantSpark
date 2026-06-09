@@ -22,9 +22,61 @@ function DecisionTag({ decision }: { decision: Decision | string }) {
   )
 }
 
+type AssistantDraft = {
+  question: string
+  draft_answer: string
+  tips: string[]
+}
+
 function GrantCard({ match }: { match: Match }) {
   const [open, setOpen] = useState(false)
+  const [drafts, setDrafts] = useState<AssistantDraft[] | null>(null)
+  const [showDrafts, setShowDrafts] = useState(false)
+  const [drafting, setDrafting] = useState(false)
+  const [draftError, setDraftError] = useState('')
+  const [needsUpgrade, setNeedsUpgrade] = useState(false)
+  const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
   const g: Grant = match.grant
+
+  async function toggleAssistant() {
+    if (drafts || drafting) {
+      setShowDrafts(!showDrafts)
+      return
+    }
+    setDrafting(true)
+    setDraftError('')
+    setNeedsUpgrade(false)
+    setShowDrafts(true)
+    try {
+      const res = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunity_id: g.id }),
+      })
+      const data = await res.json()
+      if (res.status === 402 && data?.code === 'pro_feature') {
+        setNeedsUpgrade(true)
+        setDraftError(data.error || 'The application assistant is a Pro feature.')
+      } else if (!res.ok) {
+        setDraftError(data.error || 'Could not draft answers. Please try again.')
+      } else {
+        setDrafts((data.drafts || []) as AssistantDraft[])
+      }
+    } catch {
+      setDraftError('Network error. Please try again.')
+    }
+    setDrafting(false)
+  }
+
+  async function copyDraft(text: string, idx: number) {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedIdx(idx)
+      setTimeout(() => setCopiedIdx(null), 2000)
+    } catch {
+      // Clipboard unavailable (e.g. http or permissions) — fail silently.
+    }
+  }
 
   let daysLeft: number | null = null
   if (g.deadline) {
@@ -102,12 +154,25 @@ function GrantCard({ match }: { match: Match }) {
       )}
 
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-        <button
-          onClick={() => setOpen(!open)}
-          className="text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
-        >
-          {open ? 'Hide reasoning' : 'Why this matches'}
-        </button>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          <button
+            onClick={() => setOpen(!open)}
+            className="text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
+          >
+            {open ? 'Hide reasoning' : 'Why this matches'}
+          </button>
+          <button
+            onClick={toggleAssistant}
+            disabled={drafting}
+            className="text-sm font-semibold text-accent-hover transition-colors hover:text-accent disabled:opacity-60"
+          >
+            {drafting
+              ? 'Drafting…'
+              : drafts && showDrafts
+                ? 'Hide draft answers'
+                : 'Draft application answers'}
+          </button>
+        </div>
         {g.url && (
           <a
             href={g.url}
@@ -169,6 +234,66 @@ function GrantCard({ match }: { match: Match }) {
           )}
         </div>
       )}
+
+      {showDrafts && (
+        <div className="fade-up mt-4 space-y-4 border-t border-border pt-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
+              Application assistant
+            </p>
+            <span className="text-xs text-muted">AI first draft — review before submitting</span>
+          </div>
+
+          {drafting && (
+            <div className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-secondary">
+              <span className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              Drafting answers from your profile and this grant&apos;s criteria…
+            </div>
+          )}
+
+          {draftError && (
+            <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
+              {draftError}
+              {needsUpgrade && (
+                <>
+                  {' '}
+                  <Link href="/billing" className="font-semibold underline">
+                    Upgrade to Pro
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
+
+          {drafts &&
+            drafts.map((d, i) => (
+              <div key={i} className="rounded-xl border border-border bg-surface p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm font-semibold text-text">{d.question}</p>
+                  <button
+                    onClick={() => copyDraft(d.draft_answer, i)}
+                    className="flex-shrink-0 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-2"
+                  >
+                    {copiedIdx === i ? 'Copied ✓' : 'Copy'}
+                  </button>
+                </div>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-text">
+                  {d.draft_answer}
+                </p>
+                {d.tips.length > 0 && (
+                  <ul className="mt-3 space-y-1 border-t border-border pt-3">
+                    {d.tips.map((t, j) => (
+                      <li key={j} className="flex gap-2 text-xs text-text-secondary">
+                        <span className="flex-shrink-0 font-semibold text-accent-hover">Tip:</span>
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+        </div>
+      )}
     </article>
   )
 }
@@ -188,6 +313,7 @@ function DashboardInner() {
   const [loading, setLoading] = useState(true)
   const [matching, setMatching] = useState(false)
   const [error, setError] = useState('')
+  const [planLimited, setPlanLimited] = useState(false)
   const [retryAt, setRetryAt] = useState<number | null>(null)
   const [now, setNow] = useState<number>(() => Date.now())
 
@@ -213,10 +339,14 @@ function DashboardInner() {
   const runMatching = useCallback(async () => {
     setMatching(true)
     setError('')
+    setPlanLimited(false)
     try {
       const res = await fetch('/api/match', { method: 'POST' })
       const data = await res.json()
-      if (res.status === 429) {
+      if (res.status === 402 && data?.code === 'plan_limit_exceeded') {
+        setPlanLimited(true)
+        setError(data.error || 'You’ve used your free match runs for this month.')
+      } else if (res.status === 429) {
         const seconds = Number(data?.retry_after_seconds || 60)
         setRetryAt(Date.now() + seconds * 1000)
         setError(data?.error || 'You’ve hit the rate limit. Please try again later.')
@@ -345,6 +475,9 @@ function DashboardInner() {
             <Link href="/profile" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
               Edit profile
             </Link>
+            <Link href="/billing" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
+              Billing
+            </Link>
             <Link href="/blog" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
               Blog
             </Link>
@@ -385,6 +518,14 @@ function DashboardInner() {
         {error && (
           <div className="mb-6 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
             {error}
+            {planLimited && (
+              <>
+                {' '}
+                <Link href="/billing" className="font-semibold underline">
+                  Upgrade your plan
+                </Link>
+              </>
+            )}
           </div>
         )}
 
