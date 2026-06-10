@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         {
           error:
             limit === 1
-              ? 'Multiple organisation profiles are a Team plan feature. Upgrade to add more.'
+              ? 'Multiple organisation profiles are a Strategist plan feature. Upgrade to add more.'
               : `You've reached the limit of ${limit} organisation profiles.`,
           code: 'org_limit_exceeded',
         },

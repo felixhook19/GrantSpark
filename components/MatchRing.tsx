@@ -1,12 +1,11 @@
 /**
- * Circular match-score ring (Forest Heritage colour bands).
+ * Score Ring — the brand graphic device ("Purposeful Intelligence").
  *
- * Colour bands all pulled from the brand palette so the dashboard and the
- * marketing site share the same colour story:
- *   90-100  →  forest green       "Excellent fit"
- *   75-89   →  mustard gold       "Strong fit"
- *   60-74   →  burnt amber        "Potential fit"
- *   <60     →  warm grey          "Low fit"
+ * The arc colour shifts rose (low) → gold (mid) → spark green (high);
+ * spark green is reserved for exactly this kind of score display:
+ *   75-100  →  spark green   "Strong fit"
+ *   50-74   →  deep gold     "Possible fit"
+ *   <50     →  rose          "Poor fit"
  *
  * The ring animates from 0 to its target offset on first paint
  * (300-500ms ease-out) unless reduced motion is requested.
@@ -20,10 +19,9 @@ const SIZE_MAP: Record<MatchRingSize, { px: number; stroke: number; font: string
 }
 
 function bandFor(score: number) {
-  if (score >= 90) return { stroke: '#14532D', text: 'text-primary', label: 'Excellent fit' }
-  if (score >= 75) return { stroke: '#CA8A04', text: 'text-accent', label: 'Strong fit' }
-  if (score >= 60) return { stroke: '#B45309', text: 'text-warning', label: 'Potential fit' }
-  return { stroke: '#A8A29E', text: 'text-muted', label: 'Low fit' }
+  if (score >= 75) return { stroke: '#19E88F', text: 'text-spark', label: 'Strong fit' }
+  if (score >= 50) return { stroke: '#D4A017', text: 'text-gold', label: 'Possible fit' }
+  return { stroke: '#C62828', text: 'text-danger', label: 'Poor fit' }
 }
 
 export function MatchRing({
@@ -51,7 +49,7 @@ export function MatchRing({
             cy={px / 2}
             r={radius}
             fill="none"
-            stroke="#E7E5E0"
+            stroke="#32324F"
             strokeWidth={stroke}
           />
           <circle
@@ -72,10 +70,10 @@ export function MatchRing({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`tabular font-semibold leading-none ${band.text} ${font}`}>
+          <span className={`tabular font-mono font-semibold leading-none ${band.text} ${font}`}>
             {safe}
           </span>
-          <span className={`mt-0.5 font-medium uppercase tracking-wider text-text-secondary ${label}`}>
+          <span className={`mt-0.5 font-mono font-medium uppercase tracking-wider text-text-secondary ${label}`}>
             match
           </span>
         </div>

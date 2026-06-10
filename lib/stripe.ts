@@ -5,10 +5,10 @@
 // no SDK loading risk in Vercel's serverless runtime, no extra dependency.
 //
 // Required env vars (set in Vercel, server-only):
-//   STRIPE_SECRET_KEY        sk_test_... / sk_live_...
-//   STRIPE_WEBHOOK_SECRET    whsec_...   (from the webhook endpoint config)
-//   STRIPE_PRICE_ID_PRO      price_...   (Pro £19/month recurring price)
-//   STRIPE_PRICE_ID_TEAM     price_...   (Team £99/month recurring price)
+//   STRIPE_SECRET_KEY            sk_test_... / sk_live_...
+//   STRIPE_WEBHOOK_SECRET        whsec_...   (from the webhook endpoint config)
+//   STRIPE_PRICE_ID_SEEKER       price_...   (Seeker £29/month recurring price → plan 'pro')
+//   STRIPE_PRICE_ID_STRATEGIST   price_...   (Strategist £99/month recurring price → plan 'multi')
 
 import { createHmac, timingSafeEqual } from 'crypto'
 import { requireEnv } from './env'
@@ -118,18 +118,19 @@ export function verifyStripeSignature(
 }
 
 // ── Plan / price mapping ────────────────────────────────────────────────
+// DB plan values: 'pro' = Seeker (£29), 'multi' = Strategist (£99).
 
-export type PaidPlan = 'pro' | 'team'
+export type PaidPlan = 'pro' | 'multi'
 
 export function priceIdForPlan(plan: PaidPlan): string {
   return plan === 'pro'
-    ? requireEnv('STRIPE_PRICE_ID_PRO')
-    : requireEnv('STRIPE_PRICE_ID_TEAM')
+    ? requireEnv('STRIPE_PRICE_ID_SEEKER')
+    : requireEnv('STRIPE_PRICE_ID_STRATEGIST')
 }
 
 export function planFromPriceId(priceId: string | null | undefined): PaidPlan | null {
   if (!priceId) return null
-  if (priceId === process.env.STRIPE_PRICE_ID_PRO) return 'pro'
-  if (priceId === process.env.STRIPE_PRICE_ID_TEAM) return 'team'
+  if (priceId === process.env.STRIPE_PRICE_ID_SEEKER) return 'pro'
+  if (priceId === process.env.STRIPE_PRICE_ID_STRATEGIST) return 'multi'
   return null
 }

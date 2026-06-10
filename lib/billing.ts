@@ -1,10 +1,14 @@
 // Plan lookup and usage enforcement, shared by the billing API routes
 // and the /api/match route.
 //
-// Plans (live pricing, June 2026):
-//   free  — "Starter" £0:  FREE_MONTHLY_MATCH_RUNS AI match runs per month
-//   pro   — £19/month:     unlimited matching
-//   team  — £99/month:     unlimited matching + seats (seat logic TBC)
+// Tiers (live pricing, June 2026 — charity-sector names):
+//   Scout      — DB plan 'free',  £0:        FREE_MONTHLY_MATCH_RUNS AI match runs/month
+//   Seeker     — DB plan 'pro',   £29/month: unlimited matching
+//   Strategist — DB plan 'multi', £99/month: unlimited matching + multi-org portfolio
+//
+// 'starter' is a legacy free alias kept for old rows — it is NOT a paid plan.
+// The subscriptions_plan_check constraint allows exactly:
+//   free | starter | pro | multi
 //
 // The subscriptions table is keyed by user_id and written by the Stripe
 // webhook (app/api/webhooks/stripe/route.ts). Usage is counted from
@@ -12,7 +16,14 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
-export type Plan = 'free' | 'starter' | 'pro' | 'team' | 'multi'
+export type Plan = 'free' | 'starter' | 'pro' | 'multi'
+
+export const PLAN_TIER_NAMES: Record<Plan, string> = {
+  free: 'Scout',
+  starter: 'Scout', // legacy alias of free
+  pro: 'Seeker',
+  multi: 'Strategist',
+}
 
 export type SubscriptionRow = {
   user_id: string
@@ -54,7 +65,7 @@ export function effectivePlan(sub: SubscriptionRow | null): Plan {
 }
 
 export function isPaidPlan(plan: Plan): boolean {
-  return plan === 'pro' || plan === 'team' || plan === 'multi' || plan === 'starter'
+  return plan === 'pro' || plan === 'multi'
 }
 
 export async function countMatchRunsThisMonth(

@@ -93,7 +93,7 @@ export async function POST() {
     if (used >= FREE_MONTHLY_MATCH_RUNS) {
       return NextResponse.json(
         {
-          error: `You've used all ${FREE_MONTHLY_MATCH_RUNS} free match runs this month. Upgrade to Pro for unlimited matching.`,
+          error: `You've used all ${FREE_MONTHLY_MATCH_RUNS} free match runs this month. Upgrade to Seeker for unlimited matching.`,
           code: 'plan_limit_exceeded',
           plan,
         },

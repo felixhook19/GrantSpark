@@ -20,7 +20,7 @@ type BillingInfo = {
 const PLANS = [
   {
     id: 'free',
-    name: 'Starter',
+    name: 'Scout',
     price: '£0',
     period: 'forever',
     features: [
@@ -32,8 +32,8 @@ const PLANS = [
   },
   {
     id: 'pro',
-    name: 'Pro',
-    price: '£19',
+    name: 'Seeker',
+    price: '£29',
     period: 'per month',
     highlight: true,
     features: [
@@ -45,20 +45,22 @@ const PLANS = [
     ],
   },
   {
-    id: 'team',
-    name: 'Team',
+    id: 'multi',
+    name: 'Strategist',
     price: '£99',
     period: 'per month',
+    premium: true,
     features: [
-      'Everything in Pro',
-      '5 team seats',
-      'Multiple organisation profiles',
+      'Everything in Seeker',
+      'Up to 10 organisation profiles',
       'Consultant portfolio view',
+      'Per-organisation match pipelines',
     ],
   },
 ]
 
 function planLabel(plan: string): string {
+  if (plan === 'starter') return 'Scout' // legacy free alias
   const found = PLANS.find((p) => p.id === plan)
   return found ? found.name : plan.charAt(0).toUpperCase() + plan.slice(1)
 }
@@ -127,7 +129,7 @@ function BillingInner() {
     }
   }, [loadBilling, checkoutResult])
 
-  async function startCheckout(plan: 'pro' | 'team') {
+  async function startCheckout(plan: 'pro' | 'multi') {
     setWorking(plan)
     setError('')
     try {
@@ -269,14 +271,21 @@ function BillingInner() {
                 className={
                   plan.highlight
                     ? 'rounded-2xl border-2 border-primary bg-background p-6 shadow-card'
-                    : 'rounded-2xl border border-border bg-background p-6 shadow-soft'
+                    : plan.premium
+                      ? 'rounded-2xl border border-purple bg-background p-6 shadow-soft'
+                      : 'rounded-2xl border border-border bg-background p-6 shadow-soft'
                 }
               >
                 <div className="flex items-center justify-between">
-                  <h2 className="font-display text-xl font-medium text-text">{plan.name}</h2>
+                  <h2 className="font-display text-xl tracking-tightish text-text">{plan.name}</h2>
                   {plan.highlight && (
-                    <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary">
+                    <span className="rounded-full bg-primary-soft px-2.5 py-1 text-xs font-semibold text-primary-hover">
                       Most popular
+                    </span>
+                  )}
+                  {plan.premium && (
+                    <span className="rounded-full bg-purple/30 px-2.5 py-1 text-xs font-semibold text-chalk">
+                      Premium
                     </span>
                   )}
                 </div>
@@ -309,7 +318,7 @@ function BillingInner() {
                     ) : null
                   ) : (
                     <button
-                      onClick={() => startCheckout(plan.id as 'pro' | 'team')}
+                      onClick={() => startCheckout(plan.id as 'pro' | 'multi')}
                       disabled={working !== null}
                       className={
                         plan.highlight

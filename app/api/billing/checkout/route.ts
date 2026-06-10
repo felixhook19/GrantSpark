@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic'
 type StripeCustomer = { id: string }
 type StripeCheckoutSession = { id: string; url: string | null }
 
-// POST /api/billing/checkout — body { plan: 'pro' | 'team' }.
+// POST /api/billing/checkout — body { plan: 'pro' | 'multi' }.
+// ('pro' = Seeker £29/month, 'multi' = Strategist £99/month.)
 // Creates (or reuses) the Stripe customer for this user, then returns a
 // Checkout session URL for the requested subscription plan.
 export async function POST(request: NextRequest) {
@@ -29,8 +30,8 @@ export async function POST(request: NextRequest) {
   } catch {
     // fall through to validation below
   }
-  if (plan !== 'pro' && plan !== 'team') {
-    return NextResponse.json({ error: 'plan must be "pro" or "team"' }, { status: 400 })
+  if (plan !== 'pro' && plan !== 'multi') {
+    return NextResponse.json({ error: 'plan must be "pro" or "multi"' }, { status: 400 })
   }
 
   const admin = createSupabaseAdminClient()

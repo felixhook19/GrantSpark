@@ -1,18 +1,26 @@
 import type { Metadata } from 'next'
-import { Inter, Newsreader } from 'next/font/google'
+import { Syne, DM_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({
+const syne = Syne({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-inter',
+  weight: ['700', '800'],
+  variable: '--font-syne',
 })
 
-const newsreader = Newsreader({
+const dmSans = DM_Sans({
   subsets: ['latin'],
   display: 'swap',
-  variable: '--font-newsreader',
-  axes: ['opsz'],
+  weight: ['400', '500', '700'],
+  variable: '--font-dm-sans',
+})
+
+const jetbrains = JetBrains_Mono({
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '500'],
+  variable: '--font-jetbrains',
 })
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
@@ -20,11 +28,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: 'GrantSpark — AI funding intelligence for UK organisations',
+    default: 'GrantSpark — Know before you apply',
     template: '%s · GrantSpark',
   },
   description:
-    'GrantSpark is an AI funding intelligence platform for UK charities, start-ups, CICs, community groups and social enterprises — and the consultants and in-house teams who manage funding across them. Find relevant grants, understand eligibility before applying, and track deadlines in one place.',
+    'GrantSpark matches UK charities to grants they can actually win. AI-powered scoring, honest eligibility analysis, real deadlines. Free to start.',
   keywords: [
     'UK grants',
     'grant finder',
@@ -32,18 +40,17 @@ export const metadata: Metadata = {
     'CIC funding',
     'community grants',
     'social enterprise funding',
-    'UK business grants',
-    'start-up grants UK',
+    'National Lottery funding',
     'Innovate UK funding',
     'AI grant matching',
-    'funding intelligence',
+    'grant writing',
     'fundraising software',
     'grant consultants UK',
   ],
   openGraph: {
-    title: 'GrantSpark — AI funding intelligence for UK organisations',
+    title: 'GrantSpark — Know before you apply',
     description:
-      'Find grants worth applying for. AI-matched, eligibility-checked and ranked — built for UK charities, start-ups, CICs and community organisations, and the consultants who back them.',
+      'AI grant matching for UK charities. We find the grants you can actually win — and tell you exactly why.',
     url: siteUrl,
     siteName: 'GrantSpark',
     locale: 'en_GB',
@@ -51,9 +58,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'GrantSpark — AI funding intelligence for UK organisations',
+    title: 'GrantSpark — Know before you apply',
     description:
-      'Relevant grants, plain-English eligibility and deadline tracking — built for UK charities, start-ups, CICs and community organisations.',
+      'AI grant matching for UK charities. We find the grants you can actually win — and tell you exactly why.',
   },
   robots: {
     index: true,
@@ -67,7 +74,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en-GB" className={`${inter.variable} ${newsreader.variable}`}>
+    <html
+      lang="en-GB"
+      className={`${syne.variable} ${dmSans.variable} ${jetbrains.variable}`}
+    >
       <body className="bg-background font-sans text-text antialiased">
         {children}
       </body>
