@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrg } from '@/lib/orgs'
-import { getSubscription, effectivePlan, isPaidPlan } from '@/lib/billing'
+import { effectiveOrgPlan, isPaidPlan } from '@/lib/billing'
 import { SAVED_STATUSES, type SavedStatus } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
@@ -16,6 +16,7 @@ type PatchBody = {
   rejection_reason?: string | null
   amount_awarded?: number | null
   outcome_date?: string | null
+  assigned_to?: string | null
 }
 
 // Block 2 outcome capture — the seed of the success-rate dataset.
@@ -41,7 +42,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   const planAdmin = createSupabaseAdminClient()
-  const plan = effectivePlan(await getSubscription(planAdmin, user.id))
+  const orgForPlan = await getActiveOrg(planAdmin, user.id)
+  const plan = orgForPlan
+    ? await effectiveOrgPlan(planAdmin, orgForPlan.owner_user_id)
+    : 'free'
   if (!isPaidPlan(plan)) {
     return NextResponse.json(
       {
@@ -115,6 +119,24 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Invalid amount_awarded' }, { status: 400 })
     }
     patch.amount_awarded = amount
+  }
+  // Block 12: assignment — must be an active member of this org.
+  if (body.assigned_to !== undefined) {
+    if (body.assigned_to === null) {
+      patch.assigned_to = null
+    } else {
+      const { data: member } = await admin
+        .from('org_members')
+        .select('id')
+        .eq('org_id', orgId)
+        .eq('user_id', body.assigned_to)
+        .eq('status', 'active')
+        .maybeSingle()
+      if (!member) {
+        return NextResponse.json({ error: 'Assignee must be an active team member' }, { status: 400 })
+      }
+      patch.assigned_to = body.assigned_to
+    }
   }
   if (body.outcome_date !== undefined) {
     patch.outcome_date = body.outcome_date

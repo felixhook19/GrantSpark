@@ -829,6 +829,8 @@ function DashboardInner() {
           {orgList.length > 1 && (
             <Link href="/portfolio" className={sideLinkCls}>Portfolio</Link>
           )}
+          <Link href="/answers" className={sideLinkCls}>Answer library</Link>
+          <Link href="/team" className={sideLinkCls}>Team</Link>
           <Link href="/profile" className={sideLinkCls}>Edit profile</Link>
           <Link href="/billing" className={sideLinkCls}>Billing</Link>
           <Link href="/blog" className={sideLinkCls}>Grant Intelligence</Link>

@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getSubscription, effectivePlan } from '@/lib/billing'
 import {
   getOrgsForUser,
+  getOwnedOrgs,
   getActiveOrg,
   orgLimitForPlan,
   ACTIVE_ORG_COOKIE,
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
   }
 
   const existingOrgs = await getOrgsForUser(admin, user.id)
+  const ownedOrgs = await getOwnedOrgs(admin, user.id)
 
   // Decide between creating a new profile and updating the active one.
   // create_new is plan-gated: Team can hold multiple org profiles,
@@ -75,7 +77,7 @@ export async function POST(request: NextRequest) {
   if (body.create_new && existingOrgs.length > 0) {
     const sub = await getSubscription(admin, user.id)
     const limit = orgLimitForPlan(effectivePlan(sub))
-    if (existingOrgs.length >= limit) {
+    if (ownedOrgs.length >= limit) {
       return NextResponse.json(
         {
           error:

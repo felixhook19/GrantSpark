@@ -71,6 +71,16 @@ export function isPaidPlan(plan: Plan): boolean {
   return plan === 'pro' || plan === 'multi'
 }
 
+// Block 12: org-scoped features inherit the ORG OWNER's plan, so a
+// Strategist owner's invited members get the org's entitlements without
+// their own subscription.
+export async function effectiveOrgPlan(
+  admin: SupabaseClient,
+  ownerUserId: string
+): Promise<Plan> {
+  return effectivePlan(await getSubscription(admin, ownerUserId))
+}
+
 export async function countMatchRunsThisMonth(
   admin: SupabaseClient,
   userId: string

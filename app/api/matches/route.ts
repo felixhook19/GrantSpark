@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrg } from '@/lib/orgs'
-import { getSubscription, effectivePlan, SCOUT_RESULT_LIMIT } from '@/lib/billing'
+import { effectiveOrgPlan, SCOUT_RESULT_LIMIT } from '@/lib/billing'
 import type { Grant } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
@@ -77,7 +77,8 @@ export async function GET() {
     }))
 
   // Scout tier sees only the top results; full ranking is a Seeker feature.
-  const plan = effectivePlan(await getSubscription(admin, user.id))
+  // Plan comes from the ORG OWNER so invited members inherit it (Block 12).
+  const plan = await effectiveOrgPlan(admin, org.owner_user_id)
   const truncated = plan === 'free' && matches.length > SCOUT_RESULT_LIMIT
   if (truncated) {
     matches = matches.slice(0, SCOUT_RESULT_LIMIT)

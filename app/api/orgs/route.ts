@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getSubscription, effectivePlan } from '@/lib/billing'
 import {
   getOrgsForUser,
+  getOwnedOrgs,
   getActiveOrg,
   orgLimitForPlan,
   ACTIVE_ORG_COOKIE,
@@ -24,8 +25,9 @@ export async function GET() {
   }
 
   const admin = createSupabaseAdminClient()
-  const [orgs, active, sub] = await Promise.all([
+  const [orgs, owned, active, sub] = await Promise.all([
     getOrgsForUser(admin, user.id),
+    getOwnedOrgs(admin, user.id),
     getActiveOrg(admin, user.id),
     getSubscription(admin, user.id),
   ])
@@ -42,7 +44,7 @@ export async function GET() {
     active_org_id: active?.id || null,
     plan,
     org_limit: limit,
-    can_add: orgs.length < limit,
+    can_add: owned.length < limit,
   })
 }
 

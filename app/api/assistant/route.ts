@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { requireEnv } from '@/lib/env'
 import { tryRateLimit } from '@/lib/ratelimit'
-import { getSubscription, effectivePlan } from '@/lib/billing'
+import { effectiveOrgPlan } from '@/lib/billing'
 import { getActiveOrg } from '@/lib/orgs'
 import type { Grant } from '@/types/db'
 
@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
   const admin = createSupabaseAdminClient()
 
   // Paid feature: free-tier users get a clear upgrade signal, not a draft.
-  const sub = await getSubscription(admin, user.id)
-  const plan = effectivePlan(sub)
+  const orgEarly = await getActiveOrg(admin, user.id)
+  const plan = orgEarly ? await effectiveOrgPlan(admin, orgEarly.owner_user_id) : 'free'
   if (plan === 'free') {
     return NextResponse.json(
       {
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'opportunity_id is required' }, { status: 400 })
   }
 
-  const org = await getActiveOrg(admin, user.id)
+  const org = orgEarly
   if (!org) {
     return NextResponse.json({ error: 'No organisation profile found' }, { status: 404 })
   }
