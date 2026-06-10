@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Wordmark } from '@/components/Logo'
 
+const inputCls =
+  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
+const labelCls = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-slate'
+
 export default function SignupPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -42,35 +46,35 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-6 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link href="/" className="mb-8 inline-flex" aria-label="GrantSpark — home">
-            <Wordmark size={28} />
-          </Link>
-          <h1 className="font-display text-3xl font-medium tracking-tightish text-text">
-            Create your account
-          </h1>
-          <p className="mt-2 text-text-secondary">
-            Find the grants you&apos;re actually eligible for
-          </p>
-        </div>
+    <div className="min-h-screen bg-midnight-3 px-6">
+      <div className="mx-auto w-full max-w-[400px] pt-[15vh]">
+        <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-10">
+          <div className="mb-8 text-center">
+            <Link href="/" className="inline-flex" aria-label="GrantSpark — home">
+              <Wordmark size={26} />
+            </Link>
+            <h1 className="mt-6 font-display text-[28px] tracking-[-0.02em] text-chalk">
+              Create your account
+            </h1>
+            <p className="mt-2 font-body text-[14px] text-slate">
+              Find the grants you&apos;re actually eligible for
+            </p>
+          </div>
 
-        <div className="rounded-2xl border border-border bg-background p-8 shadow-card">
           {checkEmail ? (
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-soft text-primary">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-teal/[0.15] text-teal-light">
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l9 6 9-6M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" /></svg>
               </div>
-              <h2 className="font-display text-xl font-medium text-text">Check your email</h2>
-              <p className="mt-2 text-sm leading-relaxed text-text-secondary">
+              <h2 className="font-display text-[20px] tracking-[-0.01em] text-chalk">Check your email</h2>
+              <p className="mt-2 font-body text-[13px] leading-[1.65] text-slate">
                 We&apos;ve sent a confirmation link to{' '}
-                <span className="font-semibold text-text">{email}</span>. Click it to
+                <span className="font-semibold text-chalk">{email}</span>. Click it to
                 activate your account, then sign in.
               </p>
               <Link
                 href="/login"
-                className="mt-6 inline-flex rounded-xl border border-primary px-6 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary-soft"
+                className="mt-6 inline-flex rounded border border-white/[0.12] px-6 py-3 font-body text-[13px] font-semibold text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light"
               >
                 Go to sign in
               </Link>
@@ -79,22 +83,18 @@ export default function SignupPage() {
             <>
               <form onSubmit={handleSignup} className="space-y-5">
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-text">
-                    Email address
-                  </label>
+                  <label className={labelCls}>Email address</label>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     placeholder="you@organisation.org"
-                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
+                    className={inputCls}
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-text">
-                    Password
-                  </label>
+                  <label className={labelCls}>Password</label>
                   <input
                     type="password"
                     value={password}
@@ -102,25 +102,23 @@ export default function SignupPage() {
                     required
                     minLength={8}
                     placeholder="At least 8 characters"
-                    className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
+                    className={inputCls}
                   />
                 </div>
                 {error && (
-                  <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-                    {error}
-                  </div>
+                  <p className="font-mono text-[13px] text-rose">{error}</p>
                 )}
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded bg-teal py-3 font-body text-[15px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  {loading ? 'Creating account…' : <>Create account <span aria-hidden="true">→</span></>}
+                  {loading ? 'Creating account…' : 'Create account →'}
                 </button>
               </form>
-              <p className="mt-6 text-center text-sm text-text-secondary">
+              <p className="mt-6 text-center font-body text-[13px] text-slate">
                 Already have an account?{' '}
-                <Link href="/login" className="font-semibold text-primary hover:underline">
+                <Link href="/login" className="font-medium text-teal-light hover:text-spark">
                   Sign in
                 </Link>
               </p>

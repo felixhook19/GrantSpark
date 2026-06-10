@@ -1,20 +1,23 @@
 import Link from 'next/link'
 import { SiteNav } from '@/components/SiteNav'
 import { SiteFooter } from '@/components/SiteFooter'
+import { ScoreRing } from '@/components/ScoreRing'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { createSupabasePublicClient } from '@/lib/supabase/public'
 
-// The social proof bar reads the live grants count.
+// The proof bar reads the live grants count.
 export const dynamic = 'force-dynamic'
 
 /**
- * Marketing homepage — "Purposeful Intelligence" (June 2026), approved
- * Phase 1 copy. Tone: British English, short sentences, no sector
- * platitudes.
+ * Marketing homepage — "Purposeful Intelligence" Type-First Dark rebuild.
+ * Tone: British English, short sentences, honesty as the product.
  *
- * IMPORTANT: testimonials are illustrative composites attributed to
- * anonymous roles. Replace with real, attributable customer quotes before
- * scaling acquisition spend.
+ * Testimonial-free by design: the honesty band carries the trust load
+ * until real, attributed quotes exist.
  */
+
+const eyebrowCls =
+  'font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light'
 
 async function liveGrantsCount(): Promise<number | null> {
   try {
@@ -29,410 +32,365 @@ async function liveGrantsCount(): Promise<number | null> {
   }
 }
 
+type IntelCard = { slug: string | null; tag: string; title: string; excerpt: string; read: string }
+
+const FALLBACK_INTEL: IntelCard[] = [
+  {
+    slug: null,
+    tag: 'Getting started',
+    title: 'Your first grant application: where small charities should begin',
+    excerpt: 'Choosing the right funder, evidencing need, and writing a budget that survives assessment.',
+    read: '8 min',
+  },
+  {
+    slug: null,
+    tag: 'Funder guides',
+    title: 'National Lottery Awards for All, explained',
+    excerpt: 'Who it funds, what it pays for, and what assessors actually look for.',
+    read: '9 min',
+  },
+  {
+    slug: null,
+    tag: 'Application tips',
+    title: 'Match funding explained for UK applicants',
+    excerpt: 'What counts as match, in-kind contributions, and how to secure it before the deadline.',
+    read: '7 min',
+  },
+]
+
+async function latestIntel(): Promise<IntelCard[]> {
+  try {
+    const supabase = createSupabasePublicClient()
+    const { data } = await supabase
+      .from('blog_posts')
+      .select('slug, title, excerpt, tag, read_minutes')
+      .eq('published', true)
+      .order('published_at', { ascending: false })
+      .limit(3)
+    const posts = (data || []) as Array<{
+      slug: string; title: string; excerpt: string; tag: string | null; read_minutes: number | null
+    }>
+    if (posts.length === 0) return FALLBACK_INTEL
+    return posts.map((p) => ({
+      slug: p.slug,
+      tag: p.tag || 'Grant Intelligence',
+      title: p.title,
+      excerpt: p.excerpt,
+      read: `${p.read_minutes || 6} min`,
+    }))
+  } catch {
+    return FALLBACK_INTEL
+  }
+}
+
+function DemoBadge({ decision }: { decision: 'Apply' | 'Consider' | 'Skip' }) {
+  const cls =
+    decision === 'Apply'
+      ? 'bg-spark/[0.12] text-spark'
+      : decision === 'Consider'
+        ? 'bg-gold/[0.12] text-gold'
+        : 'bg-rose/[0.12] text-rose'
+  return (
+    <span className={`rounded px-2.5 py-1 font-mono text-[10px] font-semibold uppercase tracking-[0.08em] ${cls}`}>
+      {decision}
+    </span>
+  )
+}
+
 export default async function HomePage() {
-  const grantsCount = await liveGrantsCount()
+  const [grantsCount, intel] = await Promise.all([liveGrantsCount(), latestIntel()])
+
+  const proofStats = [
+    { value: grantsCount ? `${grantsCount}+` : '60+', label: 'Active grants' },
+    { value: '£9B+', label: 'Annual UK grant funding' },
+    { value: 'AI', label: 'Scored, explained, honest' },
+    { value: 'UK', label: 'Built for UK charities & CICs' },
+    { value: 'Free', label: 'No credit card required' },
+  ]
+
+  const demoCards = [
+    { funder: 'National Lottery Community Fund', title: 'Awards for All', score: 87, decision: 'Apply' as const, meta: ['£300 – £20,000', 'Rolling'] },
+    { funder: 'Esmée Fairbairn Foundation', title: 'Core Costs', score: 64, decision: 'Consider' as const, meta: ['£30,000+', 'Open'] },
+    { funder: 'Innovate UK', title: 'Smart Grants', score: 27, decision: 'Skip' as const, meta: ['£100,000+', 'Sep 2026'] },
+  ]
+
+  const pricingFeatures = [
+    'AI grant matching',
+    'Honest eligibility analysis',
+    'Weekly email digest',
+    'Deadline alerts',
+    'AI application assistant',
+    'Up to 10 organisation profiles',
+  ]
+  const plans = [
+    { name: 'Scout', price: '£0', per: 'free forever', who: 'For Founder-Directors', included: 3, featured: false, note: '5 AI match runs per month' },
+    { name: 'Seeker', price: '£29', per: '/mo', who: 'For Fundraising Managers', included: 5, featured: true, note: 'Unlimited AI matching' },
+    { name: 'Strategist', price: '£99', per: '/mo', who: 'For Bid Managers & Heads of Fundraising', included: 6, featured: false, note: 'Consultant portfolio view' },
+  ]
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen bg-midnight-3">
       <SiteNav />
 
       {/* 1. Hero */}
-      <section className="relative overflow-hidden px-6 pb-24 pt-20 md:pt-28">
-        <div className="pointer-events-none absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full bg-primary/10 blur-3xl" />
-        <div className="mx-auto max-w-6xl">
-          <h1 className="max-w-4xl font-display text-5xl leading-[1.04] tracking-tightest text-chalk md:text-[76px]">
-            Know before you apply.
+      <section className="relative flex min-h-screen flex-col justify-center overflow-hidden bg-midnight-3 px-6 py-24">
+        {/* Decorative 87% score ring, cropped right */}
+        <svg
+          className="pointer-events-none absolute -right-40 top-1/2 -translate-y-1/2 opacity-20"
+          width="640"
+          height="640"
+          viewBox="0 0 640 640"
+          aria-hidden="true"
+        >
+          <circle cx="320" cy="320" r="280" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="26" />
+          <circle
+            cx="320" cy="320" r="280" fill="none" stroke="#19E88F" strokeWidth="26"
+            strokeLinecap="round"
+            strokeDasharray={2 * Math.PI * 280}
+            strokeDashoffset={2 * Math.PI * 280 * 0.13}
+            transform="rotate(-90 320 320)"
+          />
+          <text x="320" y="345" textAnchor="middle" fill="#19E88F" fontSize="72" fontFamily="JetBrains Mono, monospace" fontWeight="600">
+            87
+          </text>
+        </svg>
+        {/* Teal glow, left */}
+        <div
+          className="pointer-events-none absolute -left-60 top-1/3 h-[600px] w-[600px]"
+          style={{ background: 'radial-gradient(circle, rgba(0,137,123,0.12) 0%, transparent 70%)' }}
+        />
+
+        <div className="relative mx-auto w-full max-w-6xl">
+          <p className={`fade-up-1 ${eyebrowCls}`}>// AI grant matching — UK charities</p>
+          <h1 className="fade-up-2 mt-6 font-display text-[clamp(56px,7.5vw,96px)] uppercase leading-[0.95] tracking-[-0.04em] text-chalk">
+            Know before
+            <br />
+            <span className="text-teal-light">you apply.</span>
           </h1>
-
-          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-text-secondary md:text-xl">
-            AI grant matching for UK charities. We find the grants you can
-            actually win — and tell you exactly why.
+          <p className="fade-up-3 mt-8 max-w-[520px] font-body text-[18px] leading-[1.65] text-slate">
+            We score every available grant against your charity&apos;s exact profile — and
+            tell you <strong className="font-semibold text-chalk">honestly</strong> which
+            ones are worth your time. No guesswork. No wasted applications.
           </p>
-
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+          <div className="fade-up-4 mt-10 flex flex-col gap-3 sm:flex-row">
             <Link
               href="/signup"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-base font-semibold text-chalk shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
+              className="inline-flex items-center justify-center rounded bg-teal px-7 py-3.5 font-body text-[15px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light"
             >
-              Find your grants <span aria-hidden="true">→</span>
+              Find your grants — it&apos;s free
             </Link>
             <Link
-              href="#consultants"
-              className="inline-flex items-center justify-center rounded-xl border border-primary bg-transparent px-7 py-3.5 text-base font-medium text-primary-hover transition-colors hover:bg-primary-soft"
+              href="#how"
+              className="inline-flex items-center justify-center rounded border border-white/[0.12] px-7 py-3.5 font-body text-[15px] font-medium text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light"
             >
-              For consultants &amp; teams
+              See how it works →
             </Link>
           </div>
-          <p className="mt-4 text-sm text-text-secondary">
-            No credit card. No demo call. Free to start.
-          </p>
         </div>
       </section>
 
-      {/* 2. Social proof bar — JetBrains Mono */}
-      <section className="border-y border-border bg-surface px-6 py-6">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-8 gap-y-3 font-mono text-sm text-text-secondary">
-          <span>
-            <span className="tabular text-spark">{grantsCount ?? '60+'}</span> live UK grants
-            tracked
-          </span>
-          <span>AI-powered matching</span>
-          <span>Built in the UK</span>
-          <span>Free to start</span>
+      {/* 2. Proof bar */}
+      <section className="border-y border-white/[0.06] bg-midnight-2 px-6 py-8">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-y-6">
+          {proofStats.map((s, i) => (
+            <div key={s.label} className="flex items-center">
+              {i > 0 && <div className="mr-8 hidden h-10 w-px bg-white/[0.08] lg:block" />}
+              <div className="pr-8">
+                <p className="tabular font-mono text-[22px] font-semibold text-spark">{s.value}</p>
+                <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.1em] text-slate">{s.label}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* 3. How it works */}
-      <section id="how" className="px-6 py-24">
+      {/* 3. Problem */}
+      <section className="bg-midnight-4 px-6 py-[120px]">
         <div className="mx-auto max-w-6xl">
-          <p className="font-mono text-xs font-medium uppercase tracking-wider text-primary-hover">
-            How it works
-          </p>
-          <h2 className="mt-3 max-w-2xl font-display text-4xl tracking-tightest text-text">
-            Three steps to a shortlist worth your time
+          <p className={eyebrowCls}>// The problem we solve</p>
+          <h2 className="mt-4 max-w-3xl font-display text-[clamp(36px,4.5vw,56px)] uppercase leading-[0.98] tracking-[-0.04em] text-chalk">
+            Grant research is broken. <span className="text-teal-light">We fixed it.</span>
           </h2>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
+          <div className="mt-14 grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-3">
             {[
               {
-                step: '01',
-                title: 'Tell us about your organisation',
-                desc: 'What you do, where you work and who you help. Five minutes, no jargon. The same flow whether you are a charity, CIC or community group.',
+                label: '01 / Fundraisers',
+                head: 'Stop wasting applications on grants you cannot win.',
+                body: 'Every match comes with the reasons it fits and the risks that could sink it — before you spend a fortnight on the form.',
               },
               {
-                step: '02',
-                title: 'Get scored, explained matches',
-                desc: 'Every grant scored 0–100 against your profile. Eligibility checked. Reasoning shown in full. You see why a grant fits — and why it does not.',
+                label: '02 / Bid Managers',
+                head: 'Find the opportunities your spreadsheet is missing.',
+                body: 'The database refreshes from live sources daily. New funds appear scored against your profile, not buried in a newsletter.',
               },
               {
-                step: '03',
-                title: 'Apply to the right ones',
-                desc: 'Real deadlines, tracked automatically. The application assistant turns your best matches into strong first drafts in your own voice.',
+                label: '03 / Founder-Directors',
+                head: 'Start somewhere. We tell you where.',
+                body: 'No fundraising team? Your top three matches, ranked by winnability, with first-draft answers when you are ready to apply.',
               },
-            ].map((item) => (
-              <div
-                key={item.step}
-                className="rounded-2xl border border-border bg-surface p-7 shadow-soft transition-all hover:shadow-card"
-              >
-                <p className="tabular font-mono text-sm font-medium text-primary-hover">
-                  {item.step}
-                </p>
-                <h3 className="mt-4 text-lg font-semibold text-text">
-                  {item.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-                  {item.desc}
-                </p>
+            ].map((card) => (
+              <div key={card.label} className="hover-rule bg-midnight-3 p-9">
+                <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{card.label}</p>
+                <h3 className="mt-5 font-body text-[19px] font-semibold leading-snug text-chalk">{card.head}</h3>
+                <p className="mt-3 font-body text-[14px] leading-[1.65] text-slate">{card.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* 4. Honesty section — Trust Teal field */}
-      <section className="bg-teal px-6 py-20">
-        <div className="mx-auto max-w-4xl">
-          <p className="font-display text-3xl leading-snug tracking-tightish text-chalk md:text-4xl">
-            If a grant is a bad fit, we tell you. No inflated scores. No
-            false hope. Just the ones worth your time.
-          </p>
-        </div>
-      </section>
-
-      {/* 5. Features */}
-      <section id="features" className="border-t border-border bg-surface px-6 py-24">
-        <div className="mx-auto max-w-6xl">
-          <p className="font-mono text-xs font-medium uppercase tracking-wider text-primary-hover">
-            Features
-          </p>
-          <h2 className="mt-3 font-display text-4xl tracking-tightest text-text">
-            Built for the people who write the bids
-          </h2>
-
-          <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: 'AI fit scoring',
-                desc: 'Every grant scored 0–100 against your profile, with the reasoning in plain English — National Lottery to Innovate UK.',
-              },
-              {
-                title: 'Honest eligibility',
-                desc: 'Funder criteria, exclusions and required documents surfaced upfront. Stop applying to grants you were never going to win.',
-              },
-              {
-                title: 'Real deadlines',
-                desc: 'Closing dates pulled from source and flagged across your matches. Never lose a window to a stale listing.',
-              },
-              {
-                title: 'Risks, not just reasons',
-                desc: 'Each match lists what could count against you, so you can fix it before the funder finds it.',
-              },
-              {
-                title: 'Application assistant',
-                desc: 'First-draft answers against funder criteria, in your voice. You edit; it never invents facts about you.',
-              },
-              {
-                title: 'Source-attributed data',
-                desc: 'Every grant links back to its source, with last-checked dates shown openly.',
-              },
-            ].map((f) => (
-              <div
-                key={f.title}
-                className="rounded-2xl border border-border bg-background p-6 transition-all hover:shadow-card"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-soft">
-                  <svg className="h-5 w-5 text-primary-hover" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+      {/* 4. Product demo */}
+      <section id="how" className="bg-midnight-3 px-6 py-[120px]">
+        <div className="mx-auto grid max-w-6xl items-center gap-20 lg:grid-cols-2">
+          <div>
+            <p className={eyebrowCls}>// The product</p>
+            <h2 className="mt-4 font-display text-[clamp(36px,4.5vw,56px)] uppercase leading-[0.98] tracking-[-0.04em] text-chalk">
+              Your grants. <span className="text-teal-light">Scored.</span>
+            </h2>
+            <p className="mt-6 max-w-[480px] font-body text-[16px] leading-[1.65] text-slate">
+              Tell us what your organisation does. Our AI scores every live UK grant
+              against your profile, explains its reasoning in full, and gives you a
+              straight answer: apply, consider, or skip.
+            </p>
+            <div className="mt-9 space-y-5">
+              {[
+                { head: 'Scored 0–100, explained in full', body: 'Why it fits, what could count against you, what to do next.' },
+                { head: 'Real deadlines, tracked', body: 'Closing dates pulled from source — never a stale listing.' },
+                { head: 'First drafts in your voice', body: 'The application assistant turns strong matches into honest starting drafts.' },
+              ].map((f) => (
+                <div key={f.head} className="flex gap-4">
+                  <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded bg-teal/[0.15]">
+                    <svg className="h-4 w-4 text-teal-light" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  </span>
+                  <div>
+                    <p className="font-body text-[15px] font-semibold text-chalk">{f.head}</p>
+                    <p className="mt-0.5 font-body text-[13px] leading-[1.6] text-slate">{f.body}</p>
+                  </div>
                 </div>
-                <h3 className="mt-5 text-base font-semibold text-text">
-                  {f.title}
-                </h3>
-                <p className="mt-2 text-sm leading-relaxed text-text-secondary">
-                  {f.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 6. For consultants & teams */}
-      <section id="consultants" className="px-6 py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="grid items-center gap-12 md:grid-cols-2">
-            <div>
-              <p className="font-mono text-xs font-medium uppercase tracking-wider text-primary-hover">
-                For grant consultants &amp; fundraising teams
-              </p>
-              <h2 className="mt-3 font-display text-4xl tracking-tightest text-text">
-                Every client. One pipeline.
-              </h2>
-              <p className="mt-5 text-base leading-relaxed text-text-secondary">
-                Built for UK grant consultancies, bid writers and in-house
-                fundraising teams running multiple organisations. One login,
-                your whole client book, every deadline — so nothing slips
-                while you are heads-down on a Stage 2 application.
-              </p>
-              <ul className="mt-6 space-y-3">
-                {[
-                  'Up to 10 client organisation profiles under one login',
-                  'A portfolio view with live match scores per client',
-                  'Separate match pipelines and saved grants per organisation',
-                  'AI application drafts for every profile',
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-text">
-                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-5 text-sm text-text-secondary">
-                Already work with 3+ client organisations? You are who the
-                Strategist plan was built for.
-              </p>
-              <Link
-                href="/signup"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-chalk shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
-              >
-                Start with Strategist <span aria-hidden="true">→</span>
-              </Link>
+              ))}
             </div>
-            <div className="rounded-2xl border border-purple bg-surface p-8 shadow-card">
-              <p className="font-mono text-xs font-medium uppercase tracking-wider text-text-secondary">
-                Sample portfolio view
-              </p>
-              <p className="mt-2 font-display text-lg tracking-tightish text-text">
-                Four clients · mixed sector
-              </p>
-              <p className="text-sm text-text-secondary">North-west England</p>
-              <div className="mt-6 space-y-3 border-t border-border pt-4">
-                {[
-                  { score: 94, name: 'National Lottery Awards for All', client: 'Riverside Trust · charity' },
-                  { score: 86, name: 'Garfield Weston Foundation', client: 'Eastgate CIC' },
-                  { score: 71, name: 'Henry Smith Charity', client: 'Brookfield Advice Centre' },
-                  { score: 38, name: 'Esmée Fairbairn Foundation', client: 'Acme Youth Network' },
-                ].map((row) => {
-                  const colour =
-                    row.score >= 75
-                      ? 'text-spark bg-success-soft'
-                      : row.score >= 50
-                      ? 'text-gold bg-accent-soft'
-                      : 'text-danger bg-danger-soft'
-                  return (
-                    <div key={row.name} className="flex items-center gap-3">
-                      <span className={`tabular flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full font-mono text-sm font-medium ${colour}`}>
-                        {row.score}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-text">{row.name}</p>
-                        <p className="text-xs text-text-secondary">{row.client}</p>
+          </div>
+
+          {/* Dashboard mockup */}
+          <div className="demo-perspective">
+            <div className="demo-frame overflow-hidden rounded-lg border border-white/[0.1] bg-midnight-2 shadow-card">
+              <div className="flex items-center gap-2 border-b border-white/[0.06] bg-midnight-4 px-4 py-3">
+                <span className="h-2.5 w-2.5 rounded-full bg-rose/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-gold/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-spark/60" />
+                <span className="ml-3 flex-1 rounded bg-white/[0.05] px-3 py-1 font-mono text-[10px] text-muted">
+                  grantspark.co.uk/dashboard
+                </span>
+              </div>
+              <div className="space-y-3 p-4">
+                {demoCards.map((c) => (
+                  <div key={c.title} className="flex items-center gap-4 rounded border border-white/[0.07] bg-midnight p-4">
+                    <ScoreRing score={c.score} size={48} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-mono text-[9px] uppercase tracking-[0.1em] text-slate">{c.funder}</p>
+                      <p className="mt-0.5 truncate font-body text-[14px] font-semibold text-chalk">{c.title}</p>
+                      <div className="mt-1.5 flex gap-1.5">
+                        {c.meta.map((m) => (
+                          <span key={m} className="rounded-sm bg-white/[0.06] px-1.5 py-0.5 font-mono text-[9px] text-slate">{m}</span>
+                        ))}
                       </div>
-                      <span className="text-xs font-semibold text-primary-hover">View →</span>
                     </div>
-                  )
-                })}
+                    <DemoBadge decision={c.decision} />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 7. Social proof (placeholder quotes — replace before scaling acquisition) */}
-      <section className="border-t border-border bg-surface px-6 py-24">
-        <div className="mx-auto max-w-6xl">
-          <p className="font-mono text-xs font-medium uppercase tracking-wider text-primary-hover">
-            What users tell us
-          </p>
-          <h2 className="mt-3 max-w-2xl font-display text-4xl tracking-tightest text-text">
-            Less searching. More applying.
+      {/* 5. Honesty */}
+      <section id="about" className="relative overflow-hidden bg-teal px-6 py-[80px]">
+        <span
+          className="pointer-events-none absolute -right-8 -top-32 select-none font-display text-[400px] leading-none text-black/[0.08]"
+          aria-hidden="true"
+        >
+          &ldquo;
+        </span>
+        <div className="relative mx-auto max-w-4xl">
+          <h2 className="font-display text-[clamp(28px,4vw,52px)] leading-[1.1] tracking-[-0.02em] text-white">
+            If a grant is a bad fit, we tell you.
           </h2>
-
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {[
-              {
-                quote:
-                  'We used to spend a full day a week scrolling funder websites. GrantSpark gives us a ranked shortlist before our coffee goes cold.',
-                role: 'Fundraising manager, small charity',
-              },
-              {
-                quote:
-                  'The eligibility notes earn their keep. We stopped applying to grants we were never going to win.',
-                role: 'Director, community CIC',
-              },
-              {
-                quote:
-                  'Running six client portfolios used to mean six spreadsheets. Now it is one pipeline.',
-                role: 'Director, UK grant consultancy',
-              },
-            ].map((t, i) => (
-              <figure
-                key={i}
-                className="rounded-2xl border border-border bg-background p-7 shadow-soft"
-              >
-                <svg className="h-5 w-5 text-accent" fill="currentColor" viewBox="0 0 24 24"><path d="M9 7H6a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3v-4h3V7zm9 0h-3a3 3 0 0 0-3 3v4a3 3 0 0 0 3 3v-4h3V7z" /></svg>
-                <blockquote className="mt-4 text-base leading-relaxed text-text">
-                  &ldquo;{t.quote}&rdquo;
-                </blockquote>
-                <figcaption className="mt-5 text-sm text-text-secondary">
-                  — {t.role}
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-
-          <p className="mt-6 text-xs text-muted">
-            Illustrative composite feedback from early users. Real, attributed testimonials in development.
+          <p className="mt-6 max-w-[640px] font-body text-[17px] leading-[1.65] text-white/70">
+            No inflated scores. No false hope. Just the grants worth your time — and the
+            ones to avoid. <strong className="font-semibold text-white">Honesty is the product.</strong>
           </p>
         </div>
       </section>
 
-      {/* 8. Pricing */}
-      <section id="pricing" className="px-6 py-24">
-        <div className="mx-auto max-w-6xl">
-          <p className="font-mono text-xs font-medium uppercase tracking-wider text-primary-hover">
-            Pricing
-          </p>
-          <h2 className="mt-3 font-display text-4xl tracking-tightest text-text">
-            Start free. Upgrade when it pays off.
-          </h2>
-          <p className="mt-3 max-w-xl text-text-secondary">
-            No annual lock-in. No hidden fees. Cancel any time.
-          </p>
+      {/* 6. Pricing */}
+      <section id="pricing" className="bg-midnight-4 px-6 py-[120px]">
+        <div className="mx-auto max-w-[960px]">
+          <div className="text-center">
+            <p className={eyebrowCls}>// Pricing</p>
+            <h2 className="mt-4 font-display text-[clamp(36px,4.5vw,56px)] uppercase leading-[0.98] tracking-[-0.04em] text-chalk">
+              Simple. Transparent.
+            </h2>
+            <p className="mx-auto mt-4 max-w-md font-body text-[15px] text-slate">
+              No annual lock-in. No hidden fees. Cancel any time.
+            </p>
+          </div>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-3">
-            {[
-              {
-                name: 'Scout',
-                price: '£0',
-                per: 'forever',
-                line: 'Core matching and a weekly digest. See what GrantSpark finds for you.',
-                features: [
-                  '5 AI match runs per month',
-                  'Weekly email digest',
-                  'Honest eligibility analysis',
-                ],
-                highlight: false,
-                premium: false,
-                cta: 'Start free',
-              },
-              {
-                name: 'Seeker',
-                price: '£29',
-                per: 'per month',
-                line: 'For one organisation that wants every match, scored and explained.',
-                features: [
-                  'Unlimited AI matching',
-                  'Deadline alerts',
-                  'Full fit scoring with risks and next steps',
-                  'AI application assistant',
-                ],
-                highlight: true,
-                premium: false,
-                cta: 'Upgrade to Seeker',
-              },
-              {
-                name: 'Strategist',
-                price: '£99',
-                per: 'per month',
-                line: 'For consultants and teams managing funding across multiple organisations.',
-                features: [
-                  'Everything in Seeker',
-                  'Up to 10 organisation profiles',
-                  'Consultant portfolio view',
-                  'Priority support',
-                ],
-                highlight: false,
-                premium: true,
-                cta: 'Upgrade to Strategist',
-              },
-            ].map((plan) => (
+          <div className="mt-14 grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-3">
+            {plans.map((plan) => (
               <div
                 key={plan.name}
-                className={
-                  plan.highlight
-                    ? 'rounded-2xl border-2 border-primary bg-surface p-7 shadow-card'
-                    : plan.premium
-                    ? 'rounded-2xl border border-purple bg-surface p-7 shadow-soft'
-                    : 'rounded-2xl border border-border bg-surface p-7 shadow-soft'
-                }
+                className={`relative p-8 ${plan.featured ? 'bg-midnight-2' : 'bg-midnight-3'}`}
               >
-                {plan.highlight && (
-                  <p className="mb-3 inline-flex rounded-full bg-primary-soft px-2.5 py-0.5 text-xs font-semibold text-primary-hover">
-                    Most popular
-                  </p>
+                {plan.featured && (
+                  <>
+                    <span className="absolute inset-x-0 top-0 h-0.5 bg-teal" />
+                    <span className="absolute right-6 top-5 rounded bg-teal px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-white">
+                      Most popular
+                    </span>
+                  </>
                 )}
-                {plan.premium && (
-                  <p className="mb-3 inline-flex rounded-full bg-purple/30 px-2.5 py-0.5 text-xs font-semibold text-chalk">
+                {plan.name === 'Strategist' && (
+                  <span className="absolute right-6 top-5 rounded bg-purple/40 px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-chalk">
                     Premium
-                  </p>
+                  </span>
                 )}
-                <p className="font-display text-xl tracking-tightish text-text">{plan.name}</p>
-                <p className="mt-2 flex items-baseline gap-1">
-                  <span className="tabular font-mono text-4xl font-medium tracking-tightish text-text">{plan.price}</span>
-                  <span className="text-sm text-text-secondary">{plan.per}</span>
+                <h3 className="font-display text-[28px] uppercase tracking-[-0.02em] text-chalk">{plan.name}</h3>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted">{plan.who}</p>
+                <p className="mt-5 flex items-baseline gap-1">
+                  <span className="tabular font-mono text-[42px] font-semibold text-chalk">{plan.price}</span>
+                  <span className="font-mono text-[12px] text-slate">{plan.per}</span>
                 </p>
-                <p className="mt-4 text-sm leading-relaxed text-text-secondary">
-                  {plan.line}
-                </p>
-                <ul className="mt-6 space-y-2">
-                  {plan.features.map((feat) => (
-                    <li
-                      key={feat}
-                      className="flex items-start gap-2 text-sm text-text"
-                    >
-                      <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary-hover" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                      <span>{feat}</span>
-                    </li>
-                  ))}
+                <p className="mt-1 font-body text-[12px] text-slate">{plan.note}</p>
+                <ul className="mt-7 space-y-2.5">
+                  {pricingFeatures.map((feat, i) => {
+                    const on = i < plan.included
+                    return (
+                      <li key={feat} className="flex items-center gap-2.5 font-body text-[13px]">
+                        <span
+                          className={
+                            on
+                              ? 'h-2.5 w-2.5 flex-shrink-0 rounded-full bg-teal'
+                              : 'h-2.5 w-2.5 flex-shrink-0 rounded-full border border-white/[0.15]'
+                          }
+                        />
+                        <span className={on ? 'text-chalk' : 'text-muted line-through decoration-white/20'}>
+                          {feat}
+                        </span>
+                      </li>
+                    )
+                  })}
                 </ul>
                 <Link
                   href="/signup"
                   className={
-                    plan.highlight
-                      ? 'mt-7 block rounded-xl bg-primary py-3 text-center text-sm font-semibold text-chalk shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover'
-                      : 'mt-7 block rounded-xl border border-primary py-3 text-center text-sm font-semibold text-primary-hover transition-colors hover:bg-primary-soft'
+                    plan.featured
+                      ? 'mt-8 block rounded bg-teal py-3 text-center font-body text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light'
+                      : 'mt-8 block rounded border border-white/[0.12] py-3 text-center font-body text-[13px] font-semibold text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light'
                   }
                 >
-                  {plan.cta}
+                  {plan.name === 'Scout' ? 'Start free' : `Upgrade to ${plan.name}`}
                 </Link>
               </div>
             ))}
@@ -440,21 +398,55 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* 9. Closing CTA */}
-      <section className="border-t border-border bg-surface px-6 py-24">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="font-display text-4xl tracking-tightest text-text md:text-5xl">
-            Your next grant is already out there.
-          </h2>
-          <p className="mt-5 text-lg text-text-secondary">
-            Set up your organisation profile and see your matches in minutes.
-          </p>
-          <Link
-            href="/signup"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-base font-semibold text-chalk shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
-          >
-            Find your grants <span aria-hidden="true">→</span>
-          </Link>
+      {/* 7. Grant Intelligence hub */}
+      <section id="intelligence" className="bg-midnight-3 px-6 py-[120px]">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className={eyebrowCls}>// Grant Intelligence</p>
+              <h2 className="mt-4 font-display text-[clamp(36px,4.5vw,56px)] uppercase leading-[0.98] tracking-[-0.04em] text-chalk">
+                Know the <span className="text-teal-light">landscape.</span>
+              </h2>
+            </div>
+            <Link href="/blog" className="font-mono text-[12px] font-medium uppercase tracking-[0.1em] text-teal-light transition-colors hover:text-spark">
+              All articles →
+            </Link>
+          </div>
+
+          <div className="mt-14 grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-3">
+            {intel.map((post) => {
+              const inner = (
+                <>
+                  <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.15em] text-teal-light">
+                    // {post.tag}
+                  </p>
+                  <h3 className="mt-4 font-display text-[18px] leading-snug tracking-[-0.01em] text-chalk">
+                    {post.title}
+                  </h3>
+                  <p className="mt-3 font-body text-[13px] leading-[1.6] text-slate">{post.excerpt}</p>
+                  <div className="mt-6 flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted">{post.read} read</span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] text-slate transition-all group-hover:border-teal group-hover:bg-teal group-hover:text-white">
+                      →
+                    </span>
+                  </div>
+                </>
+              )
+              return post.slug ? (
+                <Link
+                  key={post.title}
+                  href={`/blog/${post.slug}`}
+                  className="group flex flex-col bg-midnight-3 p-8 transition-colors duration-300 hover:bg-midnight-2"
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <div key={post.title} className="group flex flex-col bg-midnight-3 p-8">
+                  {inner}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </section>
 

@@ -104,7 +104,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-midnight-3">
       <SiteNav />
 
       <script
@@ -113,37 +113,34 @@ export default async function BlogPostPage({ params }: RouteParams) {
       />
 
       <article className="px-6 py-16">
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-[720px]">
           <Link
             href="/blog"
-            className="text-xs font-semibold uppercase tracking-wider text-accent-hover transition-colors hover:text-accent"
+            className="font-mono text-[11px] font-medium uppercase tracking-[0.12em] text-teal-light transition-colors hover:text-spark"
           >
-            ← Back to journal
+            ← Grant Intelligence
           </Link>
 
-          <div className="mt-6 flex items-center gap-3">
+          <div className="mt-8 font-mono text-[11px] text-slate">
             {post.tag && (
-              <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-hover">
-                {post.tag}
-              </span>
+              <span className="text-teal-light">// {post.tag}</span>
             )}
-            <span className="text-xs text-text-secondary">
-              {formatDate(post.published_at)}
-              {post.read_minutes ? ` · ${post.read_minutes} min read` : ''}
-            </span>
+            {post.tag && ' · '}
+            {post.read_minutes ? `${post.read_minutes} min read · ` : ''}
+            {formatDate(post.published_at)}
           </div>
 
-          <h1 className="mt-4 font-display text-3xl font-medium leading-tight tracking-tightish text-text md:text-4xl">
+          <h1 className="mt-4 font-display text-[clamp(32px,4vw,52px)] leading-[1.1] tracking-[-0.03em] text-chalk">
             {post.title}
           </h1>
 
           {post.excerpt && (
-            <p className="mt-4 text-lg leading-relaxed text-text-secondary">
+            <p className="mt-6 font-body text-[18px] leading-[1.65] text-slate">
               {post.excerpt}
             </p>
           )}
 
-          <div className="mt-6 border-t border-border pt-8">
+          <div className="mt-8 border-t border-white/[0.08] pt-10">
             <div
               className="blog-content"
               dangerouslySetInnerHTML={{ __html: post.content_html || '' }}
@@ -151,19 +148,22 @@ export default async function BlogPostPage({ params }: RouteParams) {
           </div>
 
           {/* In-article CTA */}
-          <div className="mt-12 rounded-2xl border-2 border-accent bg-background p-7 text-center shadow-soft">
-            <h2 className="font-display text-xl font-medium text-text">
+          <div className="mt-14 border border-white/[0.08] bg-midnight-2 p-9 text-center">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
+              // Put this into practice
+            </p>
+            <h2 className="mt-3 font-display text-[22px] tracking-[-0.02em] text-chalk">
               Find the grants you&apos;re eligible for
             </h2>
-            <p className="mt-2 text-sm text-text-secondary">
-              GrantSpark surfaces UK grant opportunities and matches them to
-              your organisation — with plain-English eligibility.
+            <p className="mx-auto mt-3 max-w-md font-body text-[14px] leading-[1.6] text-slate">
+              GrantSpark scores every live UK grant against your organisation&apos;s
+              profile — with honest eligibility analysis.
             </p>
             <Link
               href="/signup"
-              className="mt-5 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
+              className="mt-6 inline-flex rounded bg-teal px-7 py-3 font-body text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light"
             >
-              Start free <span aria-hidden="true">→</span>
+              Find your grants — it&apos;s free
             </Link>
           </div>
         </div>

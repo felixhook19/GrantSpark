@@ -86,25 +86,26 @@ function getStages(orgType: string) {
 }
 
 const inputCls =
-  'w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none'
+  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
+const labelCls = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-slate'
 
 const selectedPillCls =
-  'rounded-xl border border-primary bg-primary-soft px-3 py-2 text-sm font-medium text-primary'
+  'rounded border border-teal bg-teal/[0.12] px-3 py-2 font-body text-[13px] font-medium text-teal-light'
 const unselectedPillCls =
-  'rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+  'rounded border border-white/[0.1] bg-midnight px-3 py-2 font-body text-[13px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
 
 const selectedRowCls =
-  'w-full rounded-xl border border-primary bg-primary-soft px-4 py-3 text-left text-sm font-medium text-primary'
+  'w-full rounded border border-teal bg-teal/[0.12] px-4 py-3 text-left font-body text-[14px] font-medium text-teal-light'
 const unselectedRowCls =
-  'w-full rounded-xl border border-border bg-background px-4 py-3 text-left text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 text-left font-body text-[14px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
 
 const selectedToggleCls =
-  'flex-1 rounded-xl border border-primary bg-primary-soft py-3 text-sm font-semibold text-primary'
+  'flex-1 rounded border border-teal bg-teal/[0.12] py-3 font-body text-[14px] font-semibold text-teal-light'
 const unselectedToggleCls =
-  'flex-1 rounded-xl border border-border bg-background py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+  'flex-1 rounded border border-white/[0.1] bg-midnight py-3 font-body text-[14px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
 
-const selectedCardCls = 'rounded-xl border border-primary bg-primary-soft p-4 text-left'
-const unselectedCardCls = 'rounded-xl border border-border bg-background p-4 text-left transition-colors hover:bg-surface'
+const selectedCardCls = 'rounded border border-teal bg-teal/[0.12] p-4 text-left'
+const unselectedCardCls = 'rounded border border-white/[0.1] bg-midnight p-4 text-left transition-colors hover:border-white/[0.25]'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -196,20 +197,20 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-midnight-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-spark border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-surface">
-      <nav className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75">
+    <div className="min-h-screen bg-midnight-3">
+      <nav className="sticky top-0 z-20 border-b border-white/[0.06] bg-midnight-3/85 backdrop-blur-lg">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
           <Link href="/dashboard" aria-label="GrantSpark — dashboard">
             <Wordmark size={24} />
           </Link>
-          <Link href="/dashboard" className="text-sm font-medium text-text-secondary hover:text-text">
+          <Link href="/dashboard" className="font-body text-[13px] font-medium text-slate transition-colors hover:text-chalk">
             ← Back to matches
           </Link>
         </div>
@@ -217,16 +218,17 @@ export default function ProfilePage() {
 
       <div className="mx-auto max-w-3xl px-6 py-10">
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-medium tracking-tightish text-text md:text-4xl">Your profile</h1>
-          <p className="mt-2 text-text-secondary">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">// Organisation profile</p>
+          <h1 className="mt-3 font-display text-[clamp(32px,4vw,44px)] uppercase leading-[0.98] tracking-[-0.04em] text-chalk">Your profile</h1>
+          <p className="mt-3 font-body text-[14px] leading-[1.65] text-slate">
             Update your details to refine your grant matches. Every change you save triggers a fresh matching run against all {isCharity ? 'charity and community' : 'business and innovation'} funding in the database.
           </p>
         </div>
 
         <div className="space-y-6">
 
-          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
-            <h2 className="mb-4 text-base font-semibold text-text">Organisation type</h2>
+          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+            <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Organisation type</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {ORG_TYPES.map((t) => (
                 <button
@@ -238,20 +240,20 @@ export default function ProfilePage() {
                   }}
                   className={form.org_category === t.value ? selectedCardCls : unselectedCardCls}
                 >
-                  <p className={form.org_category === t.value ? 'font-semibold text-primary' : 'font-semibold text-text'}>
+                  <p className={form.org_category === t.value ? 'font-body text-[14px] font-semibold text-teal-light' : 'font-body text-[14px] font-semibold text-chalk'}>
                     {t.label}
                   </p>
-                  <p className="mt-0.5 text-xs text-text-secondary">{t.desc}</p>
+                  <p className="mt-0.5 font-body text-[12px] text-slate">{t.desc}</p>
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
-            <h2 className="mb-4 text-base font-semibold text-text">About your organisation</h2>
+          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+            <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">About your organisation</h2>
             <div className="space-y-5">
               <div>
-                <label className="mb-2 block text-sm font-medium text-text">Organisation name *</label>
+                <label className={labelCls}>Organisation name *</label>
                 <input
                   type="text"
                   value={form.org_name}
@@ -260,10 +262,10 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-text">
+                <label className={labelCls}>
                   {isCharity ? 'What does your organisation do and who does it help? *' : 'What does your organisation do? *'}
                 </label>
-                <p className="mb-2 text-xs text-text-secondary">
+                <p className="mb-2 font-body text-[12px] leading-[1.6] text-slate">
                   {isCharity
                     ? 'Describe your charitable objectives, who you support and what outcomes you achieve. The more specific, the better your matches.'
                     : 'Describe your product, technology and market. The more specific, the better your matches.'}
@@ -279,7 +281,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-text">Website</label>
+                <label className={labelCls}>Website</label>
                 <input
                   type="text"
                   value={form.website}
@@ -291,11 +293,11 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
-            <h2 className="mb-4 text-base font-semibold text-text">Stage and size</h2>
+          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+            <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Stage and size</h2>
             <div className="space-y-5">
               <div>
-                <label className="mb-2 block text-sm font-medium text-text">
+                <label className={labelCls}>
                   {isCharity ? 'How established are you?' : 'What stage is your business at?'}
                 </label>
                 <select
@@ -307,7 +309,7 @@ export default function ProfilePage() {
                 </select>
               </div>
               <div>
-                <label className="mb-3 block text-sm font-medium text-text">
+                <label className={labelCls}>
                   {isCharity ? 'Team / staff size (including volunteers)' : 'Team size'}
                 </label>
                 <div className="space-y-2">
@@ -326,11 +328,11 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
-            <h2 className="mb-4 text-base font-semibold text-text">Location</h2>
+          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+            <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Location</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-sm font-medium text-text">Nation</label>
+                <label className={labelCls}>Nation</label>
                 <select
                   value={form.nation}
                   onChange={(e) => update('nation', e.target.value)}
@@ -340,7 +342,7 @@ export default function ProfilePage() {
                 </select>
               </div>
               <div>
-                <label className="mb-2 block text-sm font-medium text-text">Postcode area</label>
+                <label className={labelCls}>Postcode area</label>
                 <input
                   type="text"
                   value={form.postcode_area}
@@ -353,11 +355,11 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
-            <h2 className="mb-1 text-base font-semibold text-text">
+          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+            <h2 className="mb-1 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">
               {isCharity ? 'Cause areas and activities' : 'Sectors and focus'}
             </h2>
-            <p className="mb-4 text-sm text-text-secondary">
+            <p className="mb-4 mt-3 block font-body text-[13px] leading-[1.6] text-slate">
               {isCharity
                 ? 'Select all the cause areas your organisation works in. This is the most important factor in matching you to relevant grants.'
                 : 'Select all sectors that apply to your work.'}
@@ -376,12 +378,12 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-background p-6 shadow-soft">
-            <h2 className="mb-4 text-base font-semibold text-text">Funding preferences</h2>
+          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+            <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Funding preferences</h2>
             <div className="space-y-4">
               {!isCharity && (
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-text">
+                  <label className={labelCls}>
                     Do you conduct research &amp; development?
                   </label>
                   <div className="flex gap-3">
@@ -399,7 +401,7 @@ export default function ProfilePage() {
                 </div>
               )}
               <div>
-                <label className="mb-2 block text-sm font-medium text-text">
+                <label className={labelCls}>
                   {isCharity
                     ? 'Can you provide match funding or co-investment if required?'
                     : 'Can you provide match funding if required?'}
@@ -421,8 +423,12 @@ export default function ProfilePage() {
           </div>
 
           {error && (
-            <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-              {error}
+            <p className="font-mono text-[13px] text-rose">{error}</p>
+          )}
+
+          {saved && !saving && (
+            <div className="rounded border border-spark/30 bg-spark/[0.12] px-4 py-3 font-mono text-[12px] text-spark">
+              Profile saved. Your next matching run will use the updated details.
             </div>
           )}
 
@@ -431,7 +437,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => handleSave(false)}
               disabled={saving}
-              className="flex-1 rounded-xl border border-border bg-background py-3.5 text-sm font-semibold text-text transition-colors hover:bg-surface disabled:opacity-50"
+              className="flex-1 rounded border border-white/[0.12] py-3.5 font-body text-[14px] font-semibold text-chalk transition-all duration-200 hover:border-white/[0.25] disabled:opacity-50"
             >
               {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save changes'}
             </button>
@@ -439,7 +445,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => handleSave(true)}
               disabled={saving}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded bg-teal py-3.5 font-body text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light disabled:opacity-50"
             >
               {saving ? 'Saving…' : <>Save and re-run matching <span aria-hidden="true">→</span></>}
             </button>

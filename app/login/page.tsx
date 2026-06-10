@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Wordmark } from '@/components/Logo'
 
+const inputCls =
+  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
+const labelCls = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-slate'
+
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -35,62 +39,58 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface px-6 py-12">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <Link href="/" className="mb-8 inline-flex" aria-label="GrantSpark — home">
-            <Wordmark size={28} />
-          </Link>
-          <h1 className="font-display text-3xl font-medium tracking-tightish text-text">
-            Welcome back
-          </h1>
-          <p className="mt-2 text-text-secondary">Sign in to see your grant matches</p>
-        </div>
+    <div className="min-h-screen bg-midnight-3 px-6">
+      <div className="mx-auto w-full max-w-[400px] pt-[15vh]">
+        <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-10">
+          <div className="mb-8 text-center">
+            <Link href="/" className="inline-flex" aria-label="GrantSpark — home">
+              <Wordmark size={26} />
+            </Link>
+            <h1 className="mt-6 font-display text-[28px] tracking-[-0.02em] text-chalk">
+              Welcome back
+            </h1>
+            <p className="mt-2 font-body text-[14px] text-slate">
+              Sign in to see your grant matches
+            </p>
+          </div>
 
-        <div className="rounded-2xl border border-border bg-background p-8 shadow-card">
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <label className="mb-2 block text-sm font-medium text-text">
-                Email address
-              </label>
+              <label className={labelCls}>Email address</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="you@organisation.org"
-                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
+                className={inputCls}
               />
             </div>
             <div>
-              <label className="mb-2 block text-sm font-medium text-text">
-                Password
-              </label>
+              <label className={labelCls}>Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="Your password"
-                className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
+                className={inputCls}
               />
             </div>
             {error && (
-              <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-                {error}
-              </div>
+              <p className="font-mono text-[13px] text-rose">{error}</p>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full rounded bg-teal py-3 font-body text-[15px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? 'Signing in…' : <>Sign in <span aria-hidden="true">→</span></>}
+              {loading ? 'Signing in…' : 'Sign in →'}
             </button>
           </form>
-          <p className="mt-6 text-center text-sm text-text-secondary">
+          <p className="mt-6 text-center font-body text-[13px] text-slate">
             No account yet?{' '}
-            <Link href="/signup" className="font-semibold text-primary hover:underline">
+            <Link href="/signup" className="font-medium text-teal-light hover:text-spark">
               Sign up free
             </Link>
           </p>

@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Wordmark } from '@/components/Logo'
+import Link from 'next/link'
 
 const SECTORS = [
   'Technology / Software',
@@ -51,28 +52,29 @@ type OnboardingForm = {
 
 type FormField = keyof OnboardingForm
 
+const labelCls = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-slate'
 const inputCls =
-  'w-full rounded-xl border border-border bg-background px-4 py-3 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none'
+  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
 
 const selectedPillCls =
-  'rounded-xl border border-primary bg-primary-soft px-3 py-2 text-sm font-medium text-primary'
+  'rounded border border-teal bg-teal/[0.12] px-3 py-2 font-body text-[13px] font-medium text-teal-light'
 const unselectedPillCls =
-  'rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+  'rounded border border-white/[0.1] bg-midnight px-3 py-2 font-body text-[13px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
 
 const selectedRowCls =
-  'w-full rounded-xl border border-primary bg-primary-soft px-4 py-3 text-left text-sm font-medium text-primary'
+  'w-full rounded border border-teal bg-teal/[0.12] px-4 py-3 text-left font-body text-[14px] font-medium text-teal-light'
 const unselectedRowCls =
-  'w-full rounded-xl border border-border bg-background px-4 py-3 text-left text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 text-left font-body text-[14px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
 
 const selectedToggleCls =
-  'flex-1 rounded-xl border border-primary bg-primary-soft py-3 text-sm font-semibold text-primary'
+  'flex-1 rounded border border-teal bg-teal/[0.12] py-3 font-body text-[14px] font-semibold text-teal-light'
 const unselectedToggleCls =
-  'flex-1 rounded-xl border border-border bg-background py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
+  'flex-1 rounded border border-white/[0.1] bg-midnight py-3 font-body text-[14px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
 
 function OnboardingInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  // ?new=1 — Team-plan users adding another organisation profile.
+  // ?new=1 — Strategist-plan users adding another organisation profile.
   const isNewOrg = searchParams.get('new') === '1'
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -157,225 +159,229 @@ function OnboardingInner() {
 
   if (checking) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-midnight-3">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-teal border-t-transparent" />
       </div>
     )
   }
 
+  const stepTitles = [
+    'Tell us about your organisation',
+    'Location and size',
+    'Sectors and focus',
+  ]
+
   return (
-    <div className="min-h-screen bg-surface px-6 py-12">
-      <div className="mx-auto max-w-xl">
-        <div className="mb-8">
-          <div className="mb-8 flex">
+    <div className="min-h-screen bg-midnight-3 px-6 py-12">
+      <div className="mx-auto max-w-[560px]">
+        <div className="mb-8 flex justify-center">
+          <Link href="/" aria-label="GrantSpark — home">
             <Wordmark size={26} />
-          </div>
-
-          <div className="mb-6 flex gap-2" aria-label={`Step ${step} of 3`}>
-            {[1, 2, 3].map((s) => (
-              <div
-                key={s}
-                className={
-                  s <= step
-                    ? 'h-1 flex-1 rounded-full bg-primary'
-                    : 'h-1 flex-1 rounded-full bg-border'
-                }
-              />
-            ))}
-          </div>
-
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent-hover">
-            Step {step} of 3
-          </p>
-          <h1 className="mt-2 font-display text-2xl font-medium tracking-tightish text-text md:text-3xl">
-            {step === 1 && 'Tell us about your organisation'}
-            {step === 2 && 'Location and size'}
-            {step === 3 && 'Sectors and focus'}
-          </h1>
+          </Link>
         </div>
 
-        <div className="space-y-6 rounded-2xl border border-border bg-background p-8 shadow-card">
-          {step === 1 && (
-            <>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-text">
-                  Organisation name *
-                </label>
-                <input
-                  type="text"
-                  value={form.org_name}
-                  onChange={(e) => update('org_name', e.target.value)}
-                  placeholder="e.g. Acme Community CIC"
-                  className={inputCls}
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-text">
-                  What does your organisation do? *
-                </label>
-                <p className="mb-2 text-xs text-text-secondary">
-                  Plain English — this is what the AI uses to match you to grants.
-                </p>
-                <textarea
-                  value={form.org_description}
-                  onChange={(e) => update('org_description', e.target.value)}
-                  rows={4}
-                  placeholder="e.g. We run after-school programmes for young people in deprived areas of South London, focusing on mental health and employability."
-                  className={`${inputCls} resize-none`}
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-text">
-                  Stage
-                </label>
-                <select
-                  value={form.innovation_stage}
-                  onChange={(e) => update('innovation_stage', e.target.value)}
-                  className={inputCls}
+        {/* Step indicators */}
+        <div className="mb-8" aria-label={`Step ${step} of 3`}>
+          <div className="flex items-center">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex flex-1 items-center last:flex-none">
+                <span
+                  className={
+                    s <= step
+                      ? 'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-teal font-mono text-[10px] font-semibold text-white'
+                      : 'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/[0.12] font-mono text-[10px] text-muted'
+                  }
                 >
-                  {STAGES.map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
+                  {String(s).padStart(2, '0')}
+                </span>
+                {s < 3 && (
+                  <span className="mx-2 h-px flex-1 bg-white/[0.08]">
+                    <span
+                      className="block h-px bg-teal transition-all duration-300"
+                      style={{ width: s < step ? '100%' : '0%' }}
+                    />
+                  </span>
+                )}
               </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-text">
-                  Do you conduct research &amp; development?
-                </label>
-                <div className="flex gap-3">
-                  {['Yes', 'No'].map((opt) => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => update('rd_active', opt === 'Yes')}
-                      className={
-                        (opt === 'Yes') === form.rd_active ? selectedToggleCls : unselectedToggleCls
-                      }
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
+            ))}
+          </div>
+        </div>
 
-          {step === 2 && (
-            <>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-text">Nation</label>
-                <select
-                  value={form.nation}
-                  onChange={(e) => update('nation', e.target.value)}
-                  className={inputCls}
+        <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-10">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
+            // Step {step} of 3
+          </p>
+          <h1 className="mt-3 font-display text-[28px] leading-tight tracking-[-0.02em] text-chalk">
+            {stepTitles[step - 1]}
+          </h1>
+
+          <div className="mt-8 space-y-6">
+            {step === 1 && (
+              <>
+                <div>
+                  <label className={labelCls}>Organisation name *</label>
+                  <input
+                    type="text"
+                    value={form.org_name}
+                    onChange={(e) => update('org_name', e.target.value)}
+                    placeholder="e.g. Acme Community CIC"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>What does your organisation do? *</label>
+                  <p className="mb-2 font-body text-[12px] text-slate">
+                    Plain English — this is what the AI uses to match you to grants.
+                  </p>
+                  <textarea
+                    value={form.org_description}
+                    onChange={(e) => update('org_description', e.target.value)}
+                    rows={4}
+                    placeholder="e.g. We run after-school programmes for young people in deprived areas of South London, focusing on mental health and employability."
+                    className={`${inputCls} resize-none`}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Stage</label>
+                  <select
+                    value={form.innovation_stage}
+                    onChange={(e) => update('innovation_stage', e.target.value)}
+                    className={inputCls}
+                  >
+                    {STAGES.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Do you conduct research &amp; development?</label>
+                  <div className="flex gap-3">
+                    {['Yes', 'No'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => update('rd_active', opt === 'Yes')}
+                        className={
+                          (opt === 'Yes') === form.rd_active ? selectedToggleCls : unselectedToggleCls
+                        }
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <div>
+                  <label className={labelCls}>Nation</label>
+                  <select
+                    value={form.nation}
+                    onChange={(e) => update('nation', e.target.value)}
+                    className={inputCls}
+                  >
+                    {NATIONS.map((n) => (<option key={n} value={n}>{n}</option>))}
+                  </select>
+                </div>
+                <div>
+                  <label className={labelCls}>Postcode area</label>
+                  <input
+                    type="text"
+                    value={form.postcode_area}
+                    onChange={(e) => update('postcode_area', e.target.value.toUpperCase())}
+                    maxLength={4}
+                    placeholder="e.g. EC1, M1, BS1"
+                    className={inputCls}
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Team size</label>
+                  <div className="space-y-2">
+                    {TEAM_SIZES.map((t) => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        onClick={() => update('employee_count_band', t.value)}
+                        className={
+                          form.employee_count_band === t.value ? selectedRowCls : unselectedRowCls
+                        }
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Website</label>
+                  <input
+                    type="text"
+                    value={form.website}
+                    onChange={(e) => update('website', e.target.value)}
+                    placeholder="https://yourorganisation.org"
+                    className={inputCls}
+                  />
+                </div>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <div>
+                  <label className={labelCls}>Select all sectors that apply</label>
+                  <p className="mb-4 font-body text-[12px] text-slate">
+                    This helps us surface sector-specific grants.
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {SECTORS.map((sector) => (
+                      <button
+                        key={sector}
+                        type="button"
+                        onClick={() => toggleTheme(sector)}
+                        className={form.themes.includes(sector) ? selectedPillCls : unselectedPillCls}
+                      >
+                        {sector}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {error && (
+                  <p className="font-mono text-[13px] text-rose">{error}</p>
+                )}
+              </>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              {step > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => s - 1)}
+                  className="flex-1 rounded border border-white/[0.12] py-3 font-body text-[14px] font-semibold text-chalk transition-all duration-200 hover:border-white/[0.25]"
                 >
-                  {NATIONS.map((n) => (<option key={n} value={n}>{n}</option>))}
-                </select>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-text">
-                  Postcode area
-                </label>
-                <input
-                  type="text"
-                  value={form.postcode_area}
-                  onChange={(e) => update('postcode_area', e.target.value.toUpperCase())}
-                  maxLength={4}
-                  placeholder="e.g. EC1, M1, BS1"
-                  className={inputCls}
-                />
-              </div>
-              <div>
-                <label className="mb-3 block text-sm font-medium text-text">
-                  Team size
-                </label>
-                <div className="space-y-2">
-                  {TEAM_SIZES.map((t) => (
-                    <button
-                      key={t.value}
-                      type="button"
-                      onClick={() => update('employee_count_band', t.value)}
-                      className={
-                        form.employee_count_band === t.value ? selectedRowCls : unselectedRowCls
-                      }
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-text">Website</label>
-                <input
-                  type="text"
-                  value={form.website}
-                  onChange={(e) => update('website', e.target.value)}
-                  placeholder="https://yourorganisation.org"
-                  className={inputCls}
-                />
-              </div>
-            </>
-          )}
-
-          {step === 3 && (
-            <>
-              <div>
-                <label className="mb-1 block text-sm font-medium text-text">
-                  Select all sectors that apply
-                </label>
-                <p className="mb-4 text-xs text-text-secondary">
-                  This helps us surface sector-specific grants.
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {SECTORS.map((sector) => (
-                    <button
-                      key={sector}
-                      type="button"
-                      onClick={() => toggleTheme(sector)}
-                      className={form.themes.includes(sector) ? selectedPillCls : unselectedPillCls}
-                    >
-                      {sector}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              {error && (
-                <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-                  {error}
-                </div>
+                  ← Back
+                </button>
               )}
-            </>
-          )}
-
-          <div className="flex gap-3 pt-2">
-            {step > 1 && (
-              <button
-                type="button"
-                onClick={() => setStep((s) => s - 1)}
-                className="flex-1 rounded-xl border border-border bg-background py-3 text-sm font-semibold text-text transition-colors hover:bg-surface"
-              >
-                ← Back
-              </button>
-            )}
-            {step < 3 ? (
-              <button
-                type="button"
-                onClick={() => setStep((s) => s + 1)}
-                disabled={step === 1 && (!form.org_name || !form.org_description)}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Continue <span aria-hidden="true">→</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={loading}
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
-              >
-                {loading ? 'Setting up…' : <>Find my grants <span aria-hidden="true">→</span></>}
-              </button>
-            )}
+              {step < 3 ? (
+                <button
+                  type="button"
+                  onClick={() => setStep((s) => s + 1)}
+                  disabled={step === 1 && (!form.org_name || !form.org_description)}
+                  className="flex-1 rounded bg-teal py-3 font-body text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Continue →
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="flex-1 rounded bg-teal py-3 font-body text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light disabled:opacity-50"
+                >
+                  {loading ? 'Setting up…' : 'Find my grants →'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -387,8 +393,8 @@ export default function OnboardingPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-background">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="flex min-h-screen items-center justify-center bg-midnight-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-teal border-t-transparent" />
         </div>
       }
     >
