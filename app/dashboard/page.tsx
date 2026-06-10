@@ -31,7 +31,15 @@ type AssistantDraft = {
 
 const chipCls = 'rounded-sm bg-white/[0.06] px-2 py-1 font-mono text-[10px] text-slate'
 
-function GrantCard({ match }: { match: Match }) {
+function GrantCard({
+  match,
+  saved,
+  onToggleSave,
+}: {
+  match: Match
+  saved: boolean
+  onToggleSave: () => void
+}) {
   const [open, setOpen] = useState(false)
   const [drafts, setDrafts] = useState<AssistantDraft[] | null>(null)
   const [showDrafts, setShowDrafts] = useState(false)
@@ -160,6 +168,16 @@ function GrantCard({ match }: { match: Match }) {
               : drafts && showDrafts
                 ? 'Hide draft answers'
                 : 'Draft application answers'}
+          </button>
+          <button
+            onClick={onToggleSave}
+            className={
+              saved
+                ? 'font-body text-[13px] font-semibold text-spark transition-colors hover:text-chalk'
+                : 'font-body text-[13px] font-semibold text-slate transition-colors hover:text-chalk'
+            }
+          >
+            {saved ? '✓ Saved to pipeline' : 'Save to pipeline'}
           </button>
         </div>
         {g.url && (
@@ -325,6 +343,7 @@ function DashboardInner() {
   const [minAmount, setMinAmount] = useState('')
   const [maxAmount, setMaxAmount] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (retryAt === null) return
@@ -380,6 +399,19 @@ function DashboardInner() {
           return
         }
         setOrg(profileData.org as Org)
+
+        // Saved-grant ids for the card bookmarks — fire and forget.
+        fetch('/api/saved-grants')
+          .then((res) => res.json())
+          .then((data) => {
+            if (!active || !Array.isArray(data?.saved)) return
+            setSavedIds(
+              new Set(
+                (data.saved as Array<{ opportunity_id: string }>).map((s) => s.opportunity_id)
+              )
+            )
+          })
+          .catch(() => {})
 
         // Org list for the switcher — fire and forget, the dashboard
         // works without it.
@@ -455,6 +487,32 @@ function DashboardInner() {
     setSearchQuery('')
     setMinAmount('')
     setMaxAmount('')
+  }
+
+  async function toggleSave(opportunityId: string) {
+    const wasSaved = savedIds.has(opportunityId)
+    // Optimistic flip; revert on failure.
+    setSavedIds((prev) => {
+      const next = new Set(prev)
+      if (wasSaved) next.delete(opportunityId)
+      else next.add(opportunityId)
+      return next
+    })
+    try {
+      const res = await fetch('/api/saved-grants', {
+        method: wasSaved ? 'DELETE' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunity_id: opportunityId }),
+      })
+      if (!res.ok) throw new Error('save failed')
+    } catch {
+      setSavedIds((prev) => {
+        const next = new Set(prev)
+        if (wasSaved) next.add(opportunityId)
+        else next.delete(opportunityId)
+        return next
+      })
+    }
   }
 
   const applyCount = matches.filter((m) => m.decision === 'apply').length
@@ -731,7 +789,12 @@ function DashboardInner() {
                 </p>
               )}
               {visible.map((match: Match, i: number) => (
-                <GrantCard key={i} match={match} />
+                <GrantCard
+                  key={match.grant?.id || i}
+                  match={match}
+                  saved={savedIds.has(match.grant?.id)}
+                  onToggleSave={() => toggleSave(match.grant?.id)}
+                />
               ))}
             </div>
           )}

@@ -76,6 +76,10 @@ export default function AdminPage() {
   const [error, setError] = useState('')
   const [ingesting, setIngesting] = useState(false)
   const [ingestResult, setIngestResult] = useState('')
+  const [enriching, setEnriching] = useState(false)
+  const [enrichResult, setEnrichResult] = useState('')
+  const [writingPost, setWritingPost] = useState(false)
+  const [blogResult, setBlogResult] = useState('')
 
   useEffect(() => {
     let active = true
@@ -148,6 +152,49 @@ export default function AdminPage() {
       setError('Network error running ingestion.')
     }
     setIngesting(false)
+  }
+
+  async function runEnrich() {
+    setEnriching(true)
+    setEnrichResult('')
+    setError('')
+    try {
+      const res = await fetch('/api/admin/enrich', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) {
+        setError(json.error || 'Enrichment failed.')
+      } else {
+        setEnrichResult(
+          `Updated ${json.updated} of ${json.processed} grants — ${json.remaining} still need enrichment.` +
+            (json.errors?.length ? ` (${json.errors.length} error${json.errors.length === 1 ? '' : 's'})` : '')
+        )
+      }
+    } catch {
+      setError('Network error running enrichment.')
+    }
+    setEnriching(false)
+  }
+
+  async function generatePost() {
+    setWritingPost(true)
+    setBlogResult('')
+    setError('')
+    try {
+      const res = await fetch('/api/admin/blog', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) {
+        setError(json.error || 'Article generation failed.')
+      } else if (json.skipped) {
+        setBlogResult(json.reason || 'All topics published.')
+      } else {
+        setBlogResult(
+          `Published "${json.post?.title}" (${json.words} words) — ${json.topics_remaining} topic${json.topics_remaining === 1 ? '' : 's'} left in the rotation.`
+        )
+      }
+    } catch {
+      setError('Network error generating the article.')
+    }
+    setWritingPost(false)
   }
 
   if (loading) {
@@ -250,15 +297,33 @@ export default function AdminPage() {
         <section className="mt-10">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-xl font-medium text-text">Ingestion runs</h2>
-            <button
-              onClick={runIngest}
-              disabled={ingesting}
-              className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-background shadow-soft transition-all hover:bg-primary-hover disabled:opacity-50"
-            >
-              {ingesting ? 'Running…' : 'Run ingestion now'}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={runIngest}
+                disabled={ingesting}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-background shadow-soft transition-all hover:bg-primary-hover disabled:opacity-50"
+              >
+                {ingesting ? 'Running…' : 'Run ingestion now'}
+              </button>
+              <button
+                onClick={runEnrich}
+                disabled={enriching}
+                className="rounded-xl border border-primary px-4 py-2 text-sm font-semibold text-primary-hover transition-all hover:bg-primary-soft disabled:opacity-50"
+              >
+                {enriching ? 'Enriching…' : 'Enrich grant data'}
+              </button>
+              <button
+                onClick={generatePost}
+                disabled={writingPost}
+                className="rounded-xl border border-accent px-4 py-2 text-sm font-semibold text-accent-hover transition-all hover:bg-accent-soft disabled:opacity-50"
+              >
+                {writingPost ? 'Writing…' : 'Generate article'}
+              </button>
+            </div>
           </div>
           {ingestResult && <p className="mt-2 text-sm text-success">{ingestResult}</p>}
+          {enrichResult && <p className="mt-2 text-sm text-success">{enrichResult}</p>}
+          {blogResult && <p className="mt-2 text-sm text-success">{blogResult}</p>}
           <div className="mt-4 overflow-x-auto rounded-2xl border border-border bg-background shadow-soft">
             <table className="w-full min-w-[640px]">
               <thead className="border-b border-border">

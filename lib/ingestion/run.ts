@@ -139,7 +139,10 @@ async function runStructuredSource(
             source_id: source.id,
             canonical_key: entry.canonical_key,
             title: entry.title,
-            funder: entry.funder ?? source.name,
+            // No source-name fallback here: for aggregator sources (GOV.UK
+            // Find a Grant) the source name is not a funder. NULL funders
+            // are filled by the admin enrichment pass.
+            funder: entry.funder,
             url: entry.url,
             summary: entry.summary,
             description: entry.description,
