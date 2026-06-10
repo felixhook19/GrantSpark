@@ -18,9 +18,26 @@ export const maxDuration = 30
 
 type CheckResult = {
   result?: unknown
+  checks?: unknown
   key_requirement?: unknown
   reason?: unknown
   action?: unknown
+}
+
+type CheckItem = { criterion: string; status: string; detail: string }
+
+function validateChecks(value: unknown): CheckItem[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .filter((c): c is { criterion: string; status: string; detail?: unknown } =>
+      Boolean(c && typeof c.criterion === 'string' && typeof c.status === 'string' &&
+        ['pass', 'fail', 'unknown'].includes(c.status)))
+    .map((c) => ({
+      criterion: c.criterion.slice(0, 150),
+      status: c.status,
+      detail: typeof c.detail === 'string' ? c.detail.slice(0, 300) : '',
+    }))
+    .slice(0, 10)
 }
 
 function yearsTrading(incorporationDate: string | null | undefined): string {
@@ -75,6 +92,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No organisation profile found' }, { status: 404 })
   }
 
+  // 30 checks/day/org.
+  const dayStart = new Date(); dayStart.setUTCHours(0, 0, 0, 0)
+  const { count: usedToday } = await admin
+    .from('usage_events')
+    .select('id', { count: 'exact', head: true })
+    .eq('org_id', org.id)
+    .eq('event_type', 'eligibility_check')
+    .gte('created_at', dayStart.toISOString())
+  if ((usedToday ?? 0) >= 30) {
+    return NextResponse.json(
+      { error: "You've used today's 30 eligibility checks. They reset at midnight.", code: 'daily_limit' },
+      { status: 429 }
+    )
+  }
+
   const { data: grantData } = await admin
     .from('opportunities')
     .select('*')
@@ -118,7 +150,7 @@ Determine: does this organisation meet ALL stated requirements?
 - If NO: { "result": "fail", "key_requirement": "[the disqualifying requirement]", "reason": "[specific reason they do not qualify]", "action": "[check for an exception or contact the funder]" }
 - If UNCLEAR: { "result": "maybe", "key_requirement": "[the unclear requirement]", "reason": "[which requirement is ambiguous and why]", "action": "[what to clarify before applying]" }
 
-Return ONLY valid JSON with keys result, key_requirement, reason, action. No markdown. No explanation.`
+Return ONLY valid JSON with keys result, checks, key_requirement, reason, action — where "checks" is an array of { "criterion": "...", "status": "pass"|"fail"|"unknown", "detail": "..." } covering each stated criterion. Never soften a fail. No markdown. No explanation.`
 
   let parsed: CheckResult
   try {
@@ -155,10 +187,13 @@ Return ONLY valid JSON with keys result, key_requirement, reason, action. No mar
     return NextResponse.json({ error: String(err) }, { status: 502 })
   }
 
-  const result =
+  const checks = validateChecks(parsed.checks)
+  let result =
     parsed.result === 'pass' || parsed.result === 'fail' || parsed.result === 'maybe'
       ? parsed.result
       : 'maybe'
+  // Honesty override, server-side: any failed stated criterion is a fail.
+  if (checks.some((c) => c.status === 'fail')) result = 'fail'
 
   await admin.from('usage_events').insert({
     user_id: user.id,
@@ -169,9 +204,11 @@ Return ONLY valid JSON with keys result, key_requirement, reason, action. No mar
 
   return NextResponse.json({
     result,
+    checks,
     key_requirement: typeof parsed.key_requirement === 'string' ? parsed.key_requirement : '',
     reason: typeof parsed.reason === 'string' ? parsed.reason : '',
     action: typeof parsed.action === 'string' ? parsed.action : '',
+    last_verified_at: grant.last_verified_at || null,
     grant: { title: grant.title, funder: grant.funder },
   })
 }

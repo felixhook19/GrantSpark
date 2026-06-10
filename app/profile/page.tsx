@@ -107,6 +107,45 @@ const unselectedToggleCls =
 const selectedCardCls = 'rounded border border-teal bg-teal/[0.12] p-4 text-left'
 const unselectedCardCls = 'rounded border border-white/[0.1] bg-midnight p-4 text-left transition-colors hover:border-white/[0.25]'
 
+// Alert preferences (Block 10) — opt out of grant alerts and briefings.
+function AlertToggle() {
+  const [optOut, setOptOut] = useState<boolean | null>(null)
+  useEffect(() => {
+    fetch('/api/alerts')
+      .then((r) => r.json())
+      .then((d) => setOptOut(Boolean(d.alert_opt_out)))
+      .catch(() => setOptOut(false))
+  }, [])
+  if (optOut === null) return null
+  return (
+    <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+      <h2 className="mb-3 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Email alerts</h2>
+      <label className="flex cursor-pointer items-center gap-3">
+        <input
+          type="checkbox"
+          checked={!optOut}
+          onChange={(e) => {
+            const next = !e.target.checked
+            setOptOut(next)
+            fetch('/api/alerts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ alert_opt_out: next }),
+            }).catch(() => setOptOut(!next))
+          }}
+          className="h-4 w-4 accent-teal"
+        />
+        <span className="font-body text-[14px] text-chalk">
+          Email me when new grants match my profile
+        </span>
+      </label>
+      <p className="mt-2 font-body text-[12px] text-slate">
+        Covers new-grant alerts, the Monday briefing and change alerts on grants you track.
+      </p>
+    </div>
+  )
+}
+
 export default function ProfilePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -421,6 +460,8 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+
+          <AlertToggle />
 
           {error && (
             <p className="font-mono text-[13px] text-rose">{error}</p>

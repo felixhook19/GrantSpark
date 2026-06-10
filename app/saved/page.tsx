@@ -95,6 +95,48 @@ function SavedCard({
         )}
       </div>
 
+      {/* Outcome capture (Block 2) — human, never guilt-driven. */}
+      {item.status === 'rejected' && (
+        <div className="mb-4">
+          <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-slate">
+            Why didn&apos;t this one land? (optional)
+          </label>
+          <select
+            value={item.rejection_reason || ''}
+            onChange={(e) => onUpdate(item.id, { rejection_reason: e.target.value || null })}
+            className="w-full rounded-lg border border-white/10 bg-midnight px-3 py-2 text-sm text-chalk focus:border-teal focus:outline-none"
+          >
+            <option value="">Skip this</option>
+            <option value="ineligible">We weren&apos;t eligible</option>
+            <option value="oversubscribed">Fund was oversubscribed</option>
+            <option value="weak_fit">Weak fit for the funder</option>
+            <option value="incomplete">Application was incomplete</option>
+            <option value="missed_deadline">Missed the deadline</option>
+            <option value="other">Something else</option>
+          </select>
+        </div>
+      )}
+      {item.status === 'awarded' && (
+        <div className="mb-4">
+          <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-slate">
+            Brilliant. How much? (£, optional)
+          </label>
+          <input
+            type="number"
+            min={0}
+            defaultValue={item.amount_awarded ?? ''}
+            onBlur={(e) => {
+              const v = e.target.value === '' ? null : Math.round(Number(e.target.value))
+              if (v !== (item.amount_awarded ?? null)) {
+                onUpdate(item.id, { amount_awarded: v })
+              }
+            }}
+            placeholder="e.g. 10000"
+            className="w-full rounded-lg border border-white/10 bg-midnight px-3 py-2 font-mono text-sm text-spark focus:border-teal focus:outline-none"
+          />
+        </div>
+      )}
+
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-slate">

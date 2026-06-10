@@ -76,10 +76,50 @@ function OnboardingInner() {
   const searchParams = useSearchParams()
   // ?new=1 — Strategist-plan users adding another organisation profile.
   const isNewOrg = searchParams.get('new') === '1'
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState(0) // 0 = registry lookup (Block 5)
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState('')
+  const [regNumber, setRegNumber] = useState('')
+  const [regKind, setRegKind] = useState<'charity' | 'company'>('charity')
+  const [lookingUp, setLookingUp] = useState(false)
+  const [lookupError, setLookupError] = useState('')
+
+  async function runLookup() {
+    setLookingUp(true)
+    setLookupError('')
+    try {
+      const res = await fetch('/api/registry-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: regKind, number: regNumber }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setLookupError(
+          data.error === 'invalid_number'
+            ? "That number doesn't look right — check it, or enter your details manually."
+            : data.error === 'not_found'
+              ? "We couldn't find that registration. Check the number, or enter manually."
+              : "The registry isn't answering right now — enter your details manually instead."
+        )
+        setLookingUp(false)
+        return
+      }
+      setForm((f) => ({
+        ...f,
+        org_name: data.org_name || f.org_name,
+        org_category: data.org_category || f.org_category,
+        org_description: data.org_description || f.org_description,
+        nation: data.nation === 'NI' ? 'Northern Ireland' : data.nation || f.nation,
+        postcode_area: data.postcode_area || f.postcode_area,
+      }))
+      setStep(1) // wizard becomes the editable confirmation
+    } catch {
+      setLookupError("The registry isn't answering right now — enter your details manually instead.")
+    }
+    setLookingUp(false)
+  }
 
   const [form, setForm] = useState<OnboardingForm>({
     org_name: '',
@@ -208,6 +248,59 @@ function OnboardingInner() {
         </div>
 
         <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-10">
+          {step === 0 ? (
+            <>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
+                // Quick start
+              </p>
+              <h1 className="mt-3 font-display text-[28px] leading-tight tracking-[-0.02em] text-chalk">
+                Registered charity or company?
+              </h1>
+              <p className="mt-3 font-body text-[14px] leading-[1.65] text-slate">
+                Enter your number and we&apos;ll do the form for you.
+              </p>
+              <div className="mt-6 flex gap-3">
+                {(['charity', 'company'] as const).map((k) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setRegKind(k)}
+                    className={
+                      regKind === k
+                        ? 'flex-1 rounded border border-teal bg-teal/[0.12] py-2.5 font-body text-[13px] font-semibold text-teal-light'
+                        : 'flex-1 rounded border border-white/[0.1] py-2.5 font-body text-[13px] font-medium text-slate hover:text-chalk'
+                    }
+                  >
+                    {k === 'charity' ? 'Charity number' : 'Company number'}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="text"
+                value={regNumber}
+                onChange={(e) => setRegNumber(e.target.value)}
+                placeholder={regKind === 'charity' ? 'e.g. 1089464' : 'e.g. 09876543'}
+                className={`${inputCls} mt-4`}
+              />
+              {lookupError && <p className="mt-3 font-mono text-[13px] text-rose">{lookupError}</p>}
+              <button
+                type="button"
+                onClick={runLookup}
+                disabled={lookingUp || !regNumber.trim()}
+                className="mt-5 w-full rounded bg-teal py-3 font-body text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light disabled:opacity-50"
+              >
+                {lookingUp ? 'Looking you up…' : 'Find my organisation →'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="mt-4 w-full text-center font-body text-[13px] font-medium text-slate hover:text-chalk"
+              >
+                I&apos;m neither — enter my details manually
+              </button>
+            </>
+          ) : (
+            <>
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
             // Step {step} of 3
           </p>
@@ -383,6 +476,8 @@ function OnboardingInner() {
               )}
             </div>
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>

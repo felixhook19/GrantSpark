@@ -40,5 +40,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     postRoutes = []
   }
 
-  return [...staticRoutes, ...postRoutes]
+  // Public grant pages (Block 9) — service role read; opportunities RLS
+  // blocks the anon client by design.
+  let grantRoutes: MetadataRoute.Sitemap = []
+  try {
+    const { createSupabaseAdminClient } = await import('@/lib/supabase/admin')
+    const admin = createSupabaseAdminClient()
+    const { data: grants } = await admin
+      .from('opportunities')
+      .select('slug, last_seen_at')
+      .not('slug', 'is', null)
+    grantRoutes = ((grants || []) as { slug: string; last_seen_at: string | null }[]).map((g) => ({
+      url: `${siteUrl}/grants/${g.slug}`,
+      lastModified: g.last_seen_at ? new Date(g.last_seen_at) : new Date(),
+      priority: 0.6,
+    }))
+  } catch {
+    grantRoutes = []
+  }
+
+  const grantsIndex = {
+    url: `${siteUrl}/grants`,
+    lastModified: new Date(),
+    priority: 0.8,
+  }
+  const pricing = {
+    url: `${siteUrl}/pricing`,
+    lastModified: new Date(),
+    priority: 0.7,
+  }
+
+  return [...staticRoutes, grantsIndex, pricing, ...postRoutes, ...grantRoutes]
 }

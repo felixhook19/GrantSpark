@@ -15,6 +15,7 @@ type MatchRow = {
   why_match?: string[] | null
   risks?: string[] | null
   next_steps?: string[] | null
+  factors?: unknown[] | null
 }
 
 export async function GET() {
@@ -71,6 +72,7 @@ export async function GET() {
       why_match: row.why_match || [],
       risks: row.risks || [],
       next_steps: row.next_steps || [],
+      factors: row.factors || [],
       grant: grantMap[row.opportunity_id],
     }))
 

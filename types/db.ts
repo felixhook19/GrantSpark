@@ -22,6 +22,14 @@ export type Grant = {
   url: string
   status?: string | null
   last_seen_at?: string | null
+  last_verified_at?: string | null
+  slug?: string | null
+}
+
+export type MatchFactor = {
+  name: string
+  status: 'pass' | 'partial' | 'fail' | 'unknown'
+  detail: string
 }
 
 export type Match = {
@@ -30,6 +38,7 @@ export type Match = {
   why_match: string[]
   risks: string[]
   next_steps: string[]
+  factors?: MatchFactor[]
   grant: Grant
 }
 
@@ -52,6 +61,7 @@ export type Org = {
   typical_grant_size?: string | null
   annual_income_band?: string | null
   incorporation_date?: string | null
+  alert_opt_out?: boolean | null
 }
 
 export type BlogPost = {
@@ -91,6 +101,9 @@ export type SavedGrant = {
   status: SavedStatus
   notes: string | null
   internal_deadline: string | null
+  rejection_reason?: string | null
+  amount_awarded?: number | null
+  outcome_date?: string | null
   created_at: string
   updated_at: string
   grant?: Grant

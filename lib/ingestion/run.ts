@@ -6,6 +6,7 @@ import { extractCandidates, normaliseGrant } from './normalize'
 import { fetchPage, type StructuredAdapter } from './structured'
 import { govukAdapter } from './govuk'
 import { ukriAdapter } from './ukri'
+import { logGrantChanges } from './changes'
 import {
   type Source,
   type IngestionResult,
@@ -22,6 +23,19 @@ const STRUCTURED_DETAIL_FETCHES = 10
 // Never run the closed-marking sweep off a suspiciously thin listing —
 // a markup change that drops most cards must not close the catalogue.
 const MIN_LISTING_FOR_CLOSURE_SWEEP = 5
+
+// Slugs are permanent once set (SEO) — generated on first insert only.
+function slugFor(funder: string | null, title: string, canonicalKey: string): string {
+  const base = `${funder || ''}-${title}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-+|-+$)/g, '')
+    .slice(0, 72)
+  // Cheap stable suffix from the canonical key avoids cross-source collisions.
+  let h = 0
+  for (let i = 0; i < canonicalKey.length; i++) h = (h * 31 + canonicalKey.charCodeAt(i)) >>> 0
+  return `${base}-${h.toString(36).slice(0, 4)}`
+}
 
 async function startJobRun(
   admin: SupabaseLike,
@@ -157,6 +171,8 @@ async function runStructuredSource(
             geography: entry.geography.length > 0 ? entry.geography : ['UK'],
             status: entry.status,
             last_seen_at: new Date().toISOString(),
+            last_verified_at: new Date().toISOString(),
+            verification_source: 'automated',
           },
           { onConflict: 'canonical_key' }
         )
@@ -164,21 +180,38 @@ async function runStructuredSource(
           errors.push(`upsert ${entry.canonical_key}: ${upsertErr.message}`)
         } else {
           inserted++
+          // Slugs are permanent — only set where missing.
+          await admin
+            .from('opportunities')
+            .update({ slug: slugFor(entry.funder, entry.title, entry.canonical_key) })
+            .eq('canonical_key', entry.canonical_key)
+            .is('slug', null)
         }
       }
 
       // Grants this source previously listed but that have dropped off the
-      // listing have closed. Guarded against thin/failed listing parses.
+      // listing have closed. Guarded against thin/failed listing parses;
+      // each closure is changelogged (Block 11).
       if (entries.length >= MIN_LISTING_FOR_CLOSURE_SWEEP) {
         const quoted = keys.map((k) => `"${k.replace(/"/g, '')}"`).join(',')
-        const { error: closeErr } = await admin
+        const { data: dropped } = await admin
           .from('opportunities')
-          .update({ status: 'closed' })
+          .select('id, title, status')
           .eq('source_id', source.id)
           .in('status', ['open', 'rolling', 'upcoming'])
           .not('canonical_key', 'in', `(${quoted})`)
-        if (closeErr) {
-          errors.push(`closure sweep: ${closeErr.message}`)
+        for (const row of (dropped || []) as Array<{ id: string; title: string; status: string }>) {
+          const { error: closeErr } = await admin
+            .from('opportunities')
+            .update({ status: 'closed' })
+            .eq('id', row.id)
+          if (closeErr) {
+            errors.push(`closure ${row.id}: ${closeErr.message}`)
+          } else {
+            await logGrantChanges(admin, row.id, row.title, [
+              { field: 'status', old_value: row.status, new_value: 'closed' },
+            ])
+          }
         }
       }
     }
@@ -326,6 +359,8 @@ export async function runIngestionForSource(source: Source): Promise<IngestionRe
             match_funding_required: grant.match_funding_required,
             status: grant.status,
             last_seen_at: new Date().toISOString(),
+            last_verified_at: new Date().toISOString(),
+            verification_source: 'automated',
           },
           { onConflict: 'canonical_key' }
         )
@@ -334,6 +369,12 @@ export async function runIngestionForSource(source: Source): Promise<IngestionRe
           errors.push(`insert ${cand.url}: ${insertErr.message}`)
         } else {
           inserted++
+          // Slugs are permanent — only set where missing.
+          await admin
+            .from('opportunities')
+            .update({ slug: slugFor(grant.funder ?? source.name, grant.title, key) })
+            .eq('canonical_key', key)
+            .is('slug', null)
         }
       } catch (err) {
         errors.push(`grant ${cand.url}: ${String(err)}`)
