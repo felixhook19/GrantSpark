@@ -9,8 +9,7 @@ import {
   TOP_N_FOR_AI,
 } from '@/lib/matching'
 import {
-  getSubscription,
-  effectivePlan,
+  effectiveOrgPlan,
   countMatchRunsThisMonth,
   recordMatchRun,
   FREE_MONTHLY_MATCH_RUNS,
@@ -115,8 +114,8 @@ export async function POST() {
   // --- Plan enforcement -------------------------------------------------
   // Free tier gets a fixed number of match runs per calendar month; paid
   // plans are unlimited (still behind the abuse rate limits above).
-  const subscription = await getSubscription(admin, user.id)
-  const plan = effectivePlan(subscription)
+  // Plan comes from the ORG OWNER so invited members inherit it (Block 12).
+  const plan = await effectiveOrgPlan(admin, org.owner_user_id)
   let planRunsRemaining: number | null = null
   if (plan === 'free') {
     const used = await countMatchRunsThisMonth(admin, user.id)

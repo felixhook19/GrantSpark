@@ -29,8 +29,40 @@ export function orgLimitForPlan(plan: Plan): number {
 }
 
 // Oldest first, so orgs[0] is the original profile — the stable default
-// when no cookie is set.
+// when no cookie is set. Block 12: unions orgs the user OWNS with orgs
+// they're an active MEMBER of (org_members), deduped.
 export async function getOrgsForUser(
+  admin: SupabaseClient,
+  userId: string
+): Promise<Org[]> {
+  const [ownedRes, memberRes] = await Promise.all([
+    admin.from('orgs').select('*').eq('owner_user_id', userId),
+    admin.from('org_members').select('org_id').eq('user_id', userId).eq('status', 'active'),
+  ])
+  if (ownedRes.error) {
+    console.error('[orgs] failed to list owned orgs:', ownedRes.error)
+  }
+  const owned = (ownedRes.data || []) as Org[]
+  const ownedIds = new Set(owned.map((o) => o.id))
+  const memberOrgIds = ((memberRes.data || []) as { org_id: string }[])
+    .map((m) => m.org_id)
+    .filter((id) => !ownedIds.has(id))
+
+  let memberOrgs: Org[] = []
+  if (memberOrgIds.length > 0) {
+    const { data } = await admin.from('orgs').select('*').in('id', memberOrgIds)
+    memberOrgs = (data || []) as Org[]
+  }
+  return [...owned, ...memberOrgs].sort((a, b) =>
+    String((a as { created_at?: string }).created_at || '').localeCompare(
+      String((b as { created_at?: string }).created_at || '')
+    )
+  )
+}
+
+// Orgs the user OWNS — for profile-creation limits, which never count
+// memberships in someone else's account.
+export async function getOwnedOrgs(
   admin: SupabaseClient,
   userId: string
 ): Promise<Org[]> {
@@ -40,7 +72,7 @@ export async function getOrgsForUser(
     .eq('owner_user_id', userId)
     .order('created_at', { ascending: true })
   if (error) {
-    console.error('[orgs] failed to list orgs:', error)
+    console.error('[orgs] failed to list owned orgs:', error)
     return []
   }
   return (data || []) as Org[]

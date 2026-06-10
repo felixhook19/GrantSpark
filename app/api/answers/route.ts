@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrg } from '@/lib/orgs'
-import { getSubscription, effectivePlan } from '@/lib/billing'
+import { effectiveOrgPlan } from '@/lib/billing'
 import { ANSWER_CATEGORIES } from '@/lib/answers'
 
 export const dynamic = 'force-dynamic'
@@ -12,7 +12,8 @@ export const dynamic = 'force-dynamic'
 
 async function gate(userId: string) {
   const admin = createSupabaseAdminClient()
-  const plan = effectivePlan(await getSubscription(admin, userId))
+  const org = await getActiveOrg(admin, userId)
+  const plan = org ? await effectiveOrgPlan(admin, org.owner_user_id) : 'free'
   if (plan !== 'multi') {
     return {
       admin, org: null,
@@ -22,7 +23,6 @@ async function gate(userId: string) {
       ),
     }
   }
-  const org = await getActiveOrg(admin, userId)
   if (!org) {
     return { admin, org: null, fail: NextResponse.json({ error: 'No organisation profile' }, { status: 404 }) }
   }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrg } from '@/lib/orgs'
-import { getSubscription, effectivePlan } from '@/lib/billing'
+import { effectiveOrgPlan } from '@/lib/billing'
 import { ANSWER_CATEGORIES } from '@/lib/answers'
 
 export const dynamic = 'force-dynamic'
@@ -11,10 +11,11 @@ type RouteParams = { params: Promise<{ id: string }> }
 
 async function resolveOrg(userId: string) {
   const admin = createSupabaseAdminClient()
-  const plan = effectivePlan(await getSubscription(admin, userId))
-  if (plan !== 'multi') return { admin, orgId: null }
   const org = await getActiveOrg(admin, userId)
-  return { admin, orgId: org?.id || null }
+  if (!org) return { admin, orgId: null }
+  const plan = await effectiveOrgPlan(admin, org.owner_user_id)
+  if (plan !== 'multi') return { admin, orgId: null }
+  return { admin, orgId: org.id }
 }
 
 export async function PATCH(request: NextRequest, { params }: RouteParams) {

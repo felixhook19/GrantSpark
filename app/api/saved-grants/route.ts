@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrg } from '@/lib/orgs'
-import { getSubscription, effectivePlan, isPaidPlan } from '@/lib/billing'
+import { effectiveOrgPlan, isPaidPlan } from '@/lib/billing'
 import type { Grant, SavedGrant, SavedStatus } from '@/types/db'
 import { SAVED_STATUSES } from '@/types/db'
 
@@ -64,9 +64,13 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
 
   // The saved pipeline is a Seeker feature; Scout reads stay allowed so a
-  // downgraded user can still see (but not change) their history.
+  // downgraded user can still see (but not change) their history. Plan
+  // comes from the org owner so members inherit it (Block 12).
   const adminForPlan = createSupabaseAdminClient()
-  const plan = effectivePlan(await getSubscription(adminForPlan, user.id))
+  const orgForPlan = await getActiveOrg(adminForPlan, user.id)
+  const plan = orgForPlan
+    ? await effectiveOrgPlan(adminForPlan, orgForPlan.owner_user_id)
+    : 'free'
   if (!isPaidPlan(plan)) {
     return NextResponse.json(
       {
