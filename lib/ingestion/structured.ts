@@ -129,6 +129,36 @@ export function findPair(
   return null
 }
 
+// Document content from the first <h1> (or <main>) onwards — cookie
+// banners, nav menus and phase banners all precede it on GOV.UK and
+// UKRI pages and otherwise pollute summaries.
+export function mainContent(html: string): string {
+  const h1 = html.search(/<h1[\s>]/i)
+  if (h1 >= 0) return html.slice(h1)
+  const main = html.search(/<main[\s>]/i)
+  if (main >= 0) return html.slice(main)
+  return html
+}
+
+const BOILERPLATE =
+  /cookie|analytics|feedback will help|search term|change your settings|crown copyright|sign up for emails|javascript/i
+
+// Substantial, non-boilerplate paragraphs from the content region.
+export function extractParagraphs(html: string): string[] {
+  return [...mainContent(html).matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
+    .map((p) => stripTags(p[1]))
+    .filter((t) => t.length > 60 && !BOILERPLATE.test(t))
+}
+
+// "Closing date: 24 September 2026" style lookups for pages that don't
+// use <dt>/<dd>. Captures a short window after the label; the date and
+// amount parsers find what they need inside it.
+export function labelledValue(html: string, label: string): string | null {
+  const re = new RegExp(`${label}\\s*:?([\\s\\S]{0,200})`, 'i')
+  const m = mainContent(html).match(re)
+  return m ? m[1] : null
+}
+
 // Today as YYYY-MM-DD for status derivation.
 export function todayIso(): string {
   return new Date().toISOString().slice(0, 10)

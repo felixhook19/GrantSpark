@@ -18,7 +18,14 @@ import {
   dtDdPairs,
   findPair,
   deriveStatus,
+  extractParagraphs,
+  labelledValue,
 } from './structured'
+
+// Detail-page h1s are prefixed "Funding opportunity: ..." — strip it.
+function cleanTitle(title: string): string {
+  return title.replace(/^funding opportunity:\s*/i, '').trim()
+}
 
 const DETAIL_BASE = 'https://www.ukri.org'
 
@@ -46,7 +53,7 @@ function parseListing(html: string, _source: Source): StructuredGrant[] {
     entries.push({
       canonical_key: `ukri:${slug}`,
       url: `${DETAIL_BASE}/opportunity/${slug}/`,
-      title: decodeEntities(title),
+      title: cleanTitle(decodeEntities(title)),
       funder: null,
       summary: null,
       description: null,
@@ -62,21 +69,12 @@ function parseListing(html: string, _source: Source): StructuredGrant[] {
   return entries
 }
 
-function labelledValue(html: string, label: string): string | null {
-  // "Opening date:</span> <time datetime="2026-07-01T...">" or plain text
-  // after the label — capture a short window and let the date/amount
-  // parsers find what they need.
-  const re = new RegExp(`${label}\\s*:?([\\s\\S]{0,160})`, 'i')
-  const m = html.match(re)
-  return m ? m[1] : null
-}
-
 function parseDetail(html: string, entry: StructuredGrant): StructuredGrant {
   const out = { ...entry }
 
   const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)
   if (h1) {
-    const title = stripTags(h1[1])
+    const title = cleanTitle(stripTags(h1[1]))
     if (title.length >= 8) out.title = title
   }
 
@@ -104,9 +102,9 @@ function parseDetail(html: string, entry: StructuredGrant): StructuredGrant {
   out.grant_amount_min = min
   out.grant_amount_max = max
 
-  const paragraphs = [...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
-    .map((p) => stripTags(p[1]))
-    .filter((t) => t.length > 60)
+  // Content-region paragraphs only — the UKRI header nav otherwise
+  // leaks into summaries.
+  const paragraphs = extractParagraphs(html)
   if (paragraphs.length > 0) {
     out.summary = paragraphs[0].slice(0, 500)
     out.description = paragraphs.slice(0, 4).join('\n\n').slice(0, 3000)
