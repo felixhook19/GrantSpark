@@ -140,30 +140,40 @@ ADMIN_EMAILS                          # optional, comma-separated /admin allowli
 ```
 For local dev, copy .env.example to .env.local (gitignored) and fill in.
 
-## Brand — "Purposeful Intelligence" (June 2026, Type-First Dark)
+## Brand — "Purposeful Intelligence" (June 2026, Type-First Dark rebuild)
 Core (tailwind.config.ts):
 ```
-midnight: '#1A1A2E'   midnight-2: '#23233B'   midnight-3: '#2C2C48'
-teal:     '#00897B'   ← PRIMARY accent: buttons, links, interactive
-chalk:    '#F5F3F0'   ← primary text
-spark:    '#19E88F'   ← RESERVED: match scores, success states, wordmark ONLY
+midnight: '#1A1A2E' (primary bg)  midnight-2: '#16162A' (cards/panels)
+midnight-3: '#0F0F20' (deepest, heroes)  midnight-4: '#12122A' (alt sections)
+teal: '#00897B'  teal-light: '#00BFA5'  ← PRIMARY accent + hover: buttons, links, CTAs
+chalk: '#F5F3F0' ← primary text
+spark: '#19E88F' ← RESERVED: match scores, success states, logo mark ONLY
 ```
 Accents:
 ```
-action: '#E65100' (Apply badges, deadline urgency)   gold: '#D4A017' (Consider)
-rose:   '#C62828' (Skip, errors)   purple: '#4A148C' (premium tier)
-slate:  '#546E7A' (low-emphasis metadata; text-secondary uses a lightened
-        derivative #9DAEB8 for body-copy contrast on midnight)
+orange: '#E65100' (urgent CTAs)   gold: '#D4A017' (Consider, risks)
+rose: '#C62828' (Skip, errors)    purple: '#4A148C' (premium tier)
+slate: '#546E7A' (secondary text/labels)   muted: '#3D4E5C' (tertiary)
+ink: '#1E2A3A' (hovers)
+Legacy semantic aliases (background/surface/text/text-secondary/primary/...)
+are KEPT in tailwind.config.ts for pages outside the rebuild (billing,
+portfolio, saved, admin, legal) — do not delete them.
 ```
-Typography: Syne 800 (display, -0.03em, hero 72px+), DM Sans 400/500 (body,
-16px min, line-height 1.6), JetBrains Mono (ALL scores, amounts, deadlines,
-metadata). Fonts loaded in app/layout.tsx as --font-syne / --font-dm-sans /
---font-jetbrains.
-MatchRing (components/MatchRing.tsx) is the brand graphic device: arc shifts
-rose (<50) → gold (50-74) → spark (75+). It is the hero element of match cards.
+Typography: Syne 800 (display — ALL-CAPS headlines, tracking -0.04em,
+leading 0.95, never below 36px for section titles), DM Sans 400/500/600
+(body, 16px min, line-height 1.65), JetBrains Mono (ALL scores, amounts,
+deadlines, badges, labels; section eyebrows are mono `// label` in
+teal-light). Fonts load via the Google Fonts @import at the top of
+app/globals.css — NOT next/font.
+Signature touches: fixed 60px grid texture overlay (body::before in
+globals.css), 1px-divided card grids (gap-px bg-white/[0.06]).
+ScoreRing (components/ScoreRing.tsx) is the brand graphic device: arc
+shifts rose (<45) → gold (45-69) → spark (70+). Hero element of match
+cards. (The old MatchRing component was removed.)
 Copy tone: British English, short sentences. BANNED: "making a difference",
 "empowering communities", "transformative", "seamless".
-Tagline: "Funding found." Footer: "Built by a grant writer, for grant writers."
+Tagline: "Know before you apply." Sign-off: "Funding found."
+Footer: "Built by a grant writer, for grant writers."
 
 ## Key orgs Table Constraints
 ```

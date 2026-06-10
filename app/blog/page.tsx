@@ -36,7 +36,7 @@ function formatDate(value: string | null | undefined): string {
   try {
     return new Date(value).toLocaleDateString('en-GB', {
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
     })
   } catch {
@@ -55,60 +55,58 @@ export default async function BlogIndexPage() {
   const list = (posts || []) as BlogPost[]
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-midnight-3">
       <SiteNav />
 
-      <section className="border-b border-border bg-surface px-6 py-16">
-        <div className="mx-auto max-w-4xl">
-          <p className="font-mono text-xs font-medium uppercase tracking-wider text-primary-hover">
-            Grant Intelligence
+      <section className="border-b border-white/[0.06] bg-midnight-4 px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
+            // Insights, guides &amp; funder analysis
           </p>
-          <h1 className="mt-3 font-display text-4xl tracking-tightest text-text md:text-5xl">
-            UK grants, decoded.
+          <h1 className="mt-4 font-display text-[clamp(40px,6vw,72px)] uppercase leading-[0.95] tracking-[-0.04em] text-chalk">
+            Grant Intelligence
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-text-secondary">
-            Practical guides to grant funding for UK charities, CICs and
-            community organisations — and the consultants who support them.
+          <p className="mt-5 max-w-xl font-body text-[16px] leading-[1.65] text-slate">
+            Practical guides to grant funding for UK charities, CICs and community
+            organisations — and the consultants who support them.
           </p>
         </div>
       </section>
 
-      <section className="px-6 py-14">
-        <div className="mx-auto max-w-4xl">
+      <section className="px-6 py-16">
+        <div className="mx-auto max-w-6xl">
           {list.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-background py-16 text-center shadow-soft">
-              <p className="text-text-secondary">
-                No articles published yet. Check back soon.
-              </p>
+            <div className="border border-white/[0.06] bg-midnight-2 py-20 text-center">
+              <p className="font-body text-slate">No articles published yet. Check back soon.</p>
             </div>
           ) : (
-            <div className="grid gap-5">
+            <div className="grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-2 lg:grid-cols-3">
               {list.map((post: BlogPost) => (
                 <Link
                   key={post.slug}
                   href={`/blog/${post.slug}`}
-                  className="block rounded-2xl border border-border bg-background p-7 shadow-soft transition-all hover:-translate-y-px hover:shadow-card"
+                  className="group flex flex-col bg-midnight-3 p-8 transition-colors duration-300 hover:bg-midnight-2"
                 >
-                  <div className="flex items-center gap-3">
-                    {post.tag && (
-                      <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-hover">
-                        {post.tag}
-                      </span>
-                    )}
-                    <span className="text-xs text-text-secondary">
-                      {formatDate(post.published_at)}
-                      {post.read_minutes ? ` · ${post.read_minutes} min read` : ''}
-                    </span>
-                  </div>
-                  <h2 className="mt-3 font-display text-2xl font-medium tracking-tightish text-text">
+                  {post.tag && (
+                    <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.15em] text-teal-light">
+                      // {post.tag}
+                    </p>
+                  )}
+                  <h2 className="mt-4 font-display text-[18px] leading-snug tracking-[-0.01em] text-chalk">
                     {post.title}
                   </h2>
-                  <p className="mt-2 leading-relaxed text-text-secondary">
+                  <p className="mt-3 flex-1 font-body text-[13px] leading-[1.6] text-slate">
                     {post.excerpt}
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
-                    Read article <span aria-hidden="true">→</span>
-                  </span>
+                  <div className="mt-6 flex items-center justify-between">
+                    <span className="font-mono text-[10px] text-muted">
+                      {formatDate(post.published_at)}
+                      {post.read_minutes ? ` · ${post.read_minutes} min` : ''}
+                    </span>
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] text-slate transition-all group-hover:border-teal group-hover:bg-teal group-hover:text-white">
+                      →
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>

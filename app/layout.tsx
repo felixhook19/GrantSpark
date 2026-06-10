@@ -1,27 +1,8 @@
 import type { Metadata } from 'next'
-import { Syne, DM_Sans, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 
-const syne = Syne({
-  subsets: ['latin'],
-  display: 'swap',
-  weight: ['700', '800'],
-  variable: '--font-syne',
-})
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  display: 'swap',
-  weight: ['400', '500', '700'],
-  variable: '--font-dm-sans',
-})
-
-const jetbrains = JetBrains_Mono({
-  subsets: ['latin'],
-  display: 'swap',
-  weight: ['400', '500'],
-  variable: '--font-jetbrains',
-})
+// Fonts (Syne / DM Sans / JetBrains Mono) load via the Google Fonts
+// @import at the top of globals.css.
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://grantspark.co.uk'
 
@@ -74,11 +55,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html
-      lang="en-GB"
-      className={`${syne.variable} ${dmSans.variable} ${jetbrains.variable}`}
-    >
-      <body className="bg-background font-sans text-text antialiased">
+    <html lang="en-GB">
+      <body className="bg-midnight font-body text-chalk antialiased">
         {children}
       </body>
     </html>

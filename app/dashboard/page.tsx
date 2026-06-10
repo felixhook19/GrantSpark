@@ -1,23 +1,23 @@
 'use client'
 
-import { useEffect, useState, useCallback, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Wordmark } from '@/components/Logo'
-import { MatchRing } from '@/components/MatchRing'
-import type { Match, Grant, Org, Decision } from '@/types/db'
+import { ScoreRing } from '@/components/ScoreRing'
+import type { Match, Decision, Org } from '@/types/db'
 
-// Decision badges: action orange / deep gold / confident rose.
+// Decision badges: spark / gold / rose, mono, bold.
 function DecisionTag({ decision }: { decision: Decision | string }) {
   const map: Record<string, { cls: string; label: string }> = {
-    apply: { cls: 'border-action/60 bg-warning-soft text-action', label: 'Apply' },
-    consider: { cls: 'border-gold/60 bg-accent-soft text-gold', label: 'Consider' },
-    skip: { cls: 'border-rose/60 bg-danger-soft text-danger', label: 'Skip' },
+    apply: { cls: 'bg-spark/[0.12] text-spark', label: 'Apply' },
+    consider: { cls: 'bg-gold/[0.12] text-gold', label: 'Consider' },
+    skip: { cls: 'bg-rose/[0.12] text-rose', label: 'Skip' },
   }
   const item = map[decision] || map.consider
   return (
-    <span className={`inline-flex items-center rounded-full border px-3.5 py-1 text-sm font-bold uppercase tracking-wide ${item.cls}`}>
+    <span className={`rounded px-3 py-1.5 font-mono text-[11px] font-semibold uppercase tracking-[0.08em] ${item.cls}`}>
       {item.label}
     </span>
   )
@@ -29,6 +29,8 @@ type AssistantDraft = {
   tips: string[]
 }
 
+const chipCls = 'rounded-sm bg-white/[0.06] px-2 py-1 font-mono text-[10px] text-slate'
+
 function GrantCard({ match }: { match: Match }) {
   const [open, setOpen] = useState(false)
   const [drafts, setDrafts] = useState<AssistantDraft[] | null>(null)
@@ -37,7 +39,7 @@ function GrantCard({ match }: { match: Match }) {
   const [draftError, setDraftError] = useState('')
   const [needsUpgrade, setNeedsUpgrade] = useState(false)
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
-  const g: Grant = match.grant
+  const g = match.grant
 
   async function toggleAssistant() {
     if (drafts || drafting) {
@@ -89,84 +91,69 @@ function GrantCard({ match }: { match: Match }) {
     return '£' + Number(v).toLocaleString()
   }
 
-  const deadlineColor =
-    daysLeft !== null && daysLeft <= 14 ? 'text-warning' : 'text-text'
+  const amountText =
+    g.grant_amount_min || g.grant_amount_max
+      ? [money(g.grant_amount_min), money(g.grant_amount_max)].filter(Boolean).join(' – ')
+      : null
+  const deadlineText =
+    daysLeft !== null ? (daysLeft <= 0 ? 'Closed' : `${daysLeft} days left`) : 'Rolling'
+  const deadlineUrgent = daysLeft !== null && daysLeft > 0 && daysLeft <= 30
+  const geoText = g.geography && g.geography.length > 0 ? g.geography[0] : null
 
   return (
-    <article className="rounded-2xl border border-border bg-background p-6 shadow-soft transition-all hover:shadow-card">
-      <div className="flex items-start gap-6">
+    <article className="rounded-lg border border-white/[0.07] bg-midnight-2 p-5 transition-colors duration-300 hover:border-white/[0.14]">
+      <div className="flex items-start gap-5">
         {/* Score Ring — the hero element of every match card */}
-        <MatchRing score={match.fit_score} size="lg" showLabel />
+        <ScoreRing score={match.fit_score} size={64} />
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-display text-lg leading-snug tracking-tightish text-text">
+              <p className="truncate font-mono text-[10px] uppercase tracking-[0.1em] text-slate">
+                {g.funder || 'Unknown funder'}
+              </p>
+              <h3 className="mt-1 font-body text-[15px] font-semibold leading-snug text-chalk">
                 {g.title}
               </h3>
-              <p className="mt-0.5 text-sm text-text-secondary">{g.funder}</p>
             </div>
             <DecisionTag decision={match.decision} />
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {amountText && <span className={chipCls}>{amountText}</span>}
+            <span
+              className={
+                deadlineUrgent
+                  ? 'rounded-sm bg-gold/[0.12] px-2 py-1 font-mono text-[10px] text-gold'
+                  : chipCls
+              }
+            >
+              {deadlineText}
+            </span>
+            {geoText && <span className={chipCls}>{geoText}</span>}
+            {(g.sector_tags || []).slice(0, 3).map((tag: string) => (
+              <span key={tag} className={chipCls}>{tag}</span>
+            ))}
           </div>
         </div>
       </div>
 
       {g.summary && (
-        <p className="mt-4 text-sm leading-relaxed text-text-secondary">{g.summary}</p>
+        <p className="mt-4 font-body text-[13px] leading-[1.65] text-slate">{g.summary}</p>
       )}
 
-      <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 font-mono text-sm">
-        {(g.grant_amount_min || g.grant_amount_max) && (
-          <span className="text-text">
-            <span className="text-text-secondary">Amount: </span>
-            <span className="tabular font-medium">
-              {money(g.grant_amount_min)}
-              {g.grant_amount_min && g.grant_amount_max ? ' – ' : ''}
-              {money(g.grant_amount_max)}
-            </span>
-          </span>
-        )}
-        {daysLeft !== null && (
-          <span className={deadlineColor}>
-            <span className="text-text-secondary">Deadline: </span>
-            <span className="font-medium">
-              {daysLeft <= 0 ? 'Closed' : `${daysLeft} days left`}
-            </span>
-          </span>
-        )}
-        {!g.deadline && (
-          <span className="text-text">
-            <span className="text-text-secondary">Deadline: </span>
-            <span className="font-medium">Rolling / ongoing</span>
-          </span>
-        )}
-      </div>
-
-      {g.sector_tags && g.sector_tags.length > 0 && (
-        <div className="mt-4 flex flex-wrap gap-1.5">
-          {g.sector_tags.map((tag: string) => (
-            <span
-              key={tag}
-              className="rounded-lg border border-border bg-surface px-2 py-0.5 text-xs font-medium text-text-secondary"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <button
             onClick={() => setOpen(!open)}
-            className="text-sm font-semibold text-primary transition-colors hover:text-primary-hover"
+            className="font-body text-[13px] font-semibold text-teal-light transition-colors hover:text-spark"
           >
-            {open ? 'Hide reasoning' : 'Why this matches'}
+            {open ? 'Hide reasoning' : 'Why this match'}
           </button>
           <button
             onClick={toggleAssistant}
             disabled={drafting}
-            className="text-sm font-semibold text-accent-hover transition-colors hover:text-accent disabled:opacity-60"
+            className="font-body text-[13px] font-semibold text-gold transition-colors hover:text-chalk disabled:opacity-60"
           >
             {drafting
               ? 'Drafting…'
@@ -180,25 +167,24 @@ function GrantCard({ match }: { match: Match }) {
             href={g.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-text shadow-soft transition-all hover:-translate-y-px hover:bg-accent-hover hover:text-background"
+            className="rounded bg-teal px-4 py-2 font-body text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light"
           >
-            View grant <span aria-hidden="true">→</span>
+            View grant →
           </a>
         )}
       </div>
 
       {open && (
-        <div className="fade-up mt-4 space-y-5 border-t border-border pt-5">
+        <div className="fade-up mt-4 space-y-5 border-t border-white/[0.06] pt-5">
           {/* "Why this match" is the product's key intelligence, not fine print. */}
           {match.why_match && match.why_match.length > 0 && (
-            <div>
-              <p className="mb-2.5 font-mono text-xs font-medium uppercase tracking-wider text-primary-hover">
-                Why this match
+            <div className="border-l-2 border-teal pl-4">
+              <p className="mb-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-teal-light">
+                // Why this match
               </p>
               <ul className="space-y-2">
                 {match.why_match.map((r: string, i: number) => (
-                  <li key={i} className="flex gap-2.5 text-base font-medium leading-relaxed text-text">
-                    <svg className="mt-1 h-4 w-4 flex-shrink-0 text-spark" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  <li key={i} className="font-body text-[14px] font-medium leading-[1.6] text-chalk">
                     {r}
                   </li>
                 ))}
@@ -206,14 +192,13 @@ function GrantCard({ match }: { match: Match }) {
             </div>
           )}
           {match.risks && match.risks.length > 0 && (
-            <div className="rounded-r-xl border-l-4 border-gold bg-accent-soft/60 py-3 pl-4 pr-3">
-              <p className="mb-2 font-mono text-xs font-medium uppercase tracking-wider text-gold">
-                Watch out for
+            <div className="border-l-2 border-gold bg-gold/[0.06] py-3 pl-4 pr-3">
+              <p className="mb-2 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-gold">
+                // Watch out for
               </p>
               <ul className="space-y-1.5">
                 {match.risks.map((r: string, i: number) => (
-                  <li key={i} className="flex gap-2 text-sm leading-relaxed text-text">
-                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-gold" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 0 0-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" /></svg>
+                  <li key={i} className="font-body text-[13px] leading-[1.6] text-chalk">
                     {r}
                   </li>
                 ))}
@@ -222,13 +207,15 @@ function GrantCard({ match }: { match: Match }) {
           )}
           {match.next_steps && match.next_steps.length > 0 && (
             <div>
-              <p className="mb-2.5 font-mono text-xs font-medium uppercase tracking-wider text-text-secondary">
-                Next steps
+              <p className="mb-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate">
+                // Next steps
               </p>
               <ul className="space-y-2">
                 {match.next_steps.map((s: string, i: number) => (
-                  <li key={i} className="flex gap-3 text-sm font-semibold leading-relaxed text-text">
-                    <span className="tabular flex-shrink-0 font-mono font-medium text-primary-hover">{String(i + 1).padStart(2, '0')}</span>
+                  <li key={i} className="flex gap-3 font-body text-[13px] font-semibold leading-[1.6] text-chalk">
+                    <span className="tabular flex-shrink-0 font-mono font-medium text-teal-light">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
                     {s}
                   </li>
                 ))}
@@ -239,55 +226,55 @@ function GrantCard({ match }: { match: Match }) {
       )}
 
       {showDrafts && (
-        <div className="fade-up mt-4 space-y-4 border-t border-border pt-4">
+        <div className="fade-up mt-4 space-y-4 border-t border-white/[0.06] pt-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
-              Application assistant
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate">
+              // Application assistant
             </p>
-            <span className="text-xs text-muted">AI first draft — review before submitting</span>
+            <span className="font-mono text-[10px] text-muted">AI first draft — review before submitting</span>
           </div>
 
           {drafting && (
-            <div className="flex items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3 text-sm text-text-secondary">
-              <span className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <div className="flex items-center gap-3 rounded border border-white/[0.08] bg-midnight px-4 py-3 font-body text-[13px] text-slate">
+              <span className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-teal border-t-transparent" />
               Drafting answers from your profile and this grant&apos;s criteria…
             </div>
           )}
 
           {draftError && (
-            <div className="rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
+            <p className="font-mono text-[13px] text-rose">
               {draftError}
               {needsUpgrade && (
                 <>
                   {' '}
-                  <Link href="/billing" className="font-semibold underline">
+                  <Link href="/billing" className="font-semibold text-teal-light underline">
                     Upgrade to Seeker
                   </Link>
                 </>
               )}
-            </div>
+            </p>
           )}
 
           {drafts &&
             drafts.map((d, i) => (
-              <div key={i} className="rounded-xl border border-border bg-surface p-4">
+              <div key={i} className="rounded border border-white/[0.08] bg-midnight p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="text-sm font-semibold text-text">{d.question}</p>
+                  <p className="font-body text-[13px] font-semibold text-chalk">{d.question}</p>
                   <button
                     onClick={() => copyDraft(d.draft_answer, i)}
-                    className="flex-shrink-0 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-2"
+                    className="flex-shrink-0 rounded border border-white/[0.1] px-2.5 py-1 font-mono text-[10px] font-medium text-slate transition-colors hover:border-teal hover:text-teal-light"
                   >
                     {copiedIdx === i ? 'Copied ✓' : 'Copy'}
                   </button>
                 </div>
-                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-text">
+                <p className="mt-2 whitespace-pre-line font-body text-[13px] leading-[1.65] text-slate">
                   {d.draft_answer}
                 </p>
                 {d.tips.length > 0 && (
-                  <ul className="mt-3 space-y-1 border-t border-border pt-3">
+                  <ul className="mt-3 space-y-1 border-t border-white/[0.06] pt-3">
                     {d.tips.map((t, j) => (
-                      <li key={j} className="flex gap-2 text-xs text-text-secondary">
-                        <span className="flex-shrink-0 font-semibold text-accent-hover">Tip:</span>
+                      <li key={j} className="flex gap-2 font-body text-[12px] text-slate">
+                        <span className="flex-shrink-0 font-mono font-semibold text-gold">Tip:</span>
                         {t}
                       </li>
                     ))}
@@ -309,6 +296,14 @@ function formatCountdown(seconds: number): string {
 }
 
 type OrgSummary = { id: string; org_name: string }
+
+const sideLinkCls =
+  'block rounded px-3 py-2 font-body text-[13px] font-medium text-slate transition-colors hover:bg-white/[0.04] hover:text-chalk'
+const sideLinkActiveCls =
+  'block rounded bg-teal/[0.12] px-3 py-2 font-body text-[13px] font-semibold text-teal-light'
+
+const inputCls =
+  'w-full rounded border border-white/[0.08] bg-midnight-2 px-3 py-2.5 font-body text-[13px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
 
 function DashboardInner() {
   const router = useRouter()
@@ -493,265 +488,296 @@ function DashboardInner() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-screen items-center justify-center bg-midnight-3">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-          <p className="text-text-secondary">Loading your dashboard…</p>
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+          <p className="font-body text-[14px] text-slate">Loading your dashboard…</p>
         </div>
       </div>
     )
   }
 
+  const orgSwitcher = (orgList.length > 1 || canAddOrg) && (
+    <select
+      value={activeOrgId}
+      onChange={(e) => handleOrgSwitch(e.target.value)}
+      aria-label="Switch organisation"
+      className="w-full rounded border border-white/[0.1] bg-midnight px-3 py-2 font-body text-[13px] font-medium text-chalk focus:border-teal focus:outline-none"
+    >
+      {orgList.map((o) => (
+        <option key={o.id} value={o.id}>
+          {o.org_name}
+        </option>
+      ))}
+      {canAddOrg && <option value="__add">+ Add organisation</option>}
+    </select>
+  )
+
   return (
-    <div className="min-h-screen bg-surface">
-      <nav className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
+    <div className="min-h-screen bg-midnight-3">
+      {/* Sidebar (desktop) */}
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[240px] flex-col border-r border-white/[0.06] bg-midnight-2 lg:flex">
+        <div className="px-5 py-6">
           <Link href="/" aria-label="GrantSpark — home">
             <Wordmark size={24} />
           </Link>
-          <div className="flex items-center gap-5">
-            {orgList.length > 1 || canAddOrg ? (
-              <select
-                value={activeOrgId}
-                onChange={(e) => handleOrgSwitch(e.target.value)}
-                aria-label="Switch organisation"
-                className="hidden max-w-[200px] rounded-xl border border-border bg-background px-3 py-1.5 text-sm font-medium text-text focus:border-primary focus:outline-none md:block"
-              >
-                {orgList.map((o) => (
-                  <option key={o.id} value={o.id}>
-                    {o.org_name}
-                  </option>
-                ))}
-                {canAddOrg && <option value="__add">+ Add organisation</option>}
-              </select>
-            ) : (
-              org && (
-                <span className="hidden text-sm text-text-secondary md:block">{org.org_name}</span>
-              )
-            )}
-            {orgList.length > 1 && (
-              <Link href="/portfolio" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
-                Portfolio
-              </Link>
-            )}
-            <Link href="/profile" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
-              Edit profile
+        </div>
+        <nav className="flex-1 space-y-1 px-3">
+          <span className={sideLinkActiveCls}>Matches</span>
+          <Link href="/saved" className={sideLinkCls}>Saved pipeline</Link>
+          {orgList.length > 1 && (
+            <Link href="/portfolio" className={sideLinkCls}>Portfolio</Link>
+          )}
+          <Link href="/profile" className={sideLinkCls}>Edit profile</Link>
+          <Link href="/billing" className={sideLinkCls}>Billing</Link>
+          <Link href="/blog" className={sideLinkCls}>Grant Intelligence</Link>
+        </nav>
+        <div className="space-y-3 border-t border-white/[0.06] px-5 py-5">
+          {orgSwitcher || (
+            org && (
+              <p className="truncate font-mono text-[10px] uppercase tracking-[0.1em] text-slate">
+                {org.org_name}
+              </p>
+            )
+          )}
+          <button
+            onClick={handleSignOut}
+            className="font-body text-[12px] font-medium text-muted transition-colors hover:text-chalk"
+          >
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      {/* Top bar (mobile) */}
+      <nav className="sticky top-0 z-20 border-b border-white/[0.06] bg-midnight-3/85 backdrop-blur-lg lg:hidden">
+        <div className="flex h-14 items-center justify-between gap-3 px-4">
+          <Link href="/" aria-label="GrantSpark — home" className="flex-shrink-0">
+            <Wordmark size={22} />
+          </Link>
+          <div className="flex min-w-0 items-center gap-3">
+            {orgSwitcher && <div className="max-w-[160px]">{orgSwitcher}</div>}
+            <Link href="/profile" className="font-body text-[12px] font-medium text-slate hover:text-chalk">
+              Profile
             </Link>
-            <Link href="/billing" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
-              Billing
-            </Link>
-            <Link href="/blog" className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
-              Blog
-            </Link>
-            <button onClick={handleSignOut} className="text-sm font-medium text-text-secondary transition-colors hover:text-text">
+            <button onClick={handleSignOut} className="font-body text-[12px] font-medium text-slate hover:text-chalk">
               Sign out
             </button>
           </div>
         </div>
       </nav>
 
-      <div className="mx-auto max-w-5xl px-6 py-10">
+      <main className="px-5 py-8 lg:ml-[240px] lg:px-10 lg:py-10">
+        <div className="mx-auto max-w-4xl">
 
-        {/* Header */}
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-medium tracking-tightish text-text md:text-4xl">
-              {matching ? 'Finding your matches…' : `${matches.length} grants found`}
-            </h1>
-            <p className="mt-1 text-text-secondary">
-              {org ? org.org_name : ''} · AI-matched and scored against your profile
-            </p>
-          </div>
-          <button
-            onClick={runMatching}
-            disabled={refreshDisabled}
-            className="inline-flex flex-shrink-0 items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-text shadow-soft transition-all hover:bg-surface disabled:opacity-50"
-          >
-            {matching ? (
-              <><span className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /> Matching…</>
-            ) : rateLimited ? (
-              `Try again in ${formatCountdown(cooldownLeft)}`
-            ) : (
-              <><svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0 0 4.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 0 1-15.357-2m15.357 2H15" /></svg> Refresh matches</>
-            )}
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-6 rounded-xl border border-danger/30 bg-danger-soft px-4 py-3 text-sm text-danger">
-            {error}
-            {planLimited && (
-              <>
-                {' '}
-                <Link href="/billing" className="font-semibold underline">
-                  Upgrade your plan
-                </Link>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Stats */}
-        {!matching && matches.length > 0 && (
-          <div className="mb-6 grid grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-border bg-background p-5 shadow-soft">
-              <p className="tabular font-display text-2xl font-medium text-primary md:text-3xl">{applyCount}</p>
-              <p className="mt-1 text-sm text-text-secondary">Ready to apply</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-background p-5 shadow-soft">
-              <p className="tabular font-display text-2xl font-medium text-accent-hover md:text-3xl">{considerCount}</p>
-              <p className="mt-1 text-sm text-text-secondary">Worth considering</p>
-            </div>
-            <div className="rounded-2xl border border-border bg-background p-5 shadow-soft">
-              <p className="tabular font-display text-2xl font-medium text-text md:text-3xl">{matches.length}</p>
-              <p className="mt-1 text-sm text-text-secondary">Total matches</p>
-            </div>
-          </div>
-        )}
-
-        {/* Search + filters */}
-        {!matching && matches.length > 0 && (
-          <div className="mb-6 space-y-3">
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.34-4.34M17 10.5A6.5 6.5 0 1 1 4 10.5a6.5 6.5 0 0 1 13 0Z" /></svg>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by grant name, funder or keyword…"
-                  className="w-full rounded-xl border border-border bg-background py-3 pl-10 pr-4 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
-                />
-              </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className={
-                  showFilters
-                    ? 'rounded-xl border border-primary bg-primary-soft px-4 py-3 text-sm font-semibold text-primary'
-                    : 'rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface'
-                }
-              >
-                Filters {hasActiveFilters ? '●' : ''}
-              </button>
-            </div>
-
-            {showFilters && (
-              <div className="fade-up rounded-2xl border border-border bg-background p-5 shadow-soft">
-                <div className="grid gap-5 sm:grid-cols-3">
-                  <div>
-                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                      Decision
-                    </label>
-                    <select
-                      value={decisionFilter}
-                      onChange={(e) => setDecisionFilter(e.target.value)}
-                      className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text focus:border-primary focus:outline-none"
-                    >
-                      <option value="all">All decisions</option>
-                      <option value="apply">Apply ({applyCount})</option>
-                      <option value="consider">Consider ({considerCount})</option>
-                      <option value="skip">Skip</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                      Min grant amount (£)
-                    </label>
-                    <input
-                      type="number"
-                      value={minAmount}
-                      onChange={(e) => setMinAmount(e.target.value)}
-                      placeholder="e.g. 10000"
-                      className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                      Max grant amount (£)
-                    </label>
-                    <input
-                      type="number"
-                      value={maxAmount}
-                      onChange={(e) => setMaxAmount(e.target.value)}
-                      placeholder="e.g. 100000"
-                      className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
-                    />
-                  </div>
-                </div>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className="mt-4 text-sm font-medium text-text-secondary hover:text-text"
-                  >
-                    Clear all filters
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {matching && (
-          <div className="rounded-2xl border border-border bg-background py-20 text-center shadow-soft">
-            <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <h2 className="font-display text-xl font-medium text-text">Scanning grants for you</h2>
-            <p className="mt-2 text-text-secondary">Matching every opportunity against your profile and scoring eligibility…</p>
-          </div>
-        )}
-
-        {!matching && visible.length > 0 && (
-          <div className="space-y-4">
-            {hasActiveFilters && (
-              <p className="text-sm text-text-secondary">
-                Showing {visible.length} of {matches.length} grants
+          {/* Header */}
+          <div className="mb-7 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
+                // {org ? org.org_name : 'Your matches'}
               </p>
-            )}
-            {visible.map((match: Match, i: number) => (
-              <GrantCard key={i} match={match} />
-            ))}
-          </div>
-        )}
-
-        {!matching && matches.length > 0 && visible.length === 0 && (
-          <div className="rounded-2xl border border-border bg-background py-16 text-center shadow-soft">
-            <h2 className="font-display text-xl font-medium text-text">No grants match your filters</h2>
-            <p className="mt-2 text-text-secondary">Try broadening your search or clearing the filters.</p>
-            <button
-              onClick={clearFilters}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover"
-            >
-              Clear filters
-            </button>
-          </div>
-        )}
-
-        {!matching && matches.length === 0 && (
-          <div className="rounded-2xl border border-border bg-background py-20 text-center shadow-soft">
-            <h2 className="font-display text-xl font-medium text-text">No matches yet</h2>
-            <p className="mt-2 text-text-secondary">Run the matching engine to scan every grant against your profile.</p>
+              <h1 className="mt-2 font-display text-[clamp(28px,3.5vw,40px)] uppercase leading-[0.98] tracking-[-0.04em] text-chalk">
+                {matching ? 'Finding your matches…' : `${matches.length} grants found`}
+              </h1>
+              <p className="mt-2 font-body text-[13px] text-slate">
+                AI-matched and scored against your profile
+              </p>
+            </div>
             <button
               onClick={runMatching}
               disabled={refreshDisabled}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-background shadow-soft transition-all hover:-translate-y-px hover:bg-primary-hover disabled:opacity-50"
+              className="inline-flex flex-shrink-0 items-center gap-2 rounded bg-teal px-4 py-2.5 font-body text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light disabled:opacity-50 disabled:hover:translate-y-0"
             >
-              {rateLimited ? `Try again in ${formatCountdown(cooldownLeft)}` : 'Run matching now →'}
+              {matching ? (
+                <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> Matching…</>
+              ) : rateLimited ? (
+                `Try again in ${formatCountdown(cooldownLeft)}`
+              ) : (
+                'Refresh matches'
+              )}
             </button>
           </div>
-        )}
 
-        {!matching && matches.length > 0 && (
-          <div className="mt-8 rounded-2xl border border-border bg-background p-6 text-center shadow-soft">
-            <p className="text-sm text-text-secondary">
-              Want better matches?{' '}
-              <Link href="/profile" className="font-medium text-primary hover:underline">
-                Update your profile
-              </Link>
-              {' '}to refine what you&apos;re looking for.
+          {error && (
+            <p className="mb-6 rounded border border-rose/30 bg-rose/[0.08] px-4 py-3 font-mono text-[13px] text-rose">
+              {error}
+              {planLimited && (
+                <>
+                  {' '}
+                  <Link href="/billing" className="font-semibold text-teal-light underline">
+                    Upgrade your plan
+                  </Link>
+                </>
+              )}
             </p>
-          </div>
-        )}
+          )}
 
-      </div>
+          {/* Stats */}
+          {!matching && matches.length > 0 && (
+            <div className="mb-6 grid grid-cols-3 gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06]">
+              <div className="bg-midnight-2 p-5">
+                <p className="tabular font-mono text-[26px] font-semibold text-spark">{applyCount}</p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-slate">Ready to apply</p>
+              </div>
+              <div className="bg-midnight-2 p-5">
+                <p className="tabular font-mono text-[26px] font-semibold text-gold">{considerCount}</p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-slate">Worth considering</p>
+              </div>
+              <div className="bg-midnight-2 p-5">
+                <p className="tabular font-mono text-[26px] font-semibold text-chalk">{matches.length}</p>
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-slate">Total matches</p>
+              </div>
+            </div>
+          )}
+
+          {/* Search + filters */}
+          {!matching && matches.length > 0 && (
+            <div className="mb-6 space-y-3">
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-4.34-4.34M17 10.5A6.5 6.5 0 1 1 4 10.5a6.5 6.5 0 0 1 13 0Z" /></svg>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by grant name, funder or keyword…"
+                    className={`${inputCls} py-3 pl-10`}
+                  />
+                </div>
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={
+                    showFilters
+                      ? 'rounded border border-teal bg-teal/[0.12] px-4 py-3 font-body text-[13px] font-semibold text-teal-light'
+                      : 'rounded border border-white/[0.08] bg-midnight-2 px-4 py-3 font-body text-[13px] font-medium text-slate transition-colors hover:border-white/[0.2] hover:text-chalk'
+                  }
+                >
+                  Filters {hasActiveFilters ? '●' : ''}
+                </button>
+              </div>
+
+              {showFilters && (
+                <div className="fade-up rounded-lg border border-white/[0.08] bg-midnight-2 p-5">
+                  <div className="grid gap-5 sm:grid-cols-3">
+                    <div>
+                      <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.12em] text-slate">
+                        Decision
+                      </label>
+                      <select
+                        value={decisionFilter}
+                        onChange={(e) => setDecisionFilter(e.target.value)}
+                        className={`${inputCls} bg-midnight`}
+                      >
+                        <option value="all">All decisions</option>
+                        <option value="apply">Apply ({applyCount})</option>
+                        <option value="consider">Consider ({considerCount})</option>
+                        <option value="skip">Skip</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.12em] text-slate">
+                        Min grant amount (£)
+                      </label>
+                      <input
+                        type="number"
+                        value={minAmount}
+                        onChange={(e) => setMinAmount(e.target.value)}
+                        placeholder="e.g. 10000"
+                        className={`${inputCls} bg-midnight`}
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.12em] text-slate">
+                        Max grant amount (£)
+                      </label>
+                      <input
+                        type="number"
+                        value={maxAmount}
+                        onChange={(e) => setMaxAmount(e.target.value)}
+                        placeholder="e.g. 100000"
+                        className={`${inputCls} bg-midnight`}
+                      />
+                    </div>
+                  </div>
+                  {hasActiveFilters && (
+                    <button
+                      onClick={clearFilters}
+                      className="mt-4 font-body text-[13px] font-medium text-slate transition-colors hover:text-chalk"
+                    >
+                      Clear all filters
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {matching && (
+            <div className="rounded-lg border border-white/[0.07] bg-midnight-2 py-20 text-center">
+              <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+              <h2 className="font-display text-[20px] tracking-[-0.01em] text-chalk">Scanning grants for you</h2>
+              <p className="mt-2 font-body text-[13px] text-slate">
+                Matching every opportunity against your profile and scoring eligibility…
+              </p>
+            </div>
+          )}
+
+          {!matching && visible.length > 0 && (
+            <div className="space-y-4">
+              {hasActiveFilters && (
+                <p className="font-mono text-[11px] text-slate">
+                  Showing {visible.length} of {matches.length} grants
+                </p>
+              )}
+              {visible.map((match: Match, i: number) => (
+                <GrantCard key={i} match={match} />
+              ))}
+            </div>
+          )}
+
+          {!matching && matches.length > 0 && visible.length === 0 && (
+            <div className="rounded-lg border border-white/[0.07] bg-midnight-2 py-16 text-center">
+              <h2 className="font-display text-[20px] tracking-[-0.01em] text-chalk">No grants match your filters</h2>
+              <p className="mt-2 font-body text-[13px] text-slate">Try broadening your search or clearing the filters.</p>
+              <button
+                onClick={clearFilters}
+                className="mt-6 rounded bg-teal px-5 py-2.5 font-body text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light"
+              >
+                Clear filters
+              </button>
+            </div>
+          )}
+
+          {!matching && matches.length === 0 && (
+            <div className="rounded-lg border border-white/[0.07] bg-midnight-2 py-20 text-center">
+              <h2 className="font-display text-[20px] tracking-[-0.01em] text-chalk">No matches yet</h2>
+              <p className="mt-2 font-body text-[13px] text-slate">
+                Run the matching engine to scan every grant against your profile.
+              </p>
+              <button
+                onClick={runMatching}
+                disabled={refreshDisabled}
+                className="mt-6 rounded bg-teal px-6 py-3 font-body text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light disabled:opacity-50"
+              >
+                {rateLimited ? `Try again in ${formatCountdown(cooldownLeft)}` : 'Run matching now →'}
+              </button>
+            </div>
+          )}
+
+          {!matching && matches.length > 0 && (
+            <div className="mt-8 rounded-lg border border-white/[0.07] bg-midnight-2 p-6 text-center">
+              <p className="font-body text-[13px] text-slate">
+                Want better matches?{' '}
+                <Link href="/profile" className="font-medium text-teal-light hover:text-spark">
+                  Update your profile
+                </Link>
+                {' '}to refine what you&apos;re looking for.
+              </p>
+            </div>
+          )}
+
+        </div>
+      </main>
     </div>
   )
 }
@@ -760,8 +786,8 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-background">
-          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <div className="flex min-h-screen items-center justify-center bg-midnight-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-teal border-t-transparent" />
         </div>
       }
     >

@@ -1,9 +1,13 @@
 /**
- * GrantSpark logo mark ("Purposeful Intelligence" direction).
+ * GrantSpark twin-spark mark ("Purposeful Intelligence").
  *
- * Elevated midnight field with the four-point spark in Spark Green —
- * the one place outside scores and success states where spark green
- * is permitted — and a Trust Teal centre dot.
+ * Two angled chevron strokes: the lead spark in Spark Green (the one
+ * permitted use outside scores/success states) and an echo in teal-light
+ * at 60% opacity.
+ *
+ * NOTE: Wordmark deliberately renders a <span>, not a link — callers
+ * wrap it in their own <Link> (nav, dashboards, auth pages), and nesting
+ * anchors breaks hydration.
  */
 export function Logo({ size = 28 }: { size?: number }) {
   return (
@@ -15,28 +19,38 @@ export function Logo({ size = 28 }: { size?: number }) {
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <circle cx="16" cy="16" r="16" fill="#2C2C48" />
       <path
-        d="M16 6.5 L17.5 14.5 L25 16 L17.5 17.5 L16 25.5 L14.5 17.5 L7 16 L14.5 14.5 Z"
-        fill="#19E88F"
+        d="M7 4 L21 16 L7 28"
+        stroke="#19E88F"
+        strokeWidth="4.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <circle cx="16" cy="16" r="1.6" fill="#00897B" />
+      <path
+        d="M17 4 L31 16 L17 28"
+        stroke="#00BFA5"
+        strokeWidth="4.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity="0.6"
+      />
     </svg>
   )
 }
 
 /**
- * Logo + wordmark lockup. Syne 800 with "Spark" in Spark Green.
+ * Logo + wordmark lockup: Syne 800, "Grant" in chalk, "Spark" in
+ * teal-light.
  */
 export function Wordmark({ size = 26 }: { size?: number }) {
   return (
     <span className="inline-flex items-center gap-2.5">
-      <Logo size={size} />
+      <Logo size={size * 0.78} />
       <span
-        className="font-display tracking-tightest text-text"
-        style={{ fontSize: Math.max(16, size * 0.66) }}
+        className="font-display tracking-[-0.02em] text-chalk"
+        style={{ fontSize: Math.max(15, size * 0.7) }}
       >
-        Grant<span className="text-spark">Spark</span>
+        Grant<span className="text-teal-light">Spark</span>
       </span>
     </span>
   )
