@@ -206,7 +206,7 @@ export default async function GrantPage({ params }: RouteParams) {
           )}
 
           {/* End CTA */}
-          <div className="mt-12 border border-white/[0.08] bg-midnight-2 p-8 text-center">
+          <div className="mt-12 border border-rule bg-midnight-2 p-8 text-center">
             <h2 className="font-display text-[22px] tracking-[-0.02em] text-chalk">Know before you apply.</h2>
             <p className="mx-auto mt-2 max-w-md font-body text-[14px] text-slate">
               We score every open UK grant against your profile and tell you honestly

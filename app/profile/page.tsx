@@ -86,26 +86,26 @@ function getStages(orgType: string) {
 }
 
 const inputCls =
-  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
+  'w-full rounded border border-rule bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
 const labelCls = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-slate'
 
 const selectedPillCls =
   'rounded border border-teal bg-teal/[0.12] px-3 py-2 font-body text-[13px] font-medium text-teal-light'
 const unselectedPillCls =
-  'rounded border border-white/[0.1] bg-midnight px-3 py-2 font-body text-[13px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
+  'rounded border border-rule bg-midnight px-3 py-2 font-body text-[13px] font-medium text-slate transition-colors hover:border-forest/40 hover:text-chalk'
 
 const selectedRowCls =
   'w-full rounded border border-teal bg-teal/[0.12] px-4 py-3 text-left font-body text-[14px] font-medium text-teal-light'
 const unselectedRowCls =
-  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 text-left font-body text-[14px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
+  'w-full rounded border border-rule bg-midnight px-4 py-3 text-left font-body text-[14px] font-medium text-slate transition-colors hover:border-forest/40 hover:text-chalk'
 
 const selectedToggleCls =
   'flex-1 rounded border border-teal bg-teal/[0.12] py-3 font-body text-[14px] font-semibold text-teal-light'
 const unselectedToggleCls =
-  'flex-1 rounded border border-white/[0.1] bg-midnight py-3 font-body text-[14px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
+  'flex-1 rounded border border-rule bg-midnight py-3 font-body text-[14px] font-medium text-slate transition-colors hover:border-forest/40 hover:text-chalk'
 
 const selectedCardCls = 'rounded border border-teal bg-teal/[0.12] p-4 text-left'
-const unselectedCardCls = 'rounded border border-white/[0.1] bg-midnight p-4 text-left transition-colors hover:border-white/[0.25]'
+const unselectedCardCls = 'rounded border border-rule bg-midnight p-4 text-left transition-colors hover:border-forest/40'
 
 // Alert preferences (Block 10) — opt out of grant alerts and briefings.
 function AlertToggle() {
@@ -118,7 +118,7 @@ function AlertToggle() {
   }, [])
   if (optOut === null) return null
   return (
-    <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+    <div className="rounded-lg border border-rule bg-midnight-2 p-7">
       <h2 className="mb-3 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Email alerts</h2>
       <label className="flex cursor-pointer items-center gap-3">
         <input
@@ -244,7 +244,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-midnight-3">
-      <nav className="sticky top-0 z-20 border-b border-white/[0.06] bg-midnight-3/85 backdrop-blur-lg">
+      <nav className="sticky top-0 z-20 border-b border-rule bg-paper/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
           <Link href="/dashboard" aria-label="GrantSpark — dashboard">
             <Wordmark size={24} />
@@ -266,7 +266,7 @@ export default function ProfilePage() {
 
         <div className="space-y-6">
 
-          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+          <div className="rounded-lg border border-rule bg-midnight-2 p-7">
             <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Organisation type</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               {ORG_TYPES.map((t) => (
@@ -288,7 +288,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+          <div className="rounded-lg border border-rule bg-midnight-2 p-7">
             <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">About your organisation</h2>
             <div className="space-y-5">
               <div>
@@ -332,7 +332,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+          <div className="rounded-lg border border-rule bg-midnight-2 p-7">
             <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Stage and size</h2>
             <div className="space-y-5">
               <div>
@@ -367,7 +367,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+          <div className="rounded-lg border border-rule bg-midnight-2 p-7">
             <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Location</h2>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -394,7 +394,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+          <div className="rounded-lg border border-rule bg-midnight-2 p-7">
             <h2 className="mb-1 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">
               {isCharity ? 'Cause areas and activities' : 'Sectors and focus'}
             </h2>
@@ -417,7 +417,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-7">
+          <div className="rounded-lg border border-rule bg-midnight-2 p-7">
             <h2 className="mb-5 inline-block border-b-2 border-teal pb-2 font-display text-[17px] tracking-[-0.01em] text-chalk">Funding preferences</h2>
             <div className="space-y-4">
               {!isCharity && (
@@ -478,7 +478,7 @@ export default function ProfilePage() {
               type="button"
               onClick={() => handleSave(false)}
               disabled={saving}
-              className="flex-1 rounded border border-white/[0.12] py-3.5 font-body text-[14px] font-semibold text-chalk transition-all duration-200 hover:border-white/[0.25] disabled:opacity-50"
+              className="flex-1 rounded border border-rule py-3.5 font-body text-[14px] font-semibold text-chalk transition-all duration-200 hover:border-forest/40 disabled:opacity-50"
             >
               {saving ? 'Saving…' : saved ? '✓ Saved' : 'Save changes'}
             </button>

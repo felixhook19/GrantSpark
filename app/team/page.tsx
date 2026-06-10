@@ -91,7 +91,7 @@ export default function TeamPage() {
 
   return (
     <div className="min-h-screen bg-midnight-3">
-      <nav className="sticky top-0 z-20 border-b border-white/[0.06] bg-midnight-3/85 backdrop-blur-lg">
+      <nav className="sticky top-0 z-20 border-b border-rule bg-paper/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
           <Link href="/dashboard" aria-label="GrantSpark — dashboard"><Wordmark size={24} /></Link>
           <Link href="/dashboard" className="font-body text-[13px] font-medium text-slate hover:text-chalk">
@@ -115,7 +115,7 @@ export default function TeamPage() {
 
         <div className="mt-8 space-y-3">
           {members.map((m) => (
-            <div key={m.id} className="flex items-center justify-between rounded-lg border border-white/[0.07] bg-midnight-2 p-4">
+            <div key={m.id} className="flex items-center justify-between rounded-lg border border-rule bg-midnight-2 p-4">
               <div>
                 <p className="font-body text-[14px] font-semibold text-chalk">{m.email || '—'}</p>
                 <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.1em] text-slate">
@@ -132,7 +132,7 @@ export default function TeamPage() {
         </div>
 
         {isOwner && (
-          <div className="mt-8 rounded-lg border border-white/[0.08] bg-midnight-2 p-6">
+          <div className="mt-8 rounded-lg border border-rule bg-midnight-2 p-6">
             <h2 className="font-display text-[17px] tracking-[-0.01em] text-chalk">Invite a teammate</h2>
             <div className="mt-4 flex gap-3">
               <input
@@ -140,7 +140,7 @@ export default function TeamPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="colleague@yourorganisation.org"
-                className="flex-1 rounded border border-white/[0.1] bg-midnight px-4 py-2.5 font-body text-[14px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none"
+                className="flex-1 rounded border border-rule bg-midnight px-4 py-2.5 font-body text-[14px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none"
               />
               <button
                 onClick={invite}
@@ -161,7 +161,7 @@ export default function TeamPage() {
           </div>
         )}
 
-        <div className="mt-8 rounded-lg border border-white/[0.08] bg-midnight-2 p-6">
+        <div className="mt-8 rounded-lg border border-rule bg-midnight-2 p-6">
           <h2 className="font-display text-[17px] tracking-[-0.01em] text-chalk">Deadline calendar</h2>
           <p className="mt-2 font-body text-[13px] text-slate">
             Subscribe in Google or Apple Calendar — every funder and internal deadline
@@ -170,19 +170,19 @@ export default function TeamPage() {
           {calUrl ? (
             <p className="mt-3 break-all font-mono text-[11px] text-teal-light">{calUrl}</p>
           ) : (
-            <button onClick={getCalendar} className="mt-3 rounded border border-white/[0.12] px-4 py-2 font-body text-[13px] font-semibold text-chalk hover:border-teal hover:text-teal-light">
+            <button onClick={getCalendar} className="mt-3 rounded border border-rule px-4 py-2 font-body text-[13px] font-semibold text-chalk hover:border-teal hover:text-teal-light">
               Get my calendar link
             </button>
           )}
         </div>
 
-        <div className="mt-8 rounded-lg border border-white/[0.08] bg-midnight-2 p-6">
+        <div className="mt-8 rounded-lg border border-rule bg-midnight-2 p-6">
           <h2 className="font-display text-[17px] tracking-[-0.01em] text-chalk">Board report</h2>
           <p className="mt-2 font-body text-[13px] text-slate">
             A printable funding report for trustees: pipeline, awarded totals, top
             matches and the next 60 days of deadlines.
           </p>
-          <Link href="/report" className="mt-3 inline-flex rounded border border-white/[0.12] px-4 py-2 font-body text-[13px] font-semibold text-chalk hover:border-teal hover:text-teal-light">
+          <Link href="/report" className="mt-3 inline-flex rounded border border-rule px-4 py-2 font-body text-[13px] font-semibold text-chalk hover:border-teal hover:text-teal-light">
             Open the report →
           </Link>
         </div>

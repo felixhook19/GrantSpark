@@ -6,7 +6,7 @@ const colLink = 'font-body text-[13px] text-slate transition-colors hover:text-c
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-white/[0.06] bg-midnight-3">
+    <footer className="border-t border-rule bg-paper-4">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="grid gap-12 md:grid-cols-5">
           <div className="md:col-span-2">
@@ -51,11 +51,11 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col gap-3 border-t border-white/[0.06] pt-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-3 border-t border-rule pt-6 sm:flex-row sm:items-center sm:justify-between">
           <p className="font-body text-[12px] text-muted">
             © {new Date().getFullYear()} Grant Finder Ltd, trading as GrantSpark.
           </p>
-          <p className="font-display text-[15px] tracking-[-0.02em] text-teal-light">
+          <p className="font-display text-[15px] tracking-[-0.02em] text-forest">
             Funding found.
           </p>
         </div>

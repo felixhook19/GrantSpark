@@ -54,7 +54,7 @@ export default async function GrantsIndexPage() {
   return (
     <div className="min-h-screen bg-midnight-3">
       <SiteNav />
-      <section className="border-b border-white/[0.06] bg-midnight-4 px-6 py-20">
+      <section className="border-b border-rule bg-midnight-4 px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
             // {grants.length} open grants, refreshed from source
@@ -76,7 +76,7 @@ export default async function GrantsIndexPage() {
               <h2 className="font-display text-[20px] uppercase tracking-[-0.02em] text-chalk">
                 {sector} <span className="font-mono text-[12px] normal-case text-muted">({rows.length})</span>
               </h2>
-              <div className="mt-5 grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-2 lg:grid-cols-3">
+              <div className="mt-5 grid gap-px overflow-hidden border border-rule bg-rule md:grid-cols-2 lg:grid-cols-3">
                 {rows.map((g) => {
                   const conf = confidenceLabel(g.last_verified_at)
                   return (

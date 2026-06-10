@@ -224,7 +224,7 @@ export default function PrivacyPage() {
               {' '}for any privacy question, data subject request or concern.
             </p>
 
-            <p className="border-t border-white/5 pt-6 text-sm text-slate">
+            <p className="border-t border-rule pt-6 text-sm text-slate">
               See also our{' '}
               <Link href="/terms" className="text-spark hover:underline">Terms of Service</Link>,{' '}
               <Link href="/cookies" className="text-spark hover:underline">Cookie Policy</Link>{' '}

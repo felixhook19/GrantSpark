@@ -58,7 +58,7 @@ export default async function BlogIndexPage() {
     <div className="min-h-screen bg-midnight-3">
       <SiteNav />
 
-      <section className="border-b border-white/[0.06] bg-midnight-4 px-6 py-20">
+      <section className="border-b border-rule bg-midnight-4 px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
             // Insights, guides &amp; funder analysis
@@ -76,11 +76,11 @@ export default async function BlogIndexPage() {
       <section className="px-6 py-16">
         <div className="mx-auto max-w-6xl">
           {list.length === 0 ? (
-            <div className="border border-white/[0.06] bg-midnight-2 py-20 text-center">
+            <div className="border border-rule bg-midnight-2 py-20 text-center">
               <p className="font-body text-slate">No articles published yet. Check back soon.</p>
             </div>
           ) : (
-            <div className="grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-px overflow-hidden border border-rule bg-rule md:grid-cols-2 lg:grid-cols-3">
               {list.map((post: BlogPost) => (
                 <Link
                   key={post.slug}
@@ -103,7 +103,7 @@ export default async function BlogIndexPage() {
                       {formatDate(post.published_at)}
                       {post.read_minutes ? ` · ${post.read_minutes} min` : ''}
                     </span>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] text-slate transition-all group-hover:border-teal group-hover:bg-teal group-hover:text-white">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-rule text-slate transition-all group-hover:border-teal group-hover:bg-teal group-hover:text-white">
                       →
                     </span>
                   </div>

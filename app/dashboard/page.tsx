@@ -59,7 +59,7 @@ const ELIGIBILITY_STYLES: Record<string, { border: string; text: string; label: 
   maybe: { border: 'border-gold', text: 'text-gold', label: 'Maybe — one requirement needs checking' },
 }
 
-const chipCls = 'rounded-sm bg-white/[0.06] px-2 py-1 font-mono text-[10px] text-slate'
+const chipCls = 'rounded-sm bg-rule px-2 py-1 font-mono text-[10px] text-slate'
 
 function GrantCard({
   match,
@@ -211,7 +211,7 @@ function GrantCard({
   const geoText = g.geography && g.geography.length > 0 ? g.geography[0] : null
 
   return (
-    <article className="rounded-lg border border-white/[0.07] bg-midnight-2 p-5 transition-colors duration-300 hover:border-white/[0.14]">
+    <article className="rounded-lg border border-rule bg-midnight-2 p-5 transition-colors duration-300 hover:border-rule">
       <div className="flex items-start gap-5">
         {/* Score Ring — the hero element of every match card */}
         <ScoreRing score={match.fit_score} size={64} />
@@ -261,7 +261,7 @@ function GrantCard({
         <p className="mt-4 font-body text-[13px] leading-[1.65] text-slate">{g.summary}</p>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-rule pt-4">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
           <button
             onClick={() => setOpen(!open)}
@@ -318,7 +318,7 @@ function GrantCard({
       </div>
 
       {open && (
-        <div className="fade-up mt-4 space-y-5 border-t border-white/[0.06] pt-5">
+        <div className="fade-up mt-4 space-y-5 border-t border-rule pt-5">
           {/* Factor breakdown — why the score is the score (Block 3). */}
           {match.factors && match.factors.length > 0 && (
             <div>
@@ -391,7 +391,7 @@ function GrantCard({
       )}
 
       {showDrafts && (
-        <div className="fade-up mt-4 space-y-4 border-t border-white/[0.06] pt-4">
+        <div className="fade-up mt-4 space-y-4 border-t border-rule pt-4">
           <div className="flex items-center justify-between">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate">
               // Application assistant
@@ -400,7 +400,7 @@ function GrantCard({
           </div>
 
           {drafting && (
-            <div className="flex items-center gap-3 rounded border border-white/[0.08] bg-midnight px-4 py-3 font-body text-[13px] text-slate">
+            <div className="flex items-center gap-3 rounded border border-rule bg-midnight px-4 py-3 font-body text-[13px] text-slate">
               <span className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-teal border-t-transparent" />
               Drafting answers from your profile and this grant&apos;s criteria…
             </div>
@@ -422,12 +422,12 @@ function GrantCard({
 
           {drafts &&
             drafts.map((d, i) => (
-              <div key={i} className="rounded border border-white/[0.08] bg-midnight p-4">
+              <div key={i} className="rounded border border-rule bg-midnight p-4">
                 <div className="flex items-start justify-between gap-3">
                   <p className="font-body text-[13px] font-semibold text-chalk">{d.question}</p>
                   <button
                     onClick={() => copyDraft(d.draft_answer, i)}
-                    className="flex-shrink-0 rounded border border-white/[0.1] px-2.5 py-1 font-mono text-[10px] font-medium text-slate transition-colors hover:border-teal hover:text-teal-light"
+                    className="flex-shrink-0 rounded border border-rule px-2.5 py-1 font-mono text-[10px] font-medium text-slate transition-colors hover:border-teal hover:text-teal-light"
                   >
                     {copiedIdx === i ? 'Copied ✓' : 'Copy'}
                   </button>
@@ -436,7 +436,7 @@ function GrantCard({
                   {d.draft_answer}
                 </p>
                 {d.tips.length > 0 && (
-                  <ul className="mt-3 space-y-1 border-t border-white/[0.06] pt-3">
+                  <ul className="mt-3 space-y-1 border-t border-rule pt-3">
                     {d.tips.map((t, j) => (
                       <li key={j} className="flex gap-2 font-body text-[12px] text-slate">
                         <span className="flex-shrink-0 font-mono font-semibold text-gold">Tip:</span>
@@ -451,12 +451,12 @@ function GrantCard({
       )}
 
       {showCheck && (
-        <div className="fade-up mt-4 border-t border-white/[0.06] pt-4">
+        <div className="fade-up mt-4 border-t border-rule pt-4">
           <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate">
             // Eligibility pre-screener
           </p>
           {checking && (
-            <div className="mt-3 flex items-center gap-3 rounded border border-white/[0.08] bg-midnight px-4 py-3 font-body text-[13px] text-slate">
+            <div className="mt-3 flex items-center gap-3 rounded border border-rule bg-midnight px-4 py-3 font-body text-[13px] text-slate">
               <span className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-teal border-t-transparent" />
               Checking your profile against this grant&apos;s stated criteria…
             </div>
@@ -494,7 +494,7 @@ function GrantCard({
       )}
 
       {showOutline && (
-        <div className="fade-up mt-4 border-t border-white/[0.06] pt-4">
+        <div className="fade-up mt-4 border-t border-rule pt-4">
           <div className="flex items-center justify-between">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate">
               // Application outline
@@ -502,14 +502,14 @@ function GrantCard({
             {outline && (
               <button
                 onClick={copyOutline}
-                className="rounded border border-white/[0.1] px-2.5 py-1 font-mono text-[10px] font-medium text-slate transition-colors hover:border-teal hover:text-teal-light"
+                className="rounded border border-rule px-2.5 py-1 font-mono text-[10px] font-medium text-slate transition-colors hover:border-teal hover:text-teal-light"
               >
                 {outlineCopied ? 'Copied ✓' : 'Copy outline'}
               </button>
             )}
           </div>
           {outlining && (
-            <div className="mt-3 flex items-center gap-3 rounded border border-white/[0.08] bg-midnight px-4 py-3 font-body text-[13px] text-slate">
+            <div className="mt-3 flex items-center gap-3 rounded border border-rule bg-midnight px-4 py-3 font-body text-[13px] text-slate">
               <span className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-teal border-t-transparent" />
               Building a funder-specific outline from this grant&apos;s guidance…
             </div>
@@ -525,7 +525,7 @@ function GrantCard({
             </p>
           )}
           {outline && (
-            <pre className="mt-3 whitespace-pre-wrap rounded border border-white/[0.08] bg-midnight p-4 font-body text-[13px] leading-[1.65] text-slate">
+            <pre className="mt-3 whitespace-pre-wrap rounded border border-rule bg-midnight p-4 font-body text-[13px] leading-[1.65] text-slate">
               {outline}
             </pre>
           )}
@@ -545,12 +545,12 @@ function formatCountdown(seconds: number): string {
 type OrgSummary = { id: string; org_name: string }
 
 const sideLinkCls =
-  'block rounded px-3 py-2 font-body text-[13px] font-medium text-slate transition-colors hover:bg-white/[0.04] hover:text-chalk'
+  'block rounded px-3 py-2 font-body text-[13px] font-medium text-slate transition-colors hover:bg-paper-2 hover:text-chalk'
 const sideLinkActiveCls =
   'block rounded bg-teal/[0.12] px-3 py-2 font-body text-[13px] font-semibold text-teal-light'
 
 const inputCls =
-  'w-full rounded border border-white/[0.08] bg-midnight-2 px-3 py-2.5 font-body text-[13px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
+  'w-full rounded border border-rule bg-midnight-2 px-3 py-2.5 font-body text-[13px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
 
 function DashboardInner() {
   const router = useRouter()
@@ -803,7 +803,7 @@ function DashboardInner() {
       value={activeOrgId}
       onChange={(e) => handleOrgSwitch(e.target.value)}
       aria-label="Switch organisation"
-      className="w-full rounded border border-white/[0.1] bg-midnight px-3 py-2 font-body text-[13px] font-medium text-chalk focus:border-teal focus:outline-none"
+      className="w-full rounded border border-rule bg-midnight px-3 py-2 font-body text-[13px] font-medium text-chalk focus:border-teal focus:outline-none"
     >
       {orgList.map((o) => (
         <option key={o.id} value={o.id}>
@@ -817,7 +817,7 @@ function DashboardInner() {
   return (
     <div className="min-h-screen bg-midnight-3">
       {/* Sidebar (desktop) */}
-      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[240px] flex-col border-r border-white/[0.06] bg-midnight-2 lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-[240px] flex-col border-r border-rule bg-paper-2 lg:flex">
         <div className="px-5 py-6">
           <Link href="/" aria-label="GrantSpark — home">
             <Wordmark size={24} />
@@ -835,7 +835,7 @@ function DashboardInner() {
           <Link href="/billing" className={sideLinkCls}>Billing</Link>
           <Link href="/blog" className={sideLinkCls}>Grant Intelligence</Link>
         </nav>
-        <div className="space-y-3 border-t border-white/[0.06] px-5 py-5">
+        <div className="space-y-3 border-t border-rule px-5 py-5">
           {orgSwitcher || (
             org && (
               <p className="truncate font-mono text-[10px] uppercase tracking-[0.1em] text-slate">
@@ -853,7 +853,7 @@ function DashboardInner() {
       </aside>
 
       {/* Top bar (mobile) */}
-      <nav className="sticky top-0 z-20 border-b border-white/[0.06] bg-midnight-3/85 backdrop-blur-lg lg:hidden">
+      <nav className="sticky top-0 z-20 border-b border-rule bg-paper/90 backdrop-blur-md lg:hidden">
         <div className="flex h-14 items-center justify-between gap-3 px-4">
           <Link href="/" aria-label="GrantSpark — home" className="flex-shrink-0">
             <Wordmark size={22} />
@@ -882,6 +882,7 @@ function DashboardInner() {
               <h1 className="mt-2 font-display text-[clamp(28px,3.5vw,40px)] uppercase leading-[0.98] tracking-[-0.04em] text-chalk">
                 {matching ? 'Finding your matches…' : `${matches.length} grants found`}
               </h1>
+              <span className="mt-2 block h-0.5 w-10 bg-forest" />
               <p className="mt-2 font-body text-[13px] text-slate">
                 AI-matched and scored against your profile
               </p>
@@ -926,7 +927,7 @@ function DashboardInner() {
 
           {/* Stats */}
           {!matching && matches.length > 0 && (
-            <div className="mb-6 grid grid-cols-3 gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06]">
+            <div className="mb-6 grid grid-cols-3 gap-px overflow-hidden border border-rule bg-rule">
               <div className="bg-midnight-2 p-5">
                 <p className="tabular font-mono text-[26px] font-semibold text-spark">{applyCount}</p>
                 <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-slate">Ready to apply</p>
@@ -961,7 +962,7 @@ function DashboardInner() {
                   className={
                     showFilters
                       ? 'rounded border border-teal bg-teal/[0.12] px-4 py-3 font-body text-[13px] font-semibold text-teal-light'
-                      : 'rounded border border-white/[0.08] bg-midnight-2 px-4 py-3 font-body text-[13px] font-medium text-slate transition-colors hover:border-white/[0.2] hover:text-chalk'
+                      : 'rounded border border-rule bg-midnight-2 px-4 py-3 font-body text-[13px] font-medium text-slate transition-colors hover:border-forest/40 hover:text-chalk'
                   }
                 >
                   Filters {hasActiveFilters ? '●' : ''}
@@ -969,7 +970,7 @@ function DashboardInner() {
               </div>
 
               {showFilters && (
-                <div className="fade-up rounded-lg border border-white/[0.08] bg-midnight-2 p-5">
+                <div className="fade-up rounded-lg border border-rule bg-midnight-2 p-5">
                   <div className="grid gap-5 sm:grid-cols-3">
                     <div>
                       <label className="mb-2 block font-mono text-[10px] uppercase tracking-[0.12em] text-slate">
@@ -1025,7 +1026,7 @@ function DashboardInner() {
           )}
 
           {matching && (
-            <div className="rounded-lg border border-white/[0.07] bg-midnight-2 px-6 py-20 text-center">
+            <div className="rounded-lg border border-rule bg-midnight-2 px-6 py-20 text-center">
               <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-2 border-teal border-t-transparent" />
               <h2 className="font-display text-[20px] tracking-[-0.01em] text-chalk">Scanning grants for you</h2>
               <p className="mx-auto mt-3 max-w-md font-body text-[14px] leading-[1.65] text-slate">
@@ -1054,7 +1055,7 @@ function DashboardInner() {
           )}
 
           {!matching && matches.length > 0 && visible.length === 0 && (
-            <div className="rounded-lg border border-white/[0.07] bg-midnight-2 py-16 text-center">
+            <div className="rounded-lg border border-rule bg-midnight-2 py-16 text-center">
               <h2 className="font-display text-[20px] tracking-[-0.01em] text-chalk">No grants match your filters</h2>
               <p className="mt-2 font-body text-[13px] text-slate">Try broadening your search or clearing the filters.</p>
               <button
@@ -1067,7 +1068,7 @@ function DashboardInner() {
           )}
 
           {!matching && matches.length === 0 && (
-            <div className="rounded-lg border border-white/[0.07] bg-midnight-2 py-20 text-center">
+            <div className="rounded-lg border border-rule bg-midnight-2 py-20 text-center">
               <h2 className="font-display text-[20px] tracking-[-0.01em] text-chalk">No matches yet</h2>
               <p className="mt-2 font-body text-[13px] text-slate">
                 Run the matching engine to scan every grant against your profile.
@@ -1083,7 +1084,7 @@ function DashboardInner() {
           )}
 
           {!matching && matches.length > 0 && (
-            <div className="mt-8 rounded-lg border border-white/[0.07] bg-midnight-2 p-6 text-center">
+            <div className="mt-8 rounded-lg border border-rule bg-midnight-2 p-6 text-center">
               <p className="font-body text-[13px] text-slate">
                 Want better matches?{' '}
                 <Link href="/profile" className="font-medium text-teal-light hover:text-spark">

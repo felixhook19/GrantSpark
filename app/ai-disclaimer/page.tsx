@@ -166,7 +166,7 @@ export default function AiDisclaimerPage() {
               . We use these reports to improve the matching engine.
             </p>
 
-            <p className="border-t border-white/5 pt-6 text-sm text-slate">
+            <p className="border-t border-rule pt-6 text-sm text-slate">
               See also our{' '}
               <Link href="/terms" className="text-spark hover:underline">Terms of Service</Link>,{' '}
               <Link href="/privacy" className="text-spark hover:underline">Privacy Policy</Link>{' '}

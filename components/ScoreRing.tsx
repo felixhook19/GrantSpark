@@ -1,23 +1,22 @@
 /**
- * ScoreRing — the brand graphic device.
+ * ScoreRing — the brand graphic device ("Paper & Ink", light mode).
  *
- * SVG progress ring whose arc shifts rose (low) → gold (mid) → spark
- * green (high). spark is reserved for exactly this kind of score
- * display. Pure SVG + CSS (no hooks), so it renders in both server and
- * client components; the fill animates on mount via the .ring-animate
- * keyframes in globals.css (reduced-motion aware).
+ * SVG progress ring: green (high) / amber (mid) / red (low) on a rule-
+ * coloured track. Pure SVG + CSS (no hooks) so it renders in server and
+ * client components; fill animates on mount via .ring-animate
+ * (reduced-motion aware).
  *
- * Bands: >=70 spark · 45-69 gold · <45 rose.
+ * Bands: >=70 score-hi · 45-69 score-mid · <45 score-lo.
  */
 export function bandColour(score: number): { hex: string; text: string; label: string } {
-  if (score >= 70) return { hex: '#19E88F', text: 'text-spark', label: 'Strong fit' }
-  if (score >= 45) return { hex: '#D4A017', text: 'text-gold', label: 'Possible fit' }
-  return { hex: '#C62828', text: 'text-rose', label: 'Poor fit' }
+  if (score >= 70) return { hex: '#16A34A', text: 'text-score-hi', label: 'Strong fit' }
+  if (score >= 45) return { hex: '#B45309', text: 'text-score-mid', label: 'Possible fit' }
+  return { hex: '#DC2626', text: 'text-score-lo', label: 'Poor fit' }
 }
 
 export function ScoreRing({
   score,
-  size = 48,
+  size = 56,
   showLabel = false,
 }: {
   score: number
@@ -44,7 +43,7 @@ export function ScoreRing({
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="rgba(255,255,255,0.06)"
+            stroke="#E5E0D8"
             strokeWidth={stroke}
           />
           <circle
@@ -65,7 +64,7 @@ export function ScoreRing({
           />
         </svg>
         <span
-          className={`absolute inset-0 flex items-center justify-center font-mono font-semibold leading-none ${band.text}`}
+          className={`absolute inset-0 flex items-center justify-center font-mono font-bold leading-none ${band.text}`}
           style={{ fontSize: fontPx }}
         >
           {safe}
