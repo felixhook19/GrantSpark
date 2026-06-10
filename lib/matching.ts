@@ -15,8 +15,9 @@
 import type { Grant, Org } from '@/types/db'
 
 // Number of top-ranked grants to send to the AI per match run.
-// Tunable via env (RATE_LIMIT / AI cost trade-off).
-export const TOP_N_FOR_AI = Number(process.env.MATCH_TOP_N_FOR_AI || '25')
+// Tunable via env (RATE_LIMIT / AI cost trade-off). 20 keeps the AI call
+// comfortably inside Vercel's 60s function ceiling on the Hobby plan.
+export const TOP_N_FOR_AI = Number(process.env.MATCH_TOP_N_FOR_AI || '20')
 
 // Weights in the final score blend. Must sum to 1.0.
 export const RULE_WEIGHT = 0.6

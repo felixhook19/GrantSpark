@@ -159,16 +159,18 @@ export async function POST() {
     `Match funding available: ${org.has_match_funding ? 'yes' : 'no'}`,
   ].join('\n')
 
-  // Full eligibility text, no truncation -- this is the whole point of
-  // pre-filtering down to top N: each surviving grant gets the full context.
+  // Eligibility text capped per grant: structured sources store up to
+  // 3,000-char descriptions, and 25 untruncated grants pushed the prompt
+  // past what completes inside Vercel's 60s function ceiling (504s in
+  // production). 900 chars is ample signal for scoring.
   const grantsText = ranked
     .map(({ grant: g, rule_score }, i) =>
       [
         `GRANT ${i + 1} id:${g.id} rule_score:${rule_score}`,
         `Title: ${g.title}`,
         `Funder: ${g.funder || 'unknown'}`,
-        `Summary: ${g.summary || ''}`,
-        `Eligibility: ${g.eligibility_summary || g.description || ''}`,
+        `Summary: ${truncate(g.summary, 300)}`,
+        `Eligibility: ${truncate(g.eligibility_summary || g.description, 900)}`,
         `Sectors: ${(g.sector_tags || []).join(', ')}`,
         `Audience: ${(g.audience || []).join(', ')}`,
         `Amount: GBP ${g.grant_amount_min ?? '?'} - ${g.grant_amount_max ?? '?'}`,
