@@ -19,6 +19,9 @@ import {
   dtDdPairs,
   findPair,
   deriveStatus,
+  mainContent,
+  extractParagraphs,
+  labelledValue,
 } from './structured'
 
 const DETAIL_BASE = 'https://www.find-government-grants.service.gov.uk'
@@ -68,27 +71,32 @@ function parseDetail(html: string, entry: StructuredGrant): StructuredGrant {
     if (title.length >= 8) out.title = title
   }
 
+  // Live pages render key facts both as summary lists and as labelled
+  // headings — try <dt>/<dd> first, fall back to "Label: value" text.
   const pairs = dtDdPairs(html)
   const funder = findPair(pairs, 'funding organisation', 'funder')
   if (funder) out.funder = stripTags(funder)
 
-  const opening = findPair(pairs, 'opening date', 'opens')
+  const opening =
+    findPair(pairs, 'opening date', 'opens') || labelledValue(html, 'Opening date')
   out.open_date = parseUkDate(opening) ?? out.open_date
-  const closing = findPair(pairs, 'closing date', 'closes')
+  const closing =
+    findPair(pairs, 'closing date', 'closes') || labelledValue(html, 'Closing date')
   out.deadline = parseUkDate(closing) ?? out.deadline
 
   const amountText =
     findPair(pairs, 'how much you can get', 'grant scheme size', 'award') ||
-    html.match(/£[\s\S]{0,80}/)?.[0] ||
+    labelledValue(html, 'How much you can get') ||
+    labelledValue(html, 'Maximum') ||
+    mainContent(html).match(/£[\s\S]{0,80}/)?.[0] ||
     ''
   const { min, max } = parseAmounts(amountText)
   out.grant_amount_min = min
   out.grant_amount_max = max
 
-  // First substantial paragraphs become the summary/description.
-  const paragraphs = [...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
-    .map((p) => stripTags(p[1]))
-    .filter((t) => t.length > 60)
+  // First substantial paragraphs of the content region (cookie banner
+  // and nav excluded) become the summary/description.
+  const paragraphs = extractParagraphs(html)
   if (paragraphs.length > 0) {
     out.summary = paragraphs[0].slice(0, 500)
     out.description = paragraphs.slice(0, 4).join('\n\n').slice(0, 3000)
