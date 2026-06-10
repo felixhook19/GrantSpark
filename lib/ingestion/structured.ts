@@ -61,10 +61,13 @@ export function decodeEntities(text: string): string {
 // "25 July 2026", "25/07/2026", ISO datetimes → "YYYY-MM-DD" (or null).
 export function parseUkDate(raw: string | null | undefined): string | null {
   if (!raw) return null
-  const text = stripTags(raw).trim()
 
-  const iso = text.match(/(\d{4})-(\d{2})-(\d{2})/)
+  // Check the raw input first: <time datetime="2026-09-24T..."> carries
+  // the ISO date in an attribute that stripTags would discard.
+  const iso = raw.match(/(\d{4})-(\d{2})-(\d{2})/)
   if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
+
+  const text = stripTags(raw).trim()
 
   const MONTHS: Record<string, string> = {
     january: '01', february: '02', march: '03', april: '04',
