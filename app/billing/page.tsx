@@ -24,10 +24,9 @@ const PLANS = [
     price: '£0',
     period: 'forever',
     features: [
-      '5 AI match runs per month',
-      'Full grant database access',
-      'Weekly digest email',
-      'Saved grants pipeline',
+      '3 AI match runs per month',
+      'Top 5 matches per run',
+      'Honest eligibility analysis',
     ],
   },
   {
@@ -38,23 +37,24 @@ const PLANS = [
     highlight: true,
     features: [
       'Unlimited AI matching',
-      'Deadline alerts',
-      'AI fit scoring with risks & next steps',
+      'Full ranked match results',
+      'Saved grants pipeline',
+      'Weekly digest & deadline alerts',
       'AI application assistant',
-      'Priority support',
     ],
   },
   {
     id: 'multi',
     name: 'Strategist',
-    price: '£99',
+    price: '£89',
     period: 'per month',
     premium: true,
     features: [
       'Everything in Seeker',
+      'AI eligibility pre-screener',
+      'AI application outlines',
       'Up to 10 organisation profiles',
       'Consultant portfolio view',
-      'Per-organisation match pipelines',
     ],
   },
 ]

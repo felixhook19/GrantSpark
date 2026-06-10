@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrg } from '@/lib/orgs'
+import { getSubscription, effectivePlan, isPaidPlan } from '@/lib/billing'
 import type { Grant, SavedGrant, SavedStatus } from '@/types/db'
 import { SAVED_STATUSES } from '@/types/db'
 
@@ -61,6 +62,20 @@ export async function POST(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
+  // The saved pipeline is a Seeker feature; Scout reads stay allowed so a
+  // downgraded user can still see (but not change) their history.
+  const adminForPlan = createSupabaseAdminClient()
+  const plan = effectivePlan(await getSubscription(adminForPlan, user.id))
+  if (!isPaidPlan(plan)) {
+    return NextResponse.json(
+      {
+        error: 'The saved grants pipeline is a Seeker feature. Upgrade to save grants and track your applications.',
+        code: 'paid_feature',
+      },
+      { status: 402 }
+    )
+  }
 
   const orgId = await getOrgId(user.id)
   if (!orgId) return NextResponse.json({ error: 'No organisation profile' }, { status: 404 })

@@ -14,6 +14,7 @@ import {
   countMatchRunsThisMonth,
   recordMatchRun,
   FREE_MONTHLY_MATCH_RUNS,
+  SCOUT_RESULT_LIMIT,
 } from '@/lib/billing'
 import { getActiveOrg } from '@/lib/orgs'
 import type { Grant, Decision, Match } from '@/types/db'
@@ -277,7 +278,7 @@ Return ONLY a valid JSON array of these objects, no markdown, no explanation, no
   await recordMatchRun(admin, user.id, org.id)
 
   // --- Build response ------------------------------------------------------
-  const enriched: Match[] = rows
+  let enriched: Match[] = rows
     .map((row): Match | null => {
       const candidate = rankedById.get(row.opportunity_id)
       if (!candidate) return null
@@ -292,6 +293,14 @@ Return ONLY a valid JSON array of these objects, no markdown, no explanation, no
     })
     .filter((m): m is Match => m !== null)
     .sort((a, b) => b.fit_score - a.fit_score)
+
+  // Scout tier: full results are persisted (so an upgrade reveals them
+  // instantly) but only the top 5 are returned.
+  let truncated = false
+  if (plan === 'free' && enriched.length > SCOUT_RESULT_LIMIT) {
+    truncated = true
+    enriched = enriched.slice(0, SCOUT_RESULT_LIMIT)
+  }
 
   const headers: Record<string, string> = {
     'X-Match-Version': 'v2',
@@ -310,5 +319,5 @@ Return ONLY a valid JSON array of these objects, no markdown, no explanation, no
     headers['X-RateLimit-Burst-Remaining'] = String(limit.burstRemaining)
   }
 
-  return NextResponse.json({ matches: enriched }, { headers })
+  return NextResponse.json({ matches: enriched, truncated: truncated || undefined, plan }, { headers })
 }

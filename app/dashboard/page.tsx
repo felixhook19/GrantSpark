@@ -29,6 +29,19 @@ type AssistantDraft = {
   tips: string[]
 }
 
+type EligibilityResult = {
+  result: 'pass' | 'fail' | 'maybe'
+  key_requirement: string
+  reason: string
+  action: string
+}
+
+const ELIGIBILITY_STYLES: Record<string, { border: string; text: string; label: string }> = {
+  pass: { border: 'border-spark', text: 'text-spark', label: 'Pass — you meet the stated requirements' },
+  fail: { border: 'border-rose', text: 'text-rose', label: 'Fail — a stated requirement rules you out' },
+  maybe: { border: 'border-gold', text: 'text-gold', label: 'Maybe — one requirement needs checking' },
+}
+
 const chipCls = 'rounded-sm bg-white/[0.06] px-2 py-1 font-mono text-[10px] text-slate'
 
 function GrantCard({
@@ -47,7 +60,79 @@ function GrantCard({
   const [draftError, setDraftError] = useState('')
   const [needsUpgrade, setNeedsUpgrade] = useState(false)
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null)
+  const [checking, setChecking] = useState(false)
+  const [checkResult, setCheckResult] = useState<EligibilityResult | null>(null)
+  const [checkError, setCheckError] = useState('')
+  const [showCheck, setShowCheck] = useState(false)
+  const [outlining, setOutlining] = useState(false)
+  const [outline, setOutline] = useState<string | null>(null)
+  const [outlineError, setOutlineError] = useState('')
+  const [showOutline, setShowOutline] = useState(false)
+  const [outlineCopied, setOutlineCopied] = useState(false)
   const g = match.grant
+
+  async function runEligibilityCheck() {
+    if (checkResult || checking) {
+      setShowCheck(!showCheck)
+      return
+    }
+    setChecking(true)
+    setCheckError('')
+    setShowCheck(true)
+    try {
+      const res = await fetch('/api/eligibility-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunity_id: g.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setCheckError(data.error || 'Eligibility check failed. Please try again.')
+      } else {
+        setCheckResult(data as EligibilityResult)
+      }
+    } catch {
+      setCheckError('Network error. Please try again.')
+    }
+    setChecking(false)
+  }
+
+  async function buildOutline() {
+    if (outline || outlining) {
+      setShowOutline(!showOutline)
+      return
+    }
+    setOutlining(true)
+    setOutlineError('')
+    setShowOutline(true)
+    try {
+      const res = await fetch('/api/application-outline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ opportunity_id: g.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setOutlineError(data.error || 'Could not build the outline. Please try again.')
+      } else {
+        setOutline(data.outline as string)
+      }
+    } catch {
+      setOutlineError('Network error. Please try again.')
+    }
+    setOutlining(false)
+  }
+
+  async function copyOutline() {
+    if (!outline) return
+    try {
+      await navigator.clipboard.writeText(outline)
+      setOutlineCopied(true)
+      setTimeout(() => setOutlineCopied(false), 2000)
+    } catch {
+      // Clipboard unavailable — fail silently.
+    }
+  }
 
   async function toggleAssistant() {
     if (drafts || drafting) {
@@ -179,6 +264,20 @@ function GrantCard({
           >
             {saved ? '✓ Saved to pipeline' : 'Save to pipeline'}
           </button>
+          <button
+            onClick={runEligibilityCheck}
+            disabled={checking}
+            className="font-body text-[13px] font-semibold text-teal-light transition-colors hover:text-chalk disabled:opacity-60"
+          >
+            {checking ? 'Checking…' : checkResult && showCheck ? 'Hide eligibility' : 'Check my eligibility'}
+          </button>
+          <button
+            onClick={buildOutline}
+            disabled={outlining}
+            className="font-body text-[13px] font-semibold text-slate transition-colors hover:text-chalk disabled:opacity-60"
+          >
+            {outlining ? 'Building…' : outline && showOutline ? 'Hide outline' : 'Build application outline'}
+          </button>
         </div>
         {g.url && (
           <a
@@ -302,6 +401,88 @@ function GrantCard({
             ))}
         </div>
       )}
+
+      {showCheck && (
+        <div className="fade-up mt-4 border-t border-white/[0.06] pt-4">
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate">
+            // Eligibility pre-screener
+          </p>
+          {checking && (
+            <div className="mt-3 flex items-center gap-3 rounded border border-white/[0.08] bg-midnight px-4 py-3 font-body text-[13px] text-slate">
+              <span className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+              Checking your profile against this grant&apos;s stated criteria…
+            </div>
+          )}
+          {checkError && (
+            <p className="mt-3 font-mono text-[13px] text-rose">
+              {checkError}{' '}
+              {checkError.includes('Strategist') && (
+                <Link href="/billing" className="font-semibold text-teal-light underline">
+                  Upgrade
+                </Link>
+              )}
+            </p>
+          )}
+          {checkResult && (
+            <div className={`mt-3 border-l-2 ${ELIGIBILITY_STYLES[checkResult.result].border} bg-midnight py-3 pl-4 pr-3`}>
+              <p className={`font-mono text-[12px] font-semibold uppercase tracking-[0.08em] ${ELIGIBILITY_STYLES[checkResult.result].text}`}>
+                {ELIGIBILITY_STYLES[checkResult.result].label}
+              </p>
+              {checkResult.key_requirement && checkResult.key_requirement !== 'overall' && (
+                <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.08em] text-slate">
+                  Requirement: {checkResult.key_requirement}
+                </p>
+              )}
+              <p className="mt-2 font-body text-[13px] leading-[1.6] text-chalk">{checkResult.reason}</p>
+              {checkResult.action && (
+                <p className="mt-2 font-body text-[13px] leading-[1.6] text-slate">
+                  <span className="font-semibold text-teal-light">Next: </span>
+                  {checkResult.action}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {showOutline && (
+        <div className="fade-up mt-4 border-t border-white/[0.06] pt-4">
+          <div className="flex items-center justify-between">
+            <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate">
+              // Application outline
+            </p>
+            {outline && (
+              <button
+                onClick={copyOutline}
+                className="rounded border border-white/[0.1] px-2.5 py-1 font-mono text-[10px] font-medium text-slate transition-colors hover:border-teal hover:text-teal-light"
+              >
+                {outlineCopied ? 'Copied ✓' : 'Copy outline'}
+              </button>
+            )}
+          </div>
+          {outlining && (
+            <div className="mt-3 flex items-center gap-3 rounded border border-white/[0.08] bg-midnight px-4 py-3 font-body text-[13px] text-slate">
+              <span className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-2 border-teal border-t-transparent" />
+              Building a funder-specific outline from this grant&apos;s guidance…
+            </div>
+          )}
+          {outlineError && (
+            <p className="mt-3 font-mono text-[13px] text-rose">
+              {outlineError}{' '}
+              {outlineError.includes('Strategist') && (
+                <Link href="/billing" className="font-semibold text-teal-light underline">
+                  Upgrade
+                </Link>
+              )}
+            </p>
+          )}
+          {outline && (
+            <pre className="mt-3 whitespace-pre-wrap rounded border border-white/[0.08] bg-midnight p-4 font-body text-[13px] leading-[1.65] text-slate">
+              {outline}
+            </pre>
+          )}
+        </div>
+      )}
     </article>
   )
 }
@@ -344,6 +525,7 @@ function DashboardInner() {
   const [maxAmount, setMaxAmount] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set())
+  const [notice, setNotice] = useState('')
 
   useEffect(() => {
     if (retryAt === null) return
@@ -376,6 +558,11 @@ function DashboardInner() {
         setError(data.error || 'Matching failed. Please try again.')
       } else {
         setMatches((data.matches || []) as Match[])
+        setNotice(
+          data.truncated
+            ? 'Scout shows your top 5 matches only. Upgrade to Seeker for the full ranked list.'
+            : ''
+        )
       }
     } catch {
       setError('Network error. Please try again.')
@@ -436,6 +623,9 @@ function DashboardInner() {
         if (!active) return
         if (matchesData.matches && matchesData.matches.length > 0) {
           setMatches(matchesData.matches as Match[])
+          if (matchesData.truncated) {
+            setNotice('Scout shows your top 5 matches only. Upgrade to Seeker for the full ranked list.')
+          }
           setLoading(false)
         } else {
           setLoading(false)
@@ -504,6 +694,11 @@ function DashboardInner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ opportunity_id: opportunityId }),
       })
+      if (res.status === 402) {
+        const data = await res.json()
+        setNotice(data.error || 'The saved grants pipeline is a Seeker feature.')
+        throw new Error('paid feature')
+      }
       if (!res.ok) throw new Error('save failed')
     } catch {
       setSavedIds((prev) => {
@@ -655,6 +850,15 @@ function DashboardInner() {
               )}
             </button>
           </div>
+
+          {notice && (
+            <p className="mb-6 rounded border border-teal/40 bg-teal/[0.08] px-4 py-3 font-body text-[13px] text-chalk">
+              {notice}{' '}
+              <Link href="/billing" className="font-semibold text-teal-light underline">
+                See plans
+              </Link>
+            </p>
+          )}
 
           {error && (
             <p className="mb-6 rounded border border-rose/30 bg-rose/[0.08] px-4 py-3 font-mono text-[13px] text-rose">

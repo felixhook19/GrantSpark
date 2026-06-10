@@ -116,16 +116,18 @@ export default async function HomePage() {
 
   const pricingFeatures = [
     'AI grant matching',
-    'Honest eligibility analysis',
-    'Weekly email digest',
-    'Deadline alerts',
+    'Full ranked match results',
+    'Saved grants pipeline',
+    'Weekly digest & deadline alerts',
     'AI application assistant',
-    'Up to 10 organisation profiles',
+    'AI eligibility pre-screener',
+    'AI application outlines',
+    'Up to 10 org profiles + portfolio',
   ]
   const plans = [
-    { name: 'Scout', price: '£0', per: 'free forever', who: 'For Founder-Directors', included: 3, featured: false, note: '5 AI match runs per month' },
-    { name: 'Seeker', price: '£29', per: '/mo', who: 'For Fundraising Managers', included: 5, featured: true, note: 'Unlimited AI matching' },
-    { name: 'Strategist', price: '£99', per: '/mo', who: 'For Bid Managers & Heads of Fundraising', included: 6, featured: false, note: 'Consultant portfolio view' },
+    { name: 'Scout', price: '£0', per: 'free forever', who: 'For Founder-Directors', included: 1, featured: false, note: '3 AI match runs per month, top 5 results' },
+    { name: 'Seeker', price: '£29', per: '/mo', who: 'For Fundraising Managers', included: 5, featured: true, note: 'Unlimited matching, full workflow' },
+    { name: 'Strategist', price: '£89', per: '/mo', who: 'For Bid Managers & Heads of Fundraising', included: 8, featured: false, note: 'The AI works for you, not just with you' },
   ]
 
   return (

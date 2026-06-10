@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrg } from '@/lib/orgs'
+import { getSubscription, effectivePlan, isPaidPlan } from '@/lib/billing'
 import { SAVED_STATUSES, type SavedStatus } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
@@ -30,6 +31,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+
+  const planAdmin = createSupabaseAdminClient()
+  const plan = effectivePlan(await getSubscription(planAdmin, user.id))
+  if (!isPaidPlan(plan)) {
+    return NextResponse.json(
+      {
+        error: 'The saved grants pipeline is a Seeker feature. Upgrade to track your applications.',
+        code: 'paid_feature',
+      },
+      { status: 402 }
+    )
+  }
 
   const orgId = await getOrgId(user.id)
   if (!orgId) return NextResponse.json({ error: 'No organisation profile' }, { status: 404 })
