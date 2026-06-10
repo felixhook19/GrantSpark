@@ -713,11 +713,12 @@ function DashboardInner() {
           )}
 
           {matching && (
-            <div className="rounded-lg border border-white/[0.07] bg-midnight-2 py-20 text-center">
+            <div className="rounded-lg border border-white/[0.07] bg-midnight-2 px-6 py-20 text-center">
               <div className="mx-auto mb-6 h-14 w-14 animate-spin rounded-full border-2 border-teal border-t-transparent" />
               <h2 className="font-display text-[20px] tracking-[-0.01em] text-chalk">Scanning grants for you</h2>
-              <p className="mt-2 font-body text-[13px] text-slate">
-                Matching every opportunity against your profile and scoring eligibility…
+              <p className="mx-auto mt-3 max-w-md font-body text-[14px] leading-[1.65] text-slate">
+                We are sending your bespoke search, it will take 2-3 minutes — go
+                make a cuppa and we&apos;ll see you soon.
               </p>
             </div>
           )}
