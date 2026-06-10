@@ -68,7 +68,7 @@ export default async function EmbedPage({ params }: RouteParams) {
             href={`/grants/${g.slug}${utm}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="block rounded border border-white/[0.08] bg-midnight-2 p-3 transition-colors hover:border-teal"
+            className="block rounded border border-rule bg-midnight-2 p-3 transition-colors hover:border-teal"
           >
             <p className="font-body text-[14px] font-semibold leading-snug text-chalk">{g.title}</p>
             <p className="mt-1 font-mono text-[10px] text-slate">

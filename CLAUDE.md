@@ -148,36 +148,23 @@ ADMIN_EMAILS                          # optional, comma-separated /admin allowli
 ```
 For local dev, copy .env.example to .env.local (gitignored) and fill in.
 
-## Brand — "Purposeful Intelligence" (June 2026, Type-First Dark rebuild)
+## Brand — "Paper & Ink" (June 2026 — light editorial; replaced Type-First Dark)
 Core (tailwind.config.ts):
 ```
-midnight: '#1A1A2E' (primary bg)  midnight-2: '#16162A' (cards/panels)
-midnight-3: '#0F0F20' (deepest, heroes)  midnight-4: '#12122A' (alt sections)
-teal: '#00897B'  teal-light: '#00BFA5'  ← PRIMARY accent + hover: buttons, links, CTAs
-chalk: '#F5F3F0' ← primary text
-spark: '#19E88F' ← RESERVED: match scores, success states, logo mark ONLY
+paper: '#FAF8F5' (bg)  paper-2: '#F0EDE8'  paper-3: '#EDE9E3'  paper-4: '#E8E4DD'
+forest: '#1B4332' ← PRIMARY accent (buttons/links/CTAs)  forest-light: '#2D6A4F'
+forest-dim: '#E8F5E9'  sienna: '#D4580A' (urgency)  ink: '#1C1917' (text)
+slate: '#6B7280'  dim: '#9CA3AF'  rule: '#E5E0D8' (borders/dividers)
+score-hi '#16A34A' / score-mid '#B45309' / score-lo '#DC2626' (scoring only)
+ALL legacy token names (midnight*/chalk/teal*/spark/gold/rose + the older
+semantic set) are KEPT as aliases onto this palette so unrebuilt pages
+restyle automatically — do not delete them.
 ```
-Accents:
-```
-orange: '#E65100' (urgent CTAs)   gold: '#D4A017' (Consider, risks)
-rose: '#C62828' (Skip, errors)    purple: '#4A148C' (premium tier)
-slate: '#546E7A' (secondary text/labels)   muted: '#3D4E5C' (tertiary)
-ink: '#1E2A3A' (hovers)
-Legacy semantic aliases (background/surface/text/text-secondary/primary/...)
-are KEPT in tailwind.config.ts for pages outside the rebuild (billing,
-portfolio, saved, admin, legal) — do not delete them.
-```
-Typography: Syne 800 (display — ALL-CAPS headlines, tracking -0.04em,
-leading 0.95, never below 36px for section titles), DM Sans 400/500/600
-(body, 16px min, line-height 1.65), JetBrains Mono (ALL scores, amounts,
-deadlines, badges, labels; section eyebrows are mono `// label` in
-teal-light). Fonts load via the Google Fonts @import at the top of
-app/globals.css — NOT next/font.
-Signature touches: fixed 60px grid texture overlay (body::before in
-globals.css), 1px-divided card grids (gap-px bg-white/[0.06]).
-ScoreRing (components/ScoreRing.tsx) is the brand graphic device: arc
-shifts rose (<45) → gold (45-69) → spark (70+). Hero element of match
-cards. (The old MatchRing component was removed.)
+Typography unchanged: Syne 800 ALL-CAPS display (-0.04em), DM Sans body
+(1.7), JetBrains Mono for all data/labels/eyebrows (`// label` in forest).
+Signature touches: short forest accent rule under headings (w-12 h-0.5),
+1px rule-divided card grids, NO textures/overlays/transforms — editorial,
+not flashy. ScoreRing bands 70/45 on a rule-coloured track.
 Copy tone: British English, short sentences. BANNED: "making a difference",
 "empowering communities", "transformative", "seamless".
 Tagline: "Know before you apply." Sign-off: "Funding found."

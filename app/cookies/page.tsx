@@ -35,14 +35,14 @@ export default function CookiesPage() {
             </h2>
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-white/10 text-left text-chalk">
+                <tr className="border-b border-rule text-left text-chalk">
                   <th className="py-3 pr-4 font-semibold">Cookie</th>
                   <th className="py-3 pr-4 font-semibold">Purpose</th>
                   <th className="py-3 font-semibold">Lifetime</th>
                 </tr>
               </thead>
               <tbody className="text-chalk/70">
-                <tr className="border-b border-white/5 align-top">
+                <tr className="border-b border-rule align-top">
                   <td className="py-3 pr-4 font-mono text-xs">sb-*-auth-token</td>
                   <td className="py-3 pr-4">
                     Keeps you signed in across page loads. Set by Supabase, our
@@ -50,7 +50,7 @@ export default function CookiesPage() {
                   </td>
                   <td className="py-3">Up to 1 year, refreshed on use</td>
                 </tr>
-                <tr className="border-b border-white/5 align-top">
+                <tr className="border-b border-rule align-top">
                   <td className="py-3 pr-4 font-mono text-xs">sb-*-auth-token-code-verifier</td>
                   <td className="py-3 pr-4">
                     Used during email-confirmation sign-in to complete the OAuth
@@ -132,7 +132,7 @@ export default function CookiesPage() {
               if you&rsquo;d like clarification.
             </p>
 
-            <p className="border-t border-white/5 pt-6 text-sm text-slate">
+            <p className="border-t border-rule pt-6 text-sm text-slate">
               See also our{' '}
               <Link href="/terms" className="text-spark hover:underline">Terms of Service</Link>,{' '}
               <Link href="/privacy" className="text-spark hover:underline">Privacy Policy</Link>{' '}

@@ -140,7 +140,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
             </p>
           )}
 
-          <div className="mt-8 border-t border-white/[0.08] pt-10">
+          <div className="mt-8 border-t border-rule pt-10">
             <div
               className="blog-content"
               dangerouslySetInnerHTML={{ __html: post.content_html || '' }}
@@ -148,7 +148,7 @@ export default async function BlogPostPage({ params }: RouteParams) {
           </div>
 
           {/* In-article CTA */}
-          <div className="mt-14 border border-white/[0.08] bg-midnight-2 p-9 text-center">
+          <div className="mt-14 border border-rule bg-midnight-2 p-9 text-center">
             <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
               // Put this into practice
             </p>

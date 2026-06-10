@@ -7,7 +7,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Wordmark } from '@/components/Logo'
 
 const inputCls =
-  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
+  'w-full rounded border border-rule bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
 const labelCls = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-slate'
 
 export default function LoginPage() {
@@ -41,7 +41,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-midnight-3 px-6">
       <div className="mx-auto w-full max-w-[400px] pt-[15vh]">
-        <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-10">
+        <div className="rounded-lg border border-rule bg-midnight-2 p-10">
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex" aria-label="GrantSpark — home">
               <Wordmark size={26} />

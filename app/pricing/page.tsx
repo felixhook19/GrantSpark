@@ -59,7 +59,7 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="mt-14 grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-3">
+          <div className="mt-14 grid gap-px overflow-hidden border border-rule bg-rule md:grid-cols-3">
             {PLANS.map((plan) => (
               <div key={plan.name} className={`relative p-8 ${plan.featured ? 'bg-midnight-2' : 'bg-midnight-3'}`}>
                 {plan.featured && (
@@ -86,7 +86,7 @@ export default function PricingPage() {
                     const on = i < plan.included
                     return (
                       <li key={feat} className="flex items-center gap-2.5 font-body text-[13px]">
-                        <span className={on ? 'h-2.5 w-2.5 flex-shrink-0 rounded-full bg-teal' : 'h-2.5 w-2.5 flex-shrink-0 rounded-full border border-white/[0.15]'} />
+                        <span className={on ? 'h-2.5 w-2.5 flex-shrink-0 rounded-full bg-teal' : 'h-2.5 w-2.5 flex-shrink-0 rounded-full border border-rule'} />
                         <span className={on ? 'text-chalk' : 'text-muted'}>{feat}</span>
                       </li>
                     )
@@ -97,7 +97,7 @@ export default function PricingPage() {
                   className={
                     plan.featured
                       ? 'mt-8 block rounded bg-teal py-3 text-center font-body text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light'
-                      : 'mt-8 block rounded border border-white/[0.12] py-3 text-center font-body text-[13px] font-semibold text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light'
+                      : 'mt-8 block rounded border border-rule py-3 text-center font-body text-[13px] font-semibold text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light'
                   }
                 >
                   {plan.cta}

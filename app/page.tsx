@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic'
  */
 
 const eyebrowCls =
-  'font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light'
+  'font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-forest'
 
 async function liveGrantsCount(): Promise<number | null> {
   try {
@@ -138,21 +138,21 @@ export default async function HomePage() {
       <section className="relative flex min-h-screen flex-col justify-center overflow-hidden bg-midnight-3 px-6 py-24">
         {/* Decorative 87% score ring, cropped right */}
         <svg
-          className="pointer-events-none absolute -right-40 top-1/2 -translate-y-1/2 opacity-20"
+          className="pointer-events-none absolute -right-40 top-1/2 -translate-y-1/2 opacity-40"
           width="640"
           height="640"
           viewBox="0 0 640 640"
           aria-hidden="true"
         >
-          <circle cx="320" cy="320" r="280" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="26" />
+          <circle cx="320" cy="320" r="280" fill="none" stroke="#E5E0D8" strokeWidth="26" />
           <circle
-            cx="320" cy="320" r="280" fill="none" stroke="#19E88F" strokeWidth="26"
+            cx="320" cy="320" r="280" fill="none" stroke="#16A34A" strokeWidth="26"
             strokeLinecap="round"
             strokeDasharray={2 * Math.PI * 280}
             strokeDashoffset={2 * Math.PI * 280 * 0.13}
             transform="rotate(-90 320 320)"
           />
-          <text x="320" y="345" textAnchor="middle" fill="#19E88F" fontSize="72" fontFamily="JetBrains Mono, monospace" fontWeight="600">
+          <text x="320" y="345" textAnchor="middle" fill="#16A34A" fontSize="72" fontFamily="JetBrains Mono, monospace" fontWeight="600">
             87
           </text>
         </svg>
@@ -183,7 +183,7 @@ export default async function HomePage() {
             </Link>
             <Link
               href="#how"
-              className="inline-flex items-center justify-center rounded border border-white/[0.12] px-7 py-3.5 font-body text-[15px] font-medium text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light"
+              className="inline-flex items-center justify-center rounded border border-rule px-7 py-3.5 font-body text-[15px] font-medium text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light"
             >
               See how it works →
             </Link>
@@ -192,13 +192,13 @@ export default async function HomePage() {
       </section>
 
       {/* 2. Proof bar */}
-      <section className="border-y border-white/[0.06] bg-midnight-2 px-6 py-8">
+      <section className="border-y border-rule bg-midnight-2 px-6 py-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-y-6">
           {proofStats.map((s, i) => (
             <div key={s.label} className="flex items-center">
               {i > 0 && <div className="mr-8 hidden h-10 w-px bg-white/[0.08] lg:block" />}
               <div className="pr-8">
-                <p className="tabular font-mono text-[22px] font-semibold text-spark">{s.value}</p>
+                <p className="tabular font-mono text-[22px] font-semibold text-forest">{s.value}</p>
                 <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.1em] text-slate">{s.label}</p>
               </div>
             </div>
@@ -214,7 +214,7 @@ export default async function HomePage() {
             Grant research is broken. <span className="text-teal-light">We fixed it.</span>
           </h2>
 
-          <div className="mt-14 grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-3">
+          <div className="mt-14 grid gap-px overflow-hidden border border-rule bg-rule md:grid-cols-3">
             {[
               {
                 label: '01 / Fundraisers',
@@ -232,7 +232,7 @@ export default async function HomePage() {
                 body: 'No fundraising team? Your top three matches, ranked by winnability, with first-draft answers when you are ready to apply.',
               },
             ].map((card) => (
-              <div key={card.label} className="hover-rule bg-midnight-3 p-9">
+              <div key={card.label} className="relative bg-paper p-9 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[3px] after:bg-forest">
                 <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted">{card.label}</p>
                 <h3 className="mt-5 font-body text-[19px] font-semibold leading-snug text-chalk">{card.head}</h3>
                 <p className="mt-3 font-body text-[14px] leading-[1.65] text-slate">{card.body}</p>
@@ -275,26 +275,26 @@ export default async function HomePage() {
           </div>
 
           {/* Dashboard mockup */}
-          <div className="demo-perspective">
-            <div className="demo-frame overflow-hidden rounded-lg border border-white/[0.1] bg-midnight-2 shadow-card">
-              <div className="flex items-center gap-2 border-b border-white/[0.06] bg-midnight-4 px-4 py-3">
-                <span className="h-2.5 w-2.5 rounded-full bg-rose/60" />
-                <span className="h-2.5 w-2.5 rounded-full bg-gold/60" />
-                <span className="h-2.5 w-2.5 rounded-full bg-spark/60" />
-                <span className="ml-3 flex-1 rounded bg-white/[0.05] px-3 py-1 font-mono text-[10px] text-muted">
+          <div>
+            <div className="overflow-hidden rounded-lg border border-rule bg-paper-2 shadow-xl shadow-ink/[0.08]">
+              <div className="flex items-center gap-2 border-b border-rule bg-midnight-4 px-4 py-3">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#FF5F57]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#FEBC2E]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#28C840]" />
+                <span className="ml-3 flex-1 rounded bg-paper-2 px-3 py-1 font-mono text-[10px] text-muted">
                   grantspark.co.uk/dashboard
                 </span>
               </div>
               <div className="space-y-3 p-4">
                 {demoCards.map((c) => (
-                  <div key={c.title} className="flex items-center gap-4 rounded border border-white/[0.07] bg-midnight p-4">
+                  <div key={c.title} className="flex items-center gap-4 rounded border border-rule bg-midnight p-4">
                     <ScoreRing score={c.score} size={48} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-mono text-[9px] uppercase tracking-[0.1em] text-slate">{c.funder}</p>
                       <p className="mt-0.5 truncate font-body text-[14px] font-semibold text-chalk">{c.title}</p>
                       <div className="mt-1.5 flex gap-1.5">
                         {c.meta.map((m) => (
-                          <span key={m} className="rounded-sm bg-white/[0.06] px-1.5 py-0.5 font-mono text-[9px] text-slate">{m}</span>
+                          <span key={m} className="rounded-sm bg-rule px-1.5 py-0.5 font-mono text-[9px] text-slate">{m}</span>
                         ))}
                       </div>
                     </div>
@@ -339,7 +339,7 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="mt-14 grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-3">
+          <div className="mt-14 grid gap-px overflow-hidden border border-rule bg-rule md:grid-cols-3">
             {plans.map((plan) => (
               <div
                 key={plan.name}
@@ -374,7 +374,7 @@ export default async function HomePage() {
                           className={
                             on
                               ? 'h-2.5 w-2.5 flex-shrink-0 rounded-full bg-teal'
-                              : 'h-2.5 w-2.5 flex-shrink-0 rounded-full border border-white/[0.15]'
+                              : 'h-2.5 w-2.5 flex-shrink-0 rounded-full border border-rule'
                           }
                         />
                         <span className={on ? 'text-chalk' : 'text-muted line-through decoration-white/20'}>
@@ -389,7 +389,7 @@ export default async function HomePage() {
                   className={
                     plan.featured
                       ? 'mt-8 block rounded bg-teal py-3 text-center font-body text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-light'
-                      : 'mt-8 block rounded border border-white/[0.12] py-3 text-center font-body text-[13px] font-semibold text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light'
+                      : 'mt-8 block rounded border border-rule py-3 text-center font-body text-[13px] font-semibold text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light'
                   }
                 >
                   {plan.name === 'Scout' ? 'Start free' : `Upgrade to ${plan.name}`}
@@ -415,7 +415,7 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="mt-14 grid gap-px overflow-hidden border border-white/[0.06] bg-white/[0.06] md:grid-cols-3">
+          <div className="mt-14 grid gap-px overflow-hidden border border-rule bg-rule md:grid-cols-3">
             {intel.map((post) => {
               const inner = (
                 <>
@@ -428,7 +428,7 @@ export default async function HomePage() {
                   <p className="mt-3 font-body text-[13px] leading-[1.6] text-slate">{post.excerpt}</p>
                   <div className="mt-6 flex items-center justify-between">
                     <span className="font-mono text-[10px] text-muted">{post.read} read</span>
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-white/[0.12] text-slate transition-all group-hover:border-teal group-hover:bg-teal group-hover:text-white">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full border border-rule text-slate transition-all group-hover:border-teal group-hover:bg-teal group-hover:text-white">
                       →
                     </span>
                   </div>

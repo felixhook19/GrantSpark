@@ -1,15 +1,11 @@
 import type { Config } from 'tailwindcss'
 
-// "Purposeful Intelligence" — Type-First Dark (UI rebuild, June 2026).
+// "Paper & Ink" (June 2026) — light editorial: warm paper, forest green,
+// burnt sienna, ink type. Broadsheet energy, not SaaS.
 //
-// Two tiers of tokens:
-//  1. Brand tokens (midnight/teal/spark/...) — used by the rebuilt pages.
-//  2. Legacy semantic aliases (background/surface/text/primary/...) —
-//     kept so pages outside the rebuild (billing, portfolio, saved,
-//     admin, legal) stay styled. Map onto the same palette.
-//
-// spark green is RESERVED for scoring, success states and the logo mark.
-// Interactive elements use teal / teal-light.
+// Every legacy token name (midnight/chalk/teal/spark/... and the older
+// semantic set) is KEPT as an alias onto the new palette so pages outside
+// the 13-file rebuild restyle automatically. Do not delete aliases.
 const config: Config = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -18,60 +14,86 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // --- Brand tokens ---
-        midnight: '#1A1A2E', // primary background
-        'midnight-2': '#16162A', // card/panel background
-        'midnight-3': '#0F0F20', // deepest background, hero sections
-        'midnight-4': '#12122A', // alternate section background
-        teal: '#00897B', // PRIMARY ACCENT — buttons, links, CTAs
-        'teal-light': '#00BFA5', // teal hover/highlight state
-        spark: '#19E88F', // scoring only: high scores, success, logo mark
-        chalk: '#F5F3F0', // primary text on dark
-        slate: '#546E7A', // secondary/muted text
-        muted: '#3D4E5C', // tertiary text, placeholders
-        orange: '#E65100', // "Apply" decision badge, urgent CTAs
-        gold: '#D4A017', // "Consider" decision badge
-        rose: '#C62828', // "Skip" decision badge, errors
-        purple: '#4A148C', // premium tier indicators
-        ink: '#1E2A3A', // hover states on interactive elements
+        // ── Backgrounds ─────────────────────────────────────────
+        paper: '#FAF8F5',
+        'paper-2': '#F0EDE8',
+        'paper-3': '#EDE9E3',
+        'paper-4': '#E8E4DD',
 
-        // --- Legacy semantic aliases (pages outside the rebuild) ---
-        background: '#1A1A2E',
-        surface: '#16162A',
-        'surface-2': '#12122A',
-        border: '#2A2A44',
-        'border-strong': '#3A3A58',
-        text: '#F5F3F0',
-        'text-secondary': '#9DAEB8',
-        primary: '#00897B',
-        'primary-hover': '#00BFA5',
-        'primary-soft': '#0E2E2B',
-        accent: '#D4A017',
-        'accent-hover': '#E8B52E',
-        'accent-soft': '#2E2710',
-        success: '#19E88F',
-        'success-soft': '#0E2E22',
-        warning: '#E65100',
-        'warning-soft': '#301E0E',
-        danger: '#E05656',
-        'danger-soft': '#341920',
-        action: '#E65100',
-        warn: '#E65100',
+        // ── Primary accent — Forest Green ──────────────────────
+        forest: '#1B4332',
+        'forest-light': '#2D6A4F',
+        'forest-dim': '#E8F5E9',
+
+        // ── Secondary accent — Burnt Sienna ────────────────────
+        sienna: '#D4580A',
+        'sienna-light': '#E8711A',
+        'sienna-dim': '#FEF0E6',
+
+        // ── Type scale ──────────────────────────────────────────
+        ink: '#1C1917',
+        'ink-2': '#292524',
+        slate: '#6B7280',
+        dim: '#9CA3AF',
+        rule: '#E5E0D8',
+
+        // ── Scoring / decision ──────────────────────────────────
+        'score-hi': '#16A34A',
+        'score-mid': '#B45309',
+        'score-lo': '#DC2626',
+
+        // ── Legacy brand aliases (Type-First Dark names) ────────
+        midnight: '#F0EDE8', // was input/deep bg → paper-2 inset
+        'midnight-2': '#FFFFFF', // was cards → white cards
+        'midnight-3': '#FAF8F5', // was page bg → paper
+        'midnight-4': '#EDE9E3', // was alt sections → paper-3
+        chalk: '#1C1917', // primary text → ink
+        teal: '#1B4332', // primary accent → forest
+        'teal-light': '#2D6A4F',
+        muted: '#9CA3AF', // → dim
+        spark: '#16A34A', // scoring green (light-safe)
+        gold: '#B45309',
+        rose: '#DC2626',
+        orange: '#D4580A',
+        action: '#D4580A',
+        purple: '#4A148C',
+        warn: '#B45309',
+
+        // ── Legacy semantic aliases (billing/portfolio/admin/etc) ──
+        background: '#FFFFFF',
+        surface: '#F0EDE8',
+        'surface-2': '#EDE9E3',
+        border: '#E5E0D8',
+        'border-strong': '#D6D0C6',
+        text: '#1C1917',
+        'text-secondary': '#6B7280',
+        primary: '#1B4332',
+        'primary-hover': '#2D6A4F',
+        'primary-soft': '#E8F5E9',
+        accent: '#B45309',
+        'accent-hover': '#92400E',
+        'accent-soft': '#FEF3C7',
+        success: '#16A34A',
+        'success-soft': '#DCFCE7',
+        warning: '#D4580A',
+        'warning-soft': '#FEF0E6',
+        danger: '#DC2626',
+        'danger-soft': '#FEE2E2',
       },
       fontFamily: {
         display: ['Syne', 'sans-serif'], // headings — weight 800 only
-        body: ['"DM Sans"', 'sans-serif'], // body — 400/500/600
-        sans: ['"DM Sans"', 'sans-serif'], // alias (layout body class)
-        mono: ['"JetBrains Mono"', 'monospace'], // scores, amounts, labels
+        body: ['"DM Sans"', 'sans-serif'],
+        sans: ['"DM Sans"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
       },
       letterSpacing: {
         tightish: '-0.02em',
         tightest: '-0.04em',
       },
       boxShadow: {
-        soft: '0 1px 3px rgba(0, 0, 0, 0.3)',
-        card: '0 1px 2px rgba(0, 0, 0, 0.25), 0 6px 20px -4px rgba(0, 0, 0, 0.4)',
-        focus: '0 0 0 4px rgba(0, 137, 123, 0.35)',
+        soft: '0 1px 3px rgba(28, 25, 23, 0.06)',
+        card: '0 1px 2px rgba(28, 25, 23, 0.04), 0 6px 20px -6px rgba(28, 25, 23, 0.10)',
+        focus: '0 0 0 4px rgba(27, 67, 50, 0.18)',
       },
       borderRadius: {
         xl: '12px',

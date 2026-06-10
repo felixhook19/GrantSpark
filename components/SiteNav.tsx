@@ -6,7 +6,7 @@ const linkCls =
 
 export function SiteNav() {
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-white/[0.06] bg-midnight-3/85 backdrop-blur-lg">
+    <header className="sticky top-0 z-30 h-16 border-b border-rule bg-paper/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Link href="/" aria-label="GrantSpark — home">
           <Wordmark size={26} />

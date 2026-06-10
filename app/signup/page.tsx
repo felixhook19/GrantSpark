@@ -7,7 +7,7 @@ import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Wordmark } from '@/components/Logo'
 
 const inputCls =
-  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
+  'w-full rounded border border-rule bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
 const labelCls = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-slate'
 
 export default function SignupPage() {
@@ -48,7 +48,7 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-midnight-3 px-6">
       <div className="mx-auto w-full max-w-[400px] pt-[15vh]">
-        <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-10">
+        <div className="rounded-lg border border-rule bg-midnight-2 p-10">
           <div className="mb-8 text-center">
             <Link href="/" className="inline-flex" aria-label="GrantSpark — home">
               <Wordmark size={26} />
@@ -74,7 +74,7 @@ export default function SignupPage() {
               </p>
               <Link
                 href="/login"
-                className="mt-6 inline-flex rounded border border-white/[0.12] px-6 py-3 font-body text-[13px] font-semibold text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light"
+                className="mt-6 inline-flex rounded border border-rule px-6 py-3 font-body text-[13px] font-semibold text-chalk transition-all duration-200 hover:border-teal hover:text-teal-light"
               >
                 Go to sign in
               </Link>

@@ -54,22 +54,22 @@ type FormField = keyof OnboardingForm
 
 const labelCls = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-slate'
 const inputCls =
-  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
+  'w-full rounded border border-rule bg-midnight px-4 py-3 font-body text-[15px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
 
 const selectedPillCls =
   'rounded border border-teal bg-teal/[0.12] px-3 py-2 font-body text-[13px] font-medium text-teal-light'
 const unselectedPillCls =
-  'rounded border border-white/[0.1] bg-midnight px-3 py-2 font-body text-[13px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
+  'rounded border border-rule bg-midnight px-3 py-2 font-body text-[13px] font-medium text-slate transition-colors hover:border-forest/40 hover:text-chalk'
 
 const selectedRowCls =
   'w-full rounded border border-teal bg-teal/[0.12] px-4 py-3 text-left font-body text-[14px] font-medium text-teal-light'
 const unselectedRowCls =
-  'w-full rounded border border-white/[0.1] bg-midnight px-4 py-3 text-left font-body text-[14px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
+  'w-full rounded border border-rule bg-midnight px-4 py-3 text-left font-body text-[14px] font-medium text-slate transition-colors hover:border-forest/40 hover:text-chalk'
 
 const selectedToggleCls =
   'flex-1 rounded border border-teal bg-teal/[0.12] py-3 font-body text-[14px] font-semibold text-teal-light'
 const unselectedToggleCls =
-  'flex-1 rounded border border-white/[0.1] bg-midnight py-3 font-body text-[14px] font-medium text-slate transition-colors hover:border-white/[0.25] hover:text-chalk'
+  'flex-1 rounded border border-rule bg-midnight py-3 font-body text-[14px] font-medium text-slate transition-colors hover:border-forest/40 hover:text-chalk'
 
 function OnboardingInner() {
   const router = useRouter()
@@ -229,7 +229,7 @@ function OnboardingInner() {
                   className={
                     s <= step
                       ? 'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-teal font-mono text-[10px] font-semibold text-white'
-                      : 'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-white/[0.12] font-mono text-[10px] text-muted'
+                      : 'flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border border-rule font-mono text-[10px] text-muted'
                   }
                 >
                   {String(s).padStart(2, '0')}
@@ -247,7 +247,7 @@ function OnboardingInner() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-white/[0.08] bg-midnight-2 p-10">
+        <div className="rounded-lg border border-rule bg-midnight-2 p-10">
           {step === 0 ? (
             <>
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-teal-light">
@@ -268,7 +268,7 @@ function OnboardingInner() {
                     className={
                       regKind === k
                         ? 'flex-1 rounded border border-teal bg-teal/[0.12] py-2.5 font-body text-[13px] font-semibold text-teal-light'
-                        : 'flex-1 rounded border border-white/[0.1] py-2.5 font-body text-[13px] font-medium text-slate hover:text-chalk'
+                        : 'flex-1 rounded border border-rule py-2.5 font-body text-[13px] font-medium text-slate hover:text-chalk'
                     }
                   >
                     {k === 'charity' ? 'Charity number' : 'Company number'}
@@ -450,7 +450,7 @@ function OnboardingInner() {
                 <button
                   type="button"
                   onClick={() => setStep((s) => s - 1)}
-                  className="flex-1 rounded border border-white/[0.12] py-3 font-body text-[14px] font-semibold text-chalk transition-all duration-200 hover:border-white/[0.25]"
+                  className="flex-1 rounded border border-rule py-3 font-body text-[14px] font-semibold text-chalk transition-all duration-200 hover:border-forest/40"
                 >
                   ← Back
                 </button>

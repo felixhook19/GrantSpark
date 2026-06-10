@@ -1,13 +1,12 @@
 /**
- * GrantSpark twin-spark mark ("Purposeful Intelligence").
+ * GrantSpark twin-spark mark ("Paper & Ink").
  *
- * Two angled chevron strokes: the lead spark in Spark Green (the one
- * permitted use outside scores/success states) and an echo in teal-light
- * at 60% opacity.
+ * Two angled chevrons: the lead spark in score-hi green, the echo in
+ * forest-light at 60% opacity. Wordmark: "Grant" in ink, "Spark" in
+ * forest, Syne 800.
  *
- * NOTE: Wordmark deliberately renders a <span>, not a link — callers
- * wrap it in their own <Link> (nav, dashboards, auth pages), and nesting
- * anchors breaks hydration.
+ * NOTE: Wordmark renders a <span>, not a link — callers wrap it in their
+ * own <Link>; nesting anchors breaks hydration.
  */
 export function Logo({ size = 28 }: { size?: number }) {
   return (
@@ -21,15 +20,15 @@ export function Logo({ size = 28 }: { size?: number }) {
     >
       <path
         d="M7 4 L21 16 L7 28"
-        stroke="#19E88F"
-        strokeWidth="4.5"
+        stroke="#16A34A"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M17 4 L31 16 L17 28"
-        stroke="#00BFA5"
-        strokeWidth="4.5"
+        stroke="#2D6A4F"
+        strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
         opacity="0.6"
@@ -38,19 +37,15 @@ export function Logo({ size = 28 }: { size?: number }) {
   )
 }
 
-/**
- * Logo + wordmark lockup: Syne 800, "Grant" in chalk, "Spark" in
- * teal-light.
- */
 export function Wordmark({ size = 26 }: { size?: number }) {
   return (
     <span className="inline-flex items-center gap-2.5">
       <Logo size={size * 0.78} />
       <span
-        className="font-display tracking-[-0.02em] text-chalk"
+        className="font-display tracking-[-0.02em] text-ink"
         style={{ fontSize: Math.max(15, size * 0.7) }}
       >
-        Grant<span className="text-teal-light">Spark</span>
+        Grant<span className="text-forest">Spark</span>
       </span>
     </span>
   )

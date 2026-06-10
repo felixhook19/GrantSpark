@@ -15,7 +15,7 @@ type Answer = {
 }
 
 const inputCls =
-  'w-full rounded border border-white/[0.1] bg-midnight px-3 py-2.5 font-body text-[14px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
+  'w-full rounded border border-rule bg-midnight px-3 py-2.5 font-body text-[14px] text-chalk placeholder:text-muted focus:border-teal focus:outline-none'
 
 const SEED_PROMPTS: Record<string, string> = {
   mission: 'What does your organisation exist to do, in 150 words?',
@@ -97,7 +97,7 @@ export default function AnswersPage() {
 
   return (
     <div className="min-h-screen bg-midnight-3">
-      <nav className="sticky top-0 z-20 border-b border-white/[0.06] bg-midnight-3/85 backdrop-blur-lg">
+      <nav className="sticky top-0 z-20 border-b border-rule bg-paper/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-6">
           <Link href="/dashboard" aria-label="GrantSpark — dashboard"><Wordmark size={24} /></Link>
           <Link href="/dashboard" className="font-body text-[13px] font-medium text-slate hover:text-chalk">
@@ -129,7 +129,7 @@ export default function AnswersPage() {
           </div>
         ) : (
           <>
-            <div className="mt-8 rounded-lg border border-white/[0.08] bg-midnight-2 p-6">
+            <div className="mt-8 rounded-lg border border-rule bg-midnight-2 p-6">
               <div className="grid gap-3 sm:grid-cols-2">
                 <select
                   value={draft.category}
@@ -172,7 +172,7 @@ export default function AnswersPage() {
                 </p>
               )}
               {answers.map((a) => (
-                <div key={a.id} className="rounded-lg border border-white/[0.07] bg-midnight-2 p-5">
+                <div key={a.id} className="rounded-lg border border-rule bg-midnight-2 p-5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-teal-light">
@@ -181,10 +181,10 @@ export default function AnswersPage() {
                       <p className="mt-1 font-body text-[15px] font-semibold text-chalk">{a.title}</p>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => copy(a)} className="rounded border border-white/[0.1] px-2.5 py-1 font-mono text-[10px] text-slate hover:border-teal hover:text-teal-light">
+                      <button onClick={() => copy(a)} className="rounded border border-rule px-2.5 py-1 font-mono text-[10px] text-slate hover:border-teal hover:text-teal-light">
                         {copiedId === a.id ? 'Copied ✓' : 'Copy'}
                       </button>
-                      <button onClick={() => remove(a.id)} className="rounded border border-white/[0.1] px-2.5 py-1 font-mono text-[10px] text-slate hover:border-rose hover:text-rose">
+                      <button onClick={() => remove(a.id)} className="rounded border border-rule px-2.5 py-1 font-mono text-[10px] text-slate hover:border-rose hover:text-rose">
                         Delete
                       </button>
                     </div>

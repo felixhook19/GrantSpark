@@ -19,7 +19,7 @@ const STATUS_STYLES: Record<SavedStatus, string> = {
   applied: 'border-warn/20 bg-warn/10 text-warn',
   awarded: 'border-spark/30 bg-spark/15 text-spark',
   rejected: 'border-rose/20 bg-rose/10 text-rose',
-  withdrawn: 'border-white/10 bg-white/5 text-slate',
+  withdrawn: 'border-rule bg-paper-2 text-slate',
 }
 
 function money(v: number | null | undefined): string | null {
@@ -46,7 +46,7 @@ function SavedCard({
   if (!g) return null
 
   return (
-    <div className="rounded-2xl border border-white/5 bg-midnight-2 p-6 transition-colors hover:border-white/10">
+    <div className="rounded-2xl border border-rule bg-midnight-2 p-6 transition-colors hover:border-rule">
       <div className="mb-3 flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <h3 className="font-display text-base font-semibold leading-snug text-chalk">
@@ -104,7 +104,7 @@ function SavedCard({
           <select
             value={item.rejection_reason || ''}
             onChange={(e) => onUpdate(item.id, { rejection_reason: e.target.value || null })}
-            className="w-full rounded-lg border border-white/10 bg-midnight px-3 py-2 text-sm text-chalk focus:border-teal focus:outline-none"
+            className="w-full rounded-lg border border-rule bg-midnight px-3 py-2 text-sm text-chalk focus:border-teal focus:outline-none"
           >
             <option value="">Skip this</option>
             <option value="ineligible">We weren&apos;t eligible</option>
@@ -132,7 +132,7 @@ function SavedCard({
               }
             }}
             placeholder="e.g. 10000"
-            className="w-full rounded-lg border border-white/10 bg-midnight px-3 py-2 font-mono text-sm text-spark focus:border-teal focus:outline-none"
+            className="w-full rounded-lg border border-rule bg-midnight px-3 py-2 font-mono text-sm text-spark focus:border-teal focus:outline-none"
           />
         </div>
       )}
@@ -148,7 +148,7 @@ function SavedCard({
             onChange={(e) =>
               onUpdate(item.id, { internal_deadline: e.target.value || null })
             }
-            className="w-full rounded-lg border border-white/10 bg-midnight px-3 py-2 text-sm text-chalk focus:border-spark focus:outline-none"
+            className="w-full rounded-lg border border-rule bg-midnight px-3 py-2 text-sm text-chalk focus:border-spark focus:outline-none"
           />
         </div>
         <div className="flex items-end justify-end gap-3 text-sm">
@@ -180,7 +180,7 @@ function SavedCard({
           }}
           rows={2}
           placeholder="Application reference, contact name, things to follow up..."
-          className="w-full resize-none rounded-lg border border-white/10 bg-midnight px-3 py-2 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
+          className="w-full resize-none rounded-lg border border-rule bg-midnight px-3 py-2 text-sm text-chalk placeholder:text-slate focus:border-spark focus:outline-none"
         />
       </div>
     </div>
@@ -281,7 +281,7 @@ export default function SavedPage() {
 
   return (
     <div className="min-h-screen bg-midnight">
-      <nav className="sticky top-0 z-10 border-b border-white/5 bg-midnight/90 backdrop-blur-md">
+      <nav className="sticky top-0 z-10 border-b border-rule bg-midnight/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
           <Link href="/" className="flex items-center gap-2.5">
             <Logo size={26} />
@@ -331,7 +331,7 @@ export default function SavedPage() {
               className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
                 filter === 'all'
                   ? 'border-spark bg-spark/10 text-spark'
-                  : 'border-white/10 text-slate hover:border-white/20 hover:text-chalk'
+                  : 'border-rule text-slate hover:border-white/20 hover:text-chalk'
               }`}
             >
               All ({items.length})
@@ -343,7 +343,7 @@ export default function SavedPage() {
                 className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
                   filter === s
                     ? 'border-spark bg-spark/10 text-spark'
-                    : 'border-white/10 text-slate hover:border-white/20 hover:text-chalk'
+                    : 'border-rule text-slate hover:border-white/20 hover:text-chalk'
                 }`}
               >
                 {STATUS_LABELS[s]} ({counts[s]})
@@ -359,7 +359,7 @@ export default function SavedPage() {
         )}
 
         {items.length === 0 ? (
-          <div className="rounded-2xl border border-white/5 bg-midnight-2 py-20 text-center">
+          <div className="rounded-2xl border border-rule bg-midnight-2 py-20 text-center">
             <h2 className="font-display text-xl font-semibold text-chalk">No saved grants yet</h2>
             <p className="mt-2 text-slate">
               Save grants from your{' '}
@@ -370,7 +370,7 @@ export default function SavedPage() {
             </p>
           </div>
         ) : visible.length === 0 ? (
-          <div className="rounded-2xl border border-white/5 py-16 text-center">
+          <div className="rounded-2xl border border-rule py-16 text-center">
             <p className="text-slate">No grants with status &ldquo;{STATUS_LABELS[filter as SavedStatus]}&rdquo;.</p>
           </div>
         ) : (
