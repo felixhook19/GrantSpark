@@ -211,12 +211,36 @@ sources.adapter: rss | html_list | html_detail | json | govuk_find_grant | ukri
   last_error back to sources. The admin dashboard (/admin) surfaces these.
 
 ## Cron routes (vercel.json — crons require Vercel Pro)
-- /api/cron/ingest  — daily 06:00 UTC, grant database refresh
-- /api/cron/digest  — Mondays 09:00 UTC, weekly email digest
-- /api/cron/blog    — Mondays 06:00 UTC, "Grant Intelligence" article generator
-  (20-topic rotation, Claude-written, validated before insert)
+- /api/cron/ingest          — daily 06:00 UTC, grant database refresh
+- /api/cron/refresh-matches — daily 04:00 UTC, incremental scoring of new/
+  changed grants for active orgs + deadline sweep + alert queueing
+- /api/cron/digest          — Mondays 09:00 UTC, weekly email digest
+- /api/cron/monday-briefing — Mondays 07:00 UTC, per-org weekly briefing
+- /api/cron/blog            — Mondays 06:00 UTC, article generator
 All require `Authorization: Bearer ${CRON_SECRET}`; admin-session-gated
 manual triggers live under /api/admin/*.
+
+## World-class build (June 2026) — additional surface
+- matches.factors jsonb: 7-factor score breakdown; hard-disqualifier fail
+  (geography/org_type/trading_history) forces decision 'skip' SERVER-SIDE.
+- opportunities: slug (permanent once set), last_verified_at/
+  verification_source (lib/confidence.ts labels), needs_rescore.
+- grant_changes table: tracked-field diffs via lib/ingestion/changes.ts;
+  closures + deadline sweep are changelogged and alert savers.
+- saved_grants outcome capture: rejection_reason/amount_awarded/outcome_date
+  (validated against status in the PATCH route).
+- Public SEO pages: /grants + /grants/[slug] (admin-client reads; show
+  confidence label + changelog). /pricing page; lib/entitlements.ts is the
+  plan source of truth. EMAIL_SENDS_ENABLED=true required for real sends.
+- /api/registry-lookup (Companies House / Charity Commission; needs
+  COMPANIES_HOUSE_API_KEY + CHARITY_COMMISSION_API_KEY) → onboarding Step 0.
+- answer_library table + /api/answers + /answers page (Strategist);
+  outlines reference library titles. Eligibility 30/day, outlines 15/day.
+- embed_partners table + /embed/[partner] + /api/embed/[partner]/grants.
+- orgs.alert_opt_out + /api/alerts toggle (profile page).
+- NOT BUILT from the spec: Block 12 (seats/board PDF/iCal — the
+  getOrgForUser refactor needs its own session), community-foundation
+  sources, /accuracy guarantee page (needs Felix's wording approval).
 
 ## Current Database State
 - opportunities table: ~63 grants + structured-adapter intake (GOV.UK, UKRI)

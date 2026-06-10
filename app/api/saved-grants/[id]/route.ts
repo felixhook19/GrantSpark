@@ -13,7 +13,15 @@ type PatchBody = {
   status?: SavedStatus
   notes?: string | null
   internal_deadline?: string | null
+  rejection_reason?: string | null
+  amount_awarded?: number | null
+  outcome_date?: string | null
 }
+
+// Block 2 outcome capture — the seed of the success-rate dataset.
+const REJECTION_REASONS = [
+  'ineligible', 'oversubscribed', 'weak_fit', 'incomplete', 'missed_deadline', 'other',
+]
 
 async function getOrgId(userId: string): Promise<string | null> {
   const admin = createSupabaseAdminClient()
@@ -70,6 +78,50 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   const admin = createSupabaseAdminClient()
+
+  // Outcome fields are only valid in their matching status. Resolve the
+  // effective status (the one being set, else the row's current one).
+  let effectiveStatus: string | undefined = body.status
+  if (
+    effectiveStatus === undefined &&
+    (body.rejection_reason !== undefined || body.amount_awarded !== undefined)
+  ) {
+    const { data: current } = await admin
+      .from('saved_grants')
+      .select('status')
+      .eq('id', id)
+      .eq('org_id', orgId)
+      .maybeSingle()
+    if (!current) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    effectiveStatus = (current as { status: string }).status
+  }
+  if (body.rejection_reason !== undefined && body.rejection_reason !== null) {
+    if (effectiveStatus !== 'rejected') {
+      return NextResponse.json(
+        { error: 'rejection_reason only applies to rejected grants' }, { status: 400 })
+    }
+    if (!REJECTION_REASONS.includes(body.rejection_reason)) {
+      return NextResponse.json({ error: 'Invalid rejection_reason' }, { status: 400 })
+    }
+    patch.rejection_reason = body.rejection_reason
+  }
+  if (body.amount_awarded !== undefined && body.amount_awarded !== null) {
+    if (effectiveStatus !== 'awarded') {
+      return NextResponse.json(
+        { error: 'amount_awarded only applies to awarded grants' }, { status: 400 })
+    }
+    const amount = Math.round(Number(body.amount_awarded))
+    if (Number.isNaN(amount) || amount < 0 || amount > 100_000_000) {
+      return NextResponse.json({ error: 'Invalid amount_awarded' }, { status: 400 })
+    }
+    patch.amount_awarded = amount
+  }
+  if (body.outcome_date !== undefined) {
+    patch.outcome_date = body.outcome_date
+  } else if (body.status === 'awarded' || body.status === 'rejected') {
+    patch.outcome_date = new Date().toISOString().slice(0, 10)
+  }
+
   const { data, error } = await admin
     .from('saved_grants')
     .update(patch)

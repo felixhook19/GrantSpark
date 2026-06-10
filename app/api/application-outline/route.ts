@@ -61,6 +61,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No organisation profile found' }, { status: 404 })
   }
 
+  // 15 outlines/day/org — bounds cost without feeling stingy.
+  const dayStart = new Date(); dayStart.setUTCHours(0, 0, 0, 0)
+  const { count: usedToday } = await admin
+    .from('usage_events')
+    .select('id', { count: 'exact', head: true })
+    .eq('org_id', org.id)
+    .eq('event_type', 'application_outline')
+    .gte('created_at', dayStart.toISOString())
+  if ((usedToday ?? 0) >= 15) {
+    return NextResponse.json(
+      { error: "You've used today's 15 outlines. They reset at midnight.", code: 'daily_limit' },
+      { status: 429 }
+    )
+  }
+
   const { data: grantData } = await admin
     .from('opportunities')
     .select('*')
@@ -85,6 +100,17 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Block 8: reference the org's answer library (titles only — keeps
+  // tokens down and the outline generic-safe).
+  const { data: libRows } = await admin
+    .from('answer_library')
+    .select('category, title')
+    .eq('org_id', org.id)
+  const library = (libRows || []) as Array<{ category: string; title: string }>
+  const libraryText = library.length
+    ? library.map((l) => `${l.category}: "${l.title}"`).join('; ')
+    : 'none yet'
+
   const prompt = `You are an expert UK grant application consultant. Generate a step-by-step application outline for this organisation applying to this specific grant. British English. Short sentences. Never use "making a difference", "empowering communities", "transformative" or "seamless".
 
 GRANT OPPORTUNITY:
@@ -102,6 +128,7 @@ Sectors / themes: ${(org.themes || []).join(', ') || 'unspecified'}
 Mission: ${(org.org_description || '').slice(0, 500)}
 Annual income: ${org.annual_income_band || 'unknown'}
 Location: ${org.nation || 'UK'}
+THEIR ANSWER LIBRARY (existing reusable answers they can adapt): ${libraryText}
 
 TASK:
 Create a numbered step-by-step application outline. Each step should specify:
@@ -110,7 +137,7 @@ Create a numbered step-by-step application outline. Each step should specify:
 - Key points the funder cares about based on the guidance above
 - Estimated time to complete this section
 
-Be specific to THIS grant and THIS funder, not generic. Where the guidance doesn't state something, say "check the funder's application form" rather than inventing it.
+Be specific to THIS grant and THIS funder, not generic. Where the guidance doesn't state something, say "check the funder's application form" rather than inventing it. Where one of their library answers fits a step, name it exactly like [Use your answer: "Safeguarding statement"].
 
 Format as plain text. Number each step. Keep it concise (10-15 steps max).
 Start with: "Application Outline: ${grant.title} by ${grant.funder || 'the funder'}"

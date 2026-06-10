@@ -33,6 +33,35 @@ type AiMatch = {
   why_match?: unknown
   risks?: unknown
   next_steps?: unknown
+  factors?: unknown
+}
+
+// Block 3: factor breakdown. Seven fixed factor names; a fail on a hard
+// disqualifier forces decision 'skip' SERVER-SIDE — honesty is never
+// left to the prompt alone.
+const FACTOR_NAMES = [
+  'geography', 'org_type', 'income_band', 'theme_alignment',
+  'trading_history', 'grant_size_fit', 'match_funding',
+] as const
+const HARD_DISQUALIFIERS = new Set(['geography', 'org_type', 'trading_history'])
+const FACTOR_STATUSES = new Set(['pass', 'partial', 'fail', 'unknown'])
+
+type FactorStatus = 'pass' | 'partial' | 'fail' | 'unknown'
+
+function validateFactors(value: unknown): Array<{ name: string; status: FactorStatus; detail: string }> {
+  if (!Array.isArray(value)) return []
+  return value
+    .filter(
+      (f): f is { name: string; status: string; detail?: unknown } =>
+        Boolean(f && typeof f.name === 'string' &&
+          (FACTOR_NAMES as readonly string[]).includes(f.name) &&
+          typeof f.status === 'string' && FACTOR_STATUSES.has(f.status))
+    )
+    .map((f) => ({
+      name: f.name,
+      status: f.status as FactorStatus,
+      detail: typeof f.detail === 'string' ? f.detail.slice(0, 300) : '',
+    }))
 }
 
 function clamp100(n: unknown): number {
@@ -116,7 +145,7 @@ export async function POST() {
   let query = admin
     .from('opportunities')
     .select(
-      'id, title, funder, summary, description, eligibility_summary, sector_tags, audience, grant_amount_min, grant_amount_max, deadline, geography, max_employees, min_years_trading, match_funding_required, funding_type, url, status, last_seen_at'
+      'id, title, funder, summary, description, eligibility_summary, sector_tags, audience, grant_amount_min, grant_amount_max, deadline, geography, max_employees, min_years_trading, match_funding_required, funding_type, url, status, last_seen_at, last_verified_at, slug'
     )
     .in('status', ['open', 'rolling'])
     .or('deadline.is.null,deadline.gt.now()')
@@ -196,6 +225,7 @@ For each grant, return a JSON object with:
 - "why_match": 1-3 short reasons it fits (UK English, plain language)
 - "risks": 1-3 short risks or eligibility concerns the user should verify before applying
 - "next_steps": 1-3 short concrete actions to take next
+- "factors": an array assessing exactly these seven factors: geography, org_type, income_band, theme_alignment, trading_history, grant_size_fit, match_funding. Each element: { "name": "...", "status": "pass"|"partial"|"fail"|"unknown", "detail": "one grounded sentence" }. Ground every factor ONLY in the supplied profile and grant text. If the grant text does not state a requirement, status is "unknown" with detail "Not stated by the funder — verify before applying." Never invent a requirement. If geography, org_type or trading_history is a clear fail, decision must be "skip".
 
 Return ONLY a valid JSON array of these objects, no markdown, no explanation, no surrounding prose. Include every grant. Sort by fit_score descending.`
 
@@ -255,16 +285,25 @@ Return ONLY a valid JSON array of these objects, no markdown, no explanation, no
       const aiConfidence = typeof m.confidence === 'number' ? clamp100(m.confidence) : 50
       const finalScore = blendScores(candidate.rule_score, aiFit, aiConfidence)
 
+      const factors = validateFactors(m.factors)
+      let decision: Decision = validDecisions.includes(m.decision as Decision)
+        ? (m.decision as Decision)
+        : 'consider'
+      // Honesty override: a failed hard disqualifier is always a skip,
+      // whatever the model said.
+      if (factors.some((f) => f.status === 'fail' && HARD_DISQUALIFIERS.has(f.name))) {
+        decision = 'skip'
+      }
+
       return {
         org_id: org.id,
         opportunity_id: m.grant_id,
         fit_score: finalScore,
-        decision: validDecisions.includes(m.decision as Decision)
-          ? (m.decision as Decision)
-          : ('consider' as Decision),
+        decision,
         why_match: asStringArray(m.why_match),
         risks: asStringArray(m.risks),
         next_steps: asStringArray(m.next_steps),
+        factors,
       }
     })
 
@@ -288,6 +327,7 @@ Return ONLY a valid JSON array of these objects, no markdown, no explanation, no
         why_match: row.why_match,
         risks: row.risks,
         next_steps: row.next_steps,
+        factors: row.factors,
         grant: candidate.grant,
       }
     })

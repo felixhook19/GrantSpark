@@ -19,7 +19,10 @@ export function SiteNav() {
           <Link href="/blog" className={linkCls}>
             Grant Intelligence
           </Link>
-          <Link href="/#pricing" className={linkCls}>
+          <Link href="/grants" className={linkCls}>
+            Open grants
+          </Link>
+          <Link href="/pricing" className={linkCls}>
             Pricing
           </Link>
           <Link href="/#about" className={linkCls}>

@@ -6,7 +6,24 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import { Wordmark } from '@/components/Logo'
 import { ScoreRing } from '@/components/ScoreRing'
+import { confidenceLabel } from '@/lib/confidence'
 import type { Match, Decision, Org } from '@/types/db'
+
+const FACTOR_LABELS: Record<string, string> = {
+  geography: 'Geography',
+  org_type: 'Organisation type',
+  income_band: 'Income band',
+  theme_alignment: 'Theme alignment',
+  trading_history: 'Trading history',
+  grant_size_fit: 'Grant size fit',
+  match_funding: 'Match funding',
+}
+const FACTOR_ICON: Record<string, { icon: string; cls: string }> = {
+  pass: { icon: '✓', cls: 'text-spark' },
+  partial: { icon: '◐', cls: 'text-gold' },
+  fail: { icon: '✗', cls: 'text-rose' },
+  unknown: { icon: '?', cls: 'text-slate' },
+}
 
 // Decision badges: spark / gold / rose, mono, bold.
 function DecisionTag({ decision }: { decision: Decision | string }) {
@@ -224,6 +241,15 @@ function GrantCard({
               {deadlineText}
             </span>
             {geoText && <span className={chipCls}>{geoText}</span>}
+            {(() => {
+              const conf = confidenceLabel(g.last_verified_at)
+              return (
+                <span className={`${chipCls} inline-flex items-center gap-1.5`} title={conf.label}>
+                  <span className={`h-1.5 w-1.5 rounded-full ${conf.dotClass}`} />
+                  {conf.band === 'fresh' ? 'Verified' : conf.band === 'recent' ? 'Checked' : 'Verify first'}
+                </span>
+              )
+            })()}
             {(g.sector_tags || []).slice(0, 3).map((tag: string) => (
               <span key={tag} className={chipCls}>{tag}</span>
             ))}
@@ -293,6 +319,28 @@ function GrantCard({
 
       {open && (
         <div className="fade-up mt-4 space-y-5 border-t border-white/[0.06] pt-5">
+          {/* Factor breakdown — why the score is the score (Block 3). */}
+          {match.factors && match.factors.length > 0 && (
+            <div>
+              <p className="mb-2.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-slate">
+                // Score breakdown
+              </p>
+              <ul className="space-y-1.5">
+                {match.factors.map((f) => {
+                  const icon = FACTOR_ICON[f.status] || FACTOR_ICON.unknown
+                  return (
+                    <li key={f.name} className="flex gap-2.5 font-body text-[13px] leading-[1.55]">
+                      <span className={`w-4 flex-shrink-0 font-mono ${icon.cls}`}>{icon.icon}</span>
+                      <span className="text-chalk">
+                        <span className="font-semibold">{FACTOR_LABELS[f.name] || f.name}: </span>
+                        <span className="text-slate">{f.detail}</span>
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
           {/* "Why this match" is the product's key intelligence, not fine print. */}
           {match.why_match && match.why_match.length > 0 && (
             <div className="border-l-2 border-teal pl-4">
