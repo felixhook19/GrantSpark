@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getActiveOrg } from '@/lib/orgs'
+import { getSubscription, effectivePlan, SCOUT_RESULT_LIMIT } from '@/lib/billing'
 import type { Grant } from '@/types/db'
 
 export const dynamic = 'force-dynamic'
@@ -62,7 +63,7 @@ export async function GET() {
     grantMap[g.id] = g
   }
 
-  const matches = rows
+  let matches = rows
     .filter((row) => grantMap[row.opportunity_id])
     .map((row) => ({
       fit_score: row.fit_score,
@@ -73,5 +74,12 @@ export async function GET() {
       grant: grantMap[row.opportunity_id],
     }))
 
-  return NextResponse.json({ matches })
+  // Scout tier sees only the top results; full ranking is a Seeker feature.
+  const plan = effectivePlan(await getSubscription(admin, user.id))
+  const truncated = plan === 'free' && matches.length > SCOUT_RESULT_LIMIT
+  if (truncated) {
+    matches = matches.slice(0, SCOUT_RESULT_LIMIT)
+  }
+
+  return NextResponse.json({ matches, truncated: truncated || undefined, plan })
 }

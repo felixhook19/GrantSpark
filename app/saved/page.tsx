@@ -151,6 +151,7 @@ export default function SavedPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filter, setFilter] = useState<SavedStatus | 'all'>('all')
+  const [isFreePlan, setIsFreePlan] = useState(false)
 
   const load = useCallback(async () => {
     setError('')
@@ -166,6 +167,11 @@ export default function SavedPage() {
       } else {
         setItems(data.saved || [])
       }
+      // Scout sees the page read-only with an upgrade prompt.
+      fetch('/api/billing')
+        .then((r) => r.json())
+        .then((b) => setIsFreePlan(b?.plan === 'free' || b?.plan === 'starter'))
+        .catch(() => {})
     } catch {
       setError('Network error.')
     }
@@ -264,6 +270,16 @@ export default function SavedPage() {
             Track which grants you&apos;re progressing, set your own deadlines and keep notes.
           </p>
         </div>
+
+        {isFreePlan && (
+          <p className="mb-6 rounded border border-teal/40 bg-teal/[0.08] px-4 py-3 font-body text-[13px] text-chalk">
+            The saved grants pipeline is a Seeker feature — upgrade to save grants and
+            track your applications.{' '}
+            <Link href="/billing" className="font-semibold text-teal-light underline">
+              See plans
+            </Link>
+          </p>
+        )}
 
         {/* Filter tabs */}
         {items.length > 0 && (

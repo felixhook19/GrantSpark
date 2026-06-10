@@ -37,7 +37,10 @@ export type SubscriptionRow = {
   cancel_at_period_end: boolean
 }
 
-export const FREE_MONTHLY_MATCH_RUNS = 5
+// Scout (free) limits — June 2026 restructure: 3 runs/month, and only
+// the top 5 matches are shown per run (full results are a Seeker feature).
+export const FREE_MONTHLY_MATCH_RUNS = 3
+export const SCOUT_RESULT_LIMIT = 5
 
 export const MATCH_RUN_EVENT = 'match_run'
 

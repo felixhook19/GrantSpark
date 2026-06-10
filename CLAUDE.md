@@ -99,18 +99,26 @@ also use it; blog pages use `revalidate` instead.
 ### 9. No route groups
 No parentheses in folder names. All routes are flat.
 
-## Commercial model (June 2026 — charity-sector tier names)
-| Tier (UI name) | DB plan value | Price | Limits |
+## Commercial model (June 2026 restructure — charity-sector tier names)
+| Tier (UI name) | DB plan value | Price | Gates |
 |---|---|---|---|
-| Scout | `free` | £0 | 5 AI match runs/month, 1 org profile |
-| Seeker | `pro` | £29/month | unlimited matching, assistant, 1 org profile |
-| Strategist | `multi` | £99/month | everything + up to 10 org profiles, portfolio view |
+| Scout | `free` | £0 | 3 AI match runs/month, top 5 results per run, NO saved pipeline, NO digest, 1 org profile |
+| Seeker | `pro` | £29/month | unlimited matching, full results, saved pipeline, weekly digest + deadline reminders, application assistant, 1 org profile |
+| Strategist | `multi` | £89/month | everything + AI eligibility pre-screener, AI application outlines, up to 10 org profiles, portfolio view |
 
 - `starter` is a LEGACY free alias — never paid, never shown in UI.
 - subscriptions_plan_check allows EXACTLY: free | starter | pro | multi. There is NO 'team'.
+  Tier names are UI-only — NEVER add scout/seeker/strategist to the DB enum.
 - isPaidPlan() returns true only for 'pro' and 'multi'.
+- Limits live in lib/billing.ts: FREE_MONTHLY_MATCH_RUNS (3), SCOUT_RESULT_LIMIT (5).
+- Strategist-only AI routes: /api/eligibility-check, /api/application-outline
+  (both return 402 code 'strategist_feature' otherwise).
+- Saved-grants writes return 402 code 'paid_feature' on the free plan; reads stay open.
 - Stripe prices: STRIPE_PRICE_ID_SEEKER (→ 'pro'), STRIPE_PRICE_ID_STRATEGIST (→ 'multi').
 - Tier display names live in PLAN_TIER_NAMES (lib/billing.ts).
+- NOT BUILT (deliberately deferred): multi-user seats, board PDF report, iCal
+  export, immediate new-grant alerts (all blocked on email/cron infra or the
+  seats/invites auth project).
 
 ## Deployment
 - Push to main branch → Vercel auto-deploys (60-90 seconds)

@@ -51,6 +51,7 @@ export type Org = {
   has_match_funding?: boolean | null
   typical_grant_size?: string | null
   annual_income_band?: string | null
+  incorporation_date?: string | null
 }
 
 export type BlogPost = {

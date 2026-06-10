@@ -13,6 +13,7 @@
 // Beyond that we'd need pagination or a queue.
 
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
+import { getSubscription, effectivePlan, isPaidPlan } from '@/lib/billing'
 import { sendEmail } from './resend'
 import { renderDigestHtml, renderDigestText, type DigestPayload } from './templates'
 import type { Grant, SavedGrant, Org } from '@/types/db'
@@ -156,6 +157,20 @@ export async function runWeeklyDigest(
 
   for (const u of targeted) {
     if (!u.email) continue
+    // The weekly digest is a Seeker feature — skip Scout (free) users.
+    const plan = effectivePlan(await getSubscription(admin, u.id))
+    if (!isPaidPlan(plan)) {
+      results.push({
+        user_id: u.id,
+        email: u.email,
+        org_name: '',
+        status: 'skipped',
+        matches_count: 0,
+        deadlines_count: 0,
+        error: 'free plan — digest is a paid feature',
+      })
+      continue
+    }
     // Multi-org users get their digest for the first (original) org —
     // there's no request cookie here to know which one is "active".
     const { data: orgRaw } = await admin
