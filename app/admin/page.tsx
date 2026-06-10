@@ -80,6 +80,23 @@ export default function AdminPage() {
   const [enrichResult, setEnrichResult] = useState('')
   const [writingPost, setWritingPost] = useState(false)
   const [blogResult, setBlogResult] = useState('')
+  const [flushing, setFlushing] = useState(false)
+  const [flushResult, setFlushResult] = useState('')
+
+  async function flushEmails() {
+    setFlushing(true)
+    setFlushResult('')
+    setError('')
+    try {
+      const res = await fetch('/api/admin/flush-emails', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) setError(json.error || 'Flush failed.')
+      else setFlushResult(`Sent ${json.sent}, failed ${json.failed} — ${json.remaining} still queued.`)
+    } catch {
+      setError('Network error flushing the email queue.')
+    }
+    setFlushing(false)
+  }
 
   useEffect(() => {
     let active = true
@@ -319,11 +336,19 @@ export default function AdminPage() {
               >
                 {writingPost ? 'Writing…' : 'Generate article'}
               </button>
+              <button
+                onClick={flushEmails}
+                disabled={flushing}
+                className="rounded-xl border border-border px-4 py-2 text-sm font-semibold text-text-secondary transition-all hover:bg-surface disabled:opacity-50"
+              >
+                {flushing ? 'Sending…' : 'Send queued emails'}
+              </button>
             </div>
           </div>
           {ingestResult && <p className="mt-2 text-sm text-success">{ingestResult}</p>}
           {enrichResult && <p className="mt-2 text-sm text-success">{enrichResult}</p>}
           {blogResult && <p className="mt-2 text-sm text-success">{blogResult}</p>}
+          {flushResult && <p className="mt-2 text-sm text-success">{flushResult}</p>}
           <div className="mt-4 overflow-x-auto rounded-2xl border border-border bg-background shadow-soft">
             <table className="w-full min-w-[640px]">
               <thead className="border-b border-border">
